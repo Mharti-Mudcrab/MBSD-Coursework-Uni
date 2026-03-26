@@ -1,21 +1,22 @@
 package LanguageModel;
 
+import java.lang.IllegalStateException;
+
 public class DialogueNode extends Node {
-    @Override
-    public void displayText() {
-        System.out.println(displayText);
-    }
 
     public DialogueNode(String name, String displayText) {
-        super(displayText);
+        super(name, displayText);
     }
-
     
-    public void executeNode() {
+    public void executeNode(SystemState systemState) throws IllegalStateException {
         displayText();
 
         if (transition != null) {
-            transition.run();
+            transition.performTransition(systemState);
+            return;
+        }
+        else {
+            throw new IllegalStateException("Dialogue node has no transition");
         }
     }
 

@@ -2,6 +2,7 @@ package LanguageModel;
 
 import java.util.ArrayList;
 import java.lang.Integer;
+import Utils.Priority;
 
 
 public class Transition {
@@ -20,15 +21,6 @@ public class Transition {
         generateRequirements(condition);
     }
 
-    /**
-     * Takes string of eg "Talisman=1 and coin=2"
-     */
-    private generateRequirements(String condition) {
-        String requirementStrings[] = condition.trim().split("and");
-        for (String requiremen : requirementStrings) {
-            
-        }        
-    }
 
     public boolean satisfiesAllRequirements(SystemState systemState) {
         for (Requirement requirement : requirements) {
@@ -44,7 +36,7 @@ public class Transition {
         return nextNodeName;
     }
 
-    public setNextNode(Node nextNode) {
+    public void setNextNode(Node nextNode) {
         this.nextNode = nextNode;
     }
 

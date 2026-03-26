@@ -49,7 +49,7 @@ public class ChoiceNode extends Node {
         String answer = "";
         while (answer.isEmpty()) {
             answer = Input.readLine();
-            for (option : viableOptionList) {
+            for (ChoiceOption option : viableOptionList) {
                 if (option.getDisplayText().equalsIgnoreCase(answer)) {
                     Transition transition = option.getBestTransition(systemState);
                     if (transition != null) {

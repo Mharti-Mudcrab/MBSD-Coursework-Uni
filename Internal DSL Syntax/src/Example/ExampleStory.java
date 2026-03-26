@@ -66,7 +66,7 @@ public class ExampleStory extends StoryBuilder {
 
                 .Choice("movePastWitchChoice")
                     .ChoiceOption("Go back to start")
-                            .Transition("Start")
+                        .Transition("Start")
                     .ChoiceOption("Go past her")
                         .Transition("walkPastWitch", PRIORITY_HIGH, "Talisman=1")
                         .Transition("witchBadEnd")

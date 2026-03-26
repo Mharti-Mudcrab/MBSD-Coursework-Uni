@@ -2,16 +2,16 @@ package LanguageModel;
 
 import Utils.Output;
 
-public abstract class AbstractNode {
+public abstract class Node {
     protected String name;
     protected String displayText;
     protected Transition transition;
 
-    public AbstractNode (String name) {
+    public Node (String name) {
         this.name = name;
     }
 
-    public AbstractNode (String name, String displayText) {
+    public Node (String name, String displayText) {
         this.name = name;
         this.displayText = displayText;
     }

@@ -31,13 +31,13 @@ public class ChoiceNode extends Node {
     public void executeNode(SystemState systemState) {
         displayText();
 
-        Output.println("Your choices are:");
+        Output.printLine("Your choices are:");
 
         ArrayList<ChoiceOption> viableOptionList = new ArrayList<>();
         for (ChoiceOption option : options) {
-            if (option.getBestTransition(systemState) != null) {
+            if (option.hasViableTransition(systemState)) {
                 // i.e: - walk in the door (1)
-                Output.println("\t - " + option.getDisplayText()) ;
+                Output.printLine("\t - " + option.getDisplayText()) ;
                 viableOptionList.add(option);
             }
         }
@@ -54,10 +54,24 @@ public class ChoiceNode extends Node {
                     Transition transition = option.getBestTransition(systemState);
                     if (transition != null) {
                         transition.performTransition(systemState);
+                        return;
                     }
                 }
             }
-            Output.println("Invalid choice, please try again.");
+            Output.printLine("Invalid choice, please try again.");
+            answer = "";
         }
+    }
+
+    @Override
+    public boolean resolveTransitionNodeRefference(SystemState systemState) {
+        for (ChoiceOption option : options) {
+            for (Transition transition : option.getTransitions()) {
+                if (transition.getNextNode() == null) {
+                    transition.setNextNode(systemState.getNode(transition.getNextNodeName()));
+                }
+            }
+        }
+        return true;
     }
 }

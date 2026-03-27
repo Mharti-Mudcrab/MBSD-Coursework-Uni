@@ -1,8 +1,7 @@
 package LanguageModel;
 
-import java.util.Comparator;
+import java.lang.IllegalStateException;
 import java.util.ArrayList;
-import Utils.Output;
 
 public class ChoiceOption {
 
@@ -12,29 +11,42 @@ public class ChoiceOption {
 
     public ChoiceOption(String displayText) {
         this.displayText = displayText;
-        this.transitions = new LinkedHashMap<>();
+        this.transitions = new ArrayList<>();
     }
 
     public String getDisplayText() {
         return displayText;
     }
 
-    public void addTransition(Transition transition, Requirement requirement) {
-        transitions.put(transition, requirement);
+    public void setTransition(Transition transition) {
+        transitions.add(transition);
     }
 
     public ArrayList<Transition> getTransitions() {
         return transitions;
     }
 
+    public boolean hasViableTransition(SystemState systemState) {
+        for (Transition transition : transitions) {
+            if (transition.satisfiesAllRequirements(systemState)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public Transition getBestTransition(SystemState systemState) {
         Transition bestTransition = null;
         for (Transition transition : transitions) {
             if (transition.satisfiesAllRequirements(systemState)) {
-                if (bestTransition == null || transition.getPriority() > bestTransition.getPriority()) {
+                if (bestTransition == null || transition.getPriority().value() > bestTransition.getPriority().value()) {
                     bestTransition = transition;
                 }
             }
         }
+        if (bestTransition == null) {
+            throw new IllegalStateException("No best transition found for choice option: " + displayText);
+        }
+        return bestTransition;
     }
 }

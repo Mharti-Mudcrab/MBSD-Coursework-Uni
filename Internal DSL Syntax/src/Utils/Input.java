@@ -3,22 +3,24 @@ package Utils;
 import java.util.Scanner;
 import java.io.InputStream;
 
-public class Input extends Scanner {
+public class Input {
     
     private static Input instance;
+    
+    private Scanner scanner;
 
     private Input() {
-        super(System.in);
+        this.scanner = new Scanner(System.in);
     }
 
     private Input(InputStream in) {
-        super(in);
+        this.scanner = new Scanner(in);
     }
 
     public static String readLine() {
         if (instance == null) {
             instance = new Input();
         }
-        return instance.nextLine().trim();
+        return instance.scanner.nextLine().trim();
     }
 }

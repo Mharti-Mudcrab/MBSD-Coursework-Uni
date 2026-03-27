@@ -26,15 +26,15 @@ public class SystemStateChangeNode extends Node {
     }
 
     @Override
-    public Node executeNode(SystemState systemState) {
+    public void executeNode(SystemState systemState) {
         displayText();
 
-        for (String item : stateChangeItems.keys()) {
+        for (String item : stateChangeItems.keySet()) {
             systemState.setItemValue(item, stateChangeItems.get(item));
         }
 
         if (transition != null) {
-            return transition.performTransition();
+            transition.performTransition(systemState);
         }
         else {
             throw new IllegalStateException("SystemStateChangeNode has no transition");

@@ -1,17 +1,21 @@
 package LanguageModel;
 
 import java.lang.IllegalStateException;
-import java.util.HashMap;
+import Utils.Priority;
 
 public class StoryBuilder {
 
     protected SystemState state;
 
-    public abstract StoryBuilder build() throws IllegalStateException;
+    public StoryBuilder build() throws IllegalStateException {
+        return this;
+    }
 
     public SystemState getState() {
         return state;
     }
+
+    public StoryBuilder() {}
 
     public StoryBuilder(String name) {
         this.state = new SystemState(name);

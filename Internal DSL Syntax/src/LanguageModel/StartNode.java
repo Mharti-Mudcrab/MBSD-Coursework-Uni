@@ -6,11 +6,11 @@ public class StartNode extends Node {
     }
     
     @Override
-    public Node executeNode(SystemState systemState) {
+    public void executeNode(SystemState systemState) {
         displayText();
 
         if (transition != null) {
-            return transition.performTransition();
+            transition.performTransition(systemState);
         }
         else {
             throw new IllegalStateException("Dialogue node has no transition");

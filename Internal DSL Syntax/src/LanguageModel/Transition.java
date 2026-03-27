@@ -21,6 +21,11 @@ public class Transition {
         generateRequirements(condition);
     }
 
+    private void generateRequirements(String condition) {
+        if (condition == null || condition.isEmpty()) {
+            throw new IllegalStateException("Tansition condition null of transition: " + nextNodeName + ", " + priority);
+        }
+    }
 
     public boolean satisfiesAllRequirements(SystemState systemState) {
         for (Requirement requirement : requirements) {
@@ -31,7 +36,7 @@ public class Transition {
         return true;
     }
 
-    public String getNextNodeName();
+    public String getNextNodeName()
     {
         return nextNodeName;
     }

@@ -14,7 +14,7 @@ public class Output extends PrintStream {
         super(out);
     }
 
-    public static void println(String x) {
+    public static void printLine(String x) {
         if (instance == null) {
             instance = new Output();
         }

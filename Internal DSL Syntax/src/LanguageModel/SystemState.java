@@ -2,6 +2,7 @@ package LanguageModel;
 
 import java.util.HashMap;
 import java.lang.IllegalStateException;
+import Utils.Priority;
 
 
 public class SystemState {
@@ -79,26 +80,7 @@ public class SystemState {
 
     public void resolveTransitionRefferences() {
         for (Node node : nodes.values()) {
-            if (node instanceof ChoiceNode) {
-                ChoiceNode choiceNode = (ChoiceNode) node;
-                for (ChoiceOption option : choiceNode.getOptions()) {
-                    for (Transition transition : option.getTransitions()) {
-                        Node node = nodes.get(transition.getNextNodeName());
-                        if (node != null) {
-                            transition.setNextNode(node);
-                        } else {
-                            throw new IllegalStateException("ChoiceOption with text \"" + option.getdisplayText() + "\" could not resolve transition to node with ID: \"" + transition.getNextNodeName() + "\"");
-                        }
-                    }
-                }
-            } else if (node.getNextNode() == null) {
-                Node node = nodes.get(node.getNextNodeName());
-                if (node != null) {
-                    node.setTransitionRefference(node);
-                } else {
-                    throw new IllegalStateException("Node: " + node.getName() + " could not find transition to node with ID: \"" + node.getNextNodeName() + "\"");
-                }
-            }
+            node.resolveTransitionNodeRefference(this);
         }
     }
 }

@@ -13,7 +13,6 @@ public class DialogueNode extends Node {
 
         if (transition != null) {
             transition.performTransition(systemState);
-            return;
         }
         else {
             throw new IllegalStateException("Dialogue node has no transition");

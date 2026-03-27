@@ -25,7 +25,7 @@ public abstract class Node {
 
     public void displayText() {
         if (displayText != null && !displayText.isEmpty()) {
-            Output.println(displayText);
+            Output.printLine(displayText);
         }
     }
 
@@ -41,11 +41,22 @@ public abstract class Node {
         this.transition.setNextNode(node);
     }
 
-    public String getNextNodeName() {
+    public Transition getTransition() {
         if (transition == null) {
             return null;
         }
-        return transition.getNextNodeName();
+        return transition;
+    }
+
+    public boolean resolveRefference(SystemState systemState) {
+        if (transition != null) {
+            if (transition.getNextNode() != null) {
+                return true;
+            } else {
+                transition.setNextNode(systemState.getNode(transition.getNextNodeName()));
+            }
+        }
+        return false;
     }
 
 }

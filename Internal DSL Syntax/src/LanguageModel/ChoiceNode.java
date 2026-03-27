@@ -28,7 +28,7 @@ public class ChoiceNode extends Node {
     }
 
     @Override
-    public void executeNode(SystemState systemState) {
+    public void execute(SystemState systemState) {
         displayText();
 
         Output.printLine("Your choices are:");

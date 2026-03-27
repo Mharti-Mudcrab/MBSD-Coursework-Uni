@@ -6,36 +6,50 @@ public class Requirement {
 
     protected String item;
     protected int amount;
-    protected String operator;
+    protected String relationalOperator;
+    protected String booleanOperator;
 
     protected final String validOperators[] = {">=", "<=", "=", ">", "<",};
     
 
-    public Requirement(String item, int amount, String operator) {
+    public Requirement(String item, int amount, String operator, String booleanOperator) {
         this.item = item;
         this.amount = amount;
-        this.operator = operator;
+        this.relationalOperator = operator;
+        this.booleanOperator = booleanOperator;
+
     }
     
-    public Requirement(String requirementOperantString) {
-        this.operator = findOpperat(requirementOperantString);
-        String elements[] = requirementOperantString.split(operator);
+    public Requirement(String operantString, String booleanOperator) {
+        this.relationalOperator = findRelationalOpperat(operantString);
+        if (this.relationalOperator.isEmpty()) {
+            throw new IllegalStateException("Missing or wrong operand in operand string: \"" + operantString + "\"");
+        }
+        String elements[] = operantString.split(relationalOperator);
+        if (!findRelationalOpperat(elements[0].trim()).isEmpty() || elements[0].trim().contains(" ") ||
+            !findRelationalOpperat(elements[1].trim()).isEmpty() || elements[0].trim().contains(" ")   ) {
+            throw new IllegalStateException("Too many relational operands in operand string: \"" + operantString + "\"");      
+        } 
+        if (elements.length != 2) {
+            throw new IllegalStateException("Invalid operand string: \"" + operantString + "\"");
+        }
         this.item = elements[0].trim();
-        this.amount = Integer.parseInt(elements[1]);
+        this.amount = Integer.parseInt(elements[1].trim());
+        this.booleanOperator = booleanOperator;
     }
 
-    private String findOpperat(String requirementOperandString) {
+    private String findRelationalOpperat(String operantString) {
         for (String vo : validOperators) {
-            if (requirementOperandString.contains(vo)) {
+            if (operantString.contains(vo)) {
                 return vo;
             }
         }
-        throw new IllegalStateException("Invalid operant in operant string: " + requirementOperandString);
+        return "";
     }
 
     public boolean isSatisfied(SystemState systemState) {
         int currentAmount = systemState.getItemValue(item);
-        switch (operator) {
+        switch (relationalOperator) {
             case ">=":
                 return currentAmount >= amount;
             case "<=":
@@ -47,7 +61,7 @@ public class Requirement {
             case "<":
                 return currentAmount < amount;
             default:
-                throw new IllegalStateException("Invalid operator: " + operator);
+                throw new IllegalStateException("Invalid operator: " + relationalOperator);
         }
     }  
 }

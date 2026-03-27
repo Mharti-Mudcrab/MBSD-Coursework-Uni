@@ -17,11 +17,11 @@ public abstract class Node {
     }
 
     /**
-     * executeNode performs the notes anction and returs the next node to be 
+     * execute performs the notes anction and returs the next node to be 
      * executed in the story.
      * @return Node - Next story node
      */
-    public abstract void executeNode(SystemState systemState);
+    public abstract void execute(SystemState systemState);
 
     public void displayText() {
         if (displayText != null && !displayText.isEmpty()) {
@@ -48,7 +48,7 @@ public abstract class Node {
         return transition;
     }
 
-    public boolean resolveRefference(SystemState systemState) {
+    public boolean resolveTransitionNodeRefference(SystemState systemState) {
         if (transition != null) {
             if (transition.getNextNode() != null) {
                 return true;

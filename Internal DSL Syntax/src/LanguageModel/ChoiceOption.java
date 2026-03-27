@@ -28,7 +28,7 @@ public class ChoiceOption {
 
     public boolean hasViableTransition(SystemState systemState) {
         for (Transition transition : transitions) {
-            if (transition.satisfiesAllRequirements(systemState)) {
+            if (transition.satisfiesCondition(systemState)) {
                 return true;
             }
         }
@@ -38,7 +38,7 @@ public class ChoiceOption {
     public Transition getBestTransition(SystemState systemState) {
         Transition bestTransition = null;
         for (Transition transition : transitions) {
-            if (transition.satisfiesAllRequirements(systemState)) {
+            if (transition.satisfiesCondition(systemState)) {
                 if (bestTransition == null || transition.getPriority().value() > bestTransition.getPriority().value()) {
                     bestTransition = transition;
                 }

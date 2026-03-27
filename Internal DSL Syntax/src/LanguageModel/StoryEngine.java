@@ -16,14 +16,11 @@ public class StoryEngine {
     public void run() throws IllegalStateException{
         Output.printLine("Welcome to the magical story: " + state.getName() + "\n");
 
-        Node currentNode = state.getCurrentNode();
-        
-        while (currentNode != null) {
-            currentNode.executeNode(state);
-            currentNode = state.getCurrentNode();
+        while (state.isRunning()) {
+            state.getCurrentNode().execute(state);
         }
 
-        Output.printLine("Thanks for playing " + state.getName() + "!\n");
+        Output.printLine("\nThanks for playing " + state.getName() + "!\n");
     }
 
 }

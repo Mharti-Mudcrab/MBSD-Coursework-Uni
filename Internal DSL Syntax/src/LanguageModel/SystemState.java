@@ -10,17 +10,25 @@ public class SystemState {
     protected HashMap<String, Integer> items;
     protected HashMap<String, Node> nodes;
     protected String name;
+    protected Node startNode;
     protected Node currentNode;
     protected ChoiceOption currentOption;
 
-    public SystemState(String name) {
-        this.name = name;
+    public SystemState() {
         this.items = new HashMap<>();
         this.nodes = new HashMap<>();
     }
 
+    public boolean isRunning() {
+        return currentNode != null;
+    }
+
     public String getName() {
         return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public void addNode(String name, Node node) {
@@ -34,6 +42,10 @@ public class SystemState {
 
     public Node getCurrentNode() {
         return currentNode;
+    }
+
+    public void setStartNode(Node node) {
+        startNode = node;
     }
 
     public void setCurrentNode(Node node) {
@@ -82,5 +94,6 @@ public class SystemState {
         for (Node node : nodes.values()) {
             node.resolveTransitionNodeRefference(this);
         }
+        currentNode = startNode;
     }
 }

@@ -8,7 +8,7 @@ public class DialogueNode extends Node {
         super(name, displayText);
     }
     
-    public void executeNode(SystemState systemState) throws IllegalStateException {
+    public void execute(SystemState systemState) throws IllegalStateException {
         displayText();
 
         if (transition != null) {

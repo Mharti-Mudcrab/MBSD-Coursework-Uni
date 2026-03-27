@@ -6,7 +6,7 @@ public class StartNode extends Node {
     }
     
     @Override
-    public void executeNode(SystemState systemState) {
+    public void execute(SystemState systemState) {
         displayText();
 
         if (transition != null) {

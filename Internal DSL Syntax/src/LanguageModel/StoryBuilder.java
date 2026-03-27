@@ -15,18 +15,19 @@ public class StoryBuilder {
         return state;
     }
 
-    public StoryBuilder() {}
-
-    public StoryBuilder(String name) {
-        this.state = new SystemState(name);
+    public StoryBuilder() {
+        state = new SystemState();
     }
 
-    public static StoryBuilder Story(String name) {
-        return new StoryBuilder(name);
+    public StoryBuilder Story(String name) {
+        state.setName(name);
+        return this;
     }
 
     public StoryBuilder Start(String name, String displayText) {
-        state.addNode(name, new StartNode(name, displayText));
+        Node startNode = new StartNode(name, displayText);
+        state.setStartNode(startNode);
+        state.addNode(name, startNode);
         return this;
     }
 
@@ -71,6 +72,4 @@ public class StoryBuilder {
     public void resolveTransitionRefferences() {
         state.resolveTransitionRefferences();
     }
-
-
 }

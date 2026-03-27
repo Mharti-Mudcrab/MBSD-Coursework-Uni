@@ -26,7 +26,7 @@ public class SystemStateChangeNode extends Node {
     }
 
     @Override
-    public void executeNode(SystemState systemState) {
+    public void execute(SystemState systemState) {
         displayText();
 
         for (String item : stateChangeItems.keySet()) {

@@ -4,8 +4,8 @@ import LanguageModel.StoryEngine;
 import java.lang.IllegalStateException;
 
 
-public class main {
-    public static void main (String args[]) {
+public class Main {
+    public static void main(String args[]) {
         try {
             new StoryEngine(new ExampleStory()).run();
         }

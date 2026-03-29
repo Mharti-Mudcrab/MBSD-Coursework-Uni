@@ -60,10 +60,8 @@ public class Transition {
         
         boolean result = false;
         for (Boolean boo : orSequenze) {
-            System.out.print(boo + " ");
             result = result || boo;
         }
-        System.out.println();
         return result;
     }
 
@@ -85,13 +83,11 @@ public class Transition {
     }
 
     public void performTransition(SystemState systemState) {
-        for (Requirement requirement : requirements) {
-            if (!requirement.isSatisfied(systemState)) {
-                systemState.setCurrentNode(null);
-                return;
-            }
+        if (satisfiesCondition(systemState)) {
+            systemState.setCurrentNode(nextNode);  
+        } else {
+            throw new IllegalStateException("Transition failed to transition to node: " + nextNodeName);
         }
-        systemState.setCurrentNode(nextNode);  
     }
 
 }

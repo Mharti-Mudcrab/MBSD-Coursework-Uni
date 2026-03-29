@@ -25,7 +25,7 @@ public abstract class Node {
 
     public void displayText() {
         if (displayText != null && !displayText.isEmpty()) {
-            Output.printLine(displayText);
+            Output.printLine("\n" + displayText + "\n");
         }
     }
 

@@ -3,13 +3,11 @@ package LanguageModel;
 import java.lang.IllegalStateException;
 import Utils.Priority;
 
-public class StoryBuilder {
+public abstract class StoryBuilder {
 
     protected SystemState state;
 
-    public StoryBuilder build() throws IllegalStateException {
-        return this;
-    }
+    public abstract void build() throws IllegalStateException;
 
     public SystemState getState() {
         return state;

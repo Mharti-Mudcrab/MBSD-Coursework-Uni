@@ -1,0 +1,69 @@
+grammar net.seralyne.coursework.mdsd.ifictiondsl.Ifictiondsl with org.eclipse.xtext.common.Terminals
+
+generate ifictiondsl "http://www.seralyne.net/coursework/mdsd/ifictiondsl/Ifictiondsl"
+
+ 
+/*Model:
+	greetings+=Greeting*;
+	
+Greeting:
+	'Hello' name=ID '!';
+ */
+ 
+Story: 
+	'Story' name=ID
+	(nodes+=Node)*;
+	
+Node: 
+	StartNode | ChoiceNode | DialogueNode | SystemStateChangeNode | EndNode;
+
+
+
+ChoiceNode: 
+	'ChoiceNode' name=ID '{'
+		'choices' ':' '['
+			(options+=ChoiceOption (',' options+=ChoiceOption)*)?
+			']'
+		'}';
+		
+
+ChoiceOption:
+    'ChoiceOption' '{'
+        'displayText' ':' text=STRING ','
+        (transitions+=Transition (',' transitions+=Transition)*)
+    '}';
+
+Transition:
+	'->' destination=[Node]
+	('with' 'priority' priority=INT)?
+	('with' 'condition' ':' condition=Condition)?;
+
+
+StartNode: 
+		'StartNode' name=ID '{'
+		'displayText' ':' text=STRING ','
+		transition=Transition
+		'}';
+
+
+
+DialogueNode: 
+		'DialogueNode' name=ID '{'
+		'displayText' ':' text=STRING ','
+		transition=Transition
+		'}';
+
+Condition:
+	variable= ID operator=('='|'!='|'>'|'<') value=INT;
+	
+SystemStateChangeNode: 
+	'SystemStateChangeNode' name=ID '{'
+	'displayText' ':' text=STRING ','
+	variable=STRING operator=('+='|'-='|'=') value=INT ','
+	transition=Transition
+	'}';
+	
+EndNode:
+	'EndNode' name=ID '{'
+		'displayText' ':' text=STRING
+		'}';

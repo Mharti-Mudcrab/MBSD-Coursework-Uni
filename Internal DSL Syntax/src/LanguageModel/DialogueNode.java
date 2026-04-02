@@ -7,15 +7,15 @@ public class DialogueNode extends Node {
     }
 
     public DialogueNode(String name, String displayText) {
-        super(displayText);
+        super(name, displayText);
     }
 
     
-    public void executeNode() {
+    public void execute() {
         displayText();
 
         if (transition != null) {
-            transition.run();
+            transition.execute();
         }
     }
 

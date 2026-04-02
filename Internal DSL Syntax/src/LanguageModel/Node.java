@@ -2,12 +2,12 @@ package LanguageModel;
 
 public abstract class Node {
     public String name;
-    private String displayText;
-    private Transition transition;
+    String displayText;
+    Transition transition;
 
 
     public abstract void displayText();
-    public abstract void executeNode();
+    public abstract void execute();
 
     public void setTransition(Transition transition) {
         this.transition = transition;

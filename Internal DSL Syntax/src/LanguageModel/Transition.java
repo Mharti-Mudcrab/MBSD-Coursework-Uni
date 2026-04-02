@@ -2,11 +2,27 @@ package LanguageModel;
 
 public class Transition {
     
-    public Node nextNode;
+    public String nextNodeName;
+    public int priority;
     
 
-
-    public Transition() {
+    public void execute() {
+        if (nextNodeName != null) {
+            resolveNode(nextNodeName).execute();
+        }
     }
+
+
+    public Transition(String nextNodeName, int priority) {
+        this.nextNodeName = nextNodeName;
+        this.priority = priority;
+    }
+
+    private Node resolveNode(String nextNodeName) {
+        return SystemState.getSystemState().getNodeByName(nextNodeName);
+        
+    }
+
+    
     
 }

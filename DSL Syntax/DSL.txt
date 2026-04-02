@@ -1,5 +1,5 @@
 Story EnchantedForest
-StartNode start {     
+StartNode Start {     
     displayText: "You are in an enchanted forest. Magic fills the air and you feel enchanted\n\nYou see 2 roads to go down and some bushes around",
     -> roadChoice
 }
@@ -34,7 +34,7 @@ DialogueNode foundNothingDialogue {
 }
 
 DialogueNode road2Dialogue {
-    displayText: "You find an oppening in the forrest but wait! It is blocked by a magic Shield!", 
+    displayText: "You find an opening in the forest but wait! It is blocked by a magic Shield!", 
     -> shieldChoice
 }
 
@@ -49,8 +49,8 @@ ChoiceNode shieldChoice {
 }
 
 DialogueNode goThroughOpeningDialogueSuccess {
-    displayText: "You get through to the oppening", 
-    -> moreChoices...
+    displayText: "You get through to the opening", 
+    -> abruptBadEnd
 }
 
 DialogueNode goThroughOpeningDialogueFail {
@@ -59,12 +59,12 @@ DialogueNode goThroughOpeningDialogueFail {
 }
 
 DialogueNode road1DialogueNoTalisman {
-    displayText: "You encounter a suspisious looking old lady!\n\"Hello dear child\"\n\n\"Do you perhaps want to help an old lady through the forest?", 
+    displayText: "You encounter a suspicious looking old lady!\n\"Hello dear child\"\n\n\"Do you perhaps want to help an old lady through the forest?", 
     -> movePastWitchChoice
 }
 
 DialogueNode road1DialogueTalisman {
-    displayText: "You encounter a suspisious looking old lady!\n\"Hello dear child\"\n\n\"You see the witch for who she is", 
+    displayText: "You encounter a suspicious looking old lady!\n\"Hello dear child\"\n\n\"You see the witch for who she is", 
     -> movePastWitchChoice
 }
 
@@ -80,13 +80,13 @@ ChoiceNode movePastWitchChoice {
 
 DialogueNode walkPastWitch {
     displayText: "You catch a lurking eye from the old lady as you walk past", 
-    -> moreChoices...
+    -> abruptBadEnd
 }
 
 EndNode witchBadEnd {
     displayText: "The witch stabs you, mauls you and absolutely decimates you. You are dead, dead, dead. Any questions?" 
 }
 
-EndNode witchBadEnd {
-    displayText: "Opps... The story ended abruptly.. To be continued maybe?..." 
+EndNode abruptBadEnd {
+    displayText: "Oops... The story ended abruptly.. To be continued maybe?..." 
 }

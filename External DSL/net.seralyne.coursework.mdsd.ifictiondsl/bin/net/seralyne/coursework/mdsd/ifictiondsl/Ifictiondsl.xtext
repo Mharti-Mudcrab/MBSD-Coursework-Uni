@@ -53,17 +53,42 @@ DialogueNode:
 		transition=Transition
 		'}';
 
+
+//===================================================
+Condition: // entry
+	OrCondition;
+
+OrCondition returns Condition: // low priority
+	({Or.left=current} 'or' right=AndCondition)*;
+
+AndCondition returns Condition: // high priority
+	// Primary ({And.left=current} 'and' right=Primary)*;
+	({And.left=current} 'and' right=Primary)*;
+
+Primary returns Condition:
+	'(' Condition ')' | Comparison;
+
+Comparison:
+	(variable=ID operator=Operator value=INT);
+
+Operator: ('='|'!='|'>'|'<'|'>='|'<=');
+//===================================================
+
 Condition:
-	variable= ID operator=('='|'!='|'>'|'<') value=INT;
-	
+	(variable= ID Operator value=INT ('and'|'or' conditions+=Condition)*);
+
+
 SystemStateChangeNode: 
 	'SystemStateChangeNode' name=ID '{'
 	'displayText' ':' text=STRING ','
-	variable=STRING operator=('+='|'-='|'=') value=INT ','
+	StateUpdate(, StateUpdate)* ','
 	transition=Transition
 	'}';
 	
+StateUpdate:
+	(variable=String operator=('+='|'-='|'=') value=INT);
+
 EndNode:
 	'EndNode' name=ID '{'
 		'displayText' ':' text=STRING
-		'}';
+	'}';

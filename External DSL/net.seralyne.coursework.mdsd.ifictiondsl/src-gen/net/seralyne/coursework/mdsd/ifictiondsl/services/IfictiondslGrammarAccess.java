@@ -6,6 +6,7 @@ package net.seralyne.coursework.mdsd.ifictiondsl.services;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
+import org.eclipse.xtext.Action;
 import org.eclipse.xtext.Alternatives;
 import org.eclipse.xtext.Assignment;
 import org.eclipse.xtext.CrossReference;
@@ -459,54 +460,193 @@ public class IfictiondslGrammarAccess extends AbstractElementFinder.AbstractGram
 	}
 	public class ConditionElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "net.seralyne.coursework.mdsd.ifictiondsl.Ifictiondsl.Condition");
+		private final RuleCall cOrConditionParserRuleCall = (RuleCall)rule.eContents().get(1);
+		
+		////===================================================
+		//Condition: // entry
+		//    OrCondition;
+		@Override public ParserRule getRule() { return rule; }
+		
+		//// entry
+		//   OrCondition
+		public RuleCall getOrConditionParserRuleCall() { return cOrConditionParserRuleCall; }
+	}
+	public class OrConditionElements extends AbstractParserRuleElementFinder {
+		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "net.seralyne.coursework.mdsd.ifictiondsl.Ifictiondsl.OrCondition");
+		private final Group cGroup = (Group)rule.eContents().get(1);
+		private final RuleCall cAndConditionParserRuleCall_0 = (RuleCall)cGroup.eContents().get(0);
+		private final Group cGroup_1 = (Group)cGroup.eContents().get(1);
+		private final Action cOrLeftAction_1_0 = (Action)cGroup_1.eContents().get(0);
+		private final Keyword cOrKeyword_1_1 = (Keyword)cGroup_1.eContents().get(1);
+		private final Assignment cRightAssignment_1_2 = (Assignment)cGroup_1.eContents().get(2);
+		private final RuleCall cRightAndConditionParserRuleCall_1_2_0 = (RuleCall)cRightAssignment_1_2.eContents().get(0);
+		
+		//OrCondition returns Condition: // low priority
+		//    AndCondition ({Or.left=current} 'or' right=AndCondition)*;
+		@Override public ParserRule getRule() { return rule; }
+		
+		//// low priority
+		//   AndCondition ({Or.left=current} 'or' right=AndCondition)*
+		public Group getGroup() { return cGroup; }
+		
+		//// low priority
+		//   AndCondition
+		public RuleCall getAndConditionParserRuleCall_0() { return cAndConditionParserRuleCall_0; }
+		
+		//({Or.left=current} 'or' right=AndCondition)*
+		public Group getGroup_1() { return cGroup_1; }
+		
+		//{Or.left=current}
+		public Action getOrLeftAction_1_0() { return cOrLeftAction_1_0; }
+		
+		//'or'
+		public Keyword getOrKeyword_1_1() { return cOrKeyword_1_1; }
+		
+		//right=AndCondition
+		public Assignment getRightAssignment_1_2() { return cRightAssignment_1_2; }
+		
+		//AndCondition
+		public RuleCall getRightAndConditionParserRuleCall_1_2_0() { return cRightAndConditionParserRuleCall_1_2_0; }
+	}
+	public class AndConditionElements extends AbstractParserRuleElementFinder {
+		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "net.seralyne.coursework.mdsd.ifictiondsl.Ifictiondsl.AndCondition");
+		private final Group cGroup = (Group)rule.eContents().get(1);
+		private final RuleCall cPrimaryParserRuleCall_0 = (RuleCall)cGroup.eContents().get(0);
+		private final Group cGroup_1 = (Group)cGroup.eContents().get(1);
+		private final Action cAndLeftAction_1_0 = (Action)cGroup_1.eContents().get(0);
+		private final Keyword cAndKeyword_1_1 = (Keyword)cGroup_1.eContents().get(1);
+		private final Assignment cRightAssignment_1_2 = (Assignment)cGroup_1.eContents().get(2);
+		private final RuleCall cRightPrimaryParserRuleCall_1_2_0 = (RuleCall)cRightAssignment_1_2.eContents().get(0);
+		
+		//AndCondition returns Condition: // high priority
+		//    // Primary ({And.left=current} 'and' right=Primary)*;
+		//    Primary ({And.left=current} 'and' right=Primary)*;
+		@Override public ParserRule getRule() { return rule; }
+		
+		//// high priority
+		//   // Primary ({And.left=current} 'and' right=Primary)*;
+		//   Primary ({And.left=current} 'and' right=Primary)*
+		public Group getGroup() { return cGroup; }
+		
+		//// high priority
+		//   // Primary ({And.left=current} 'and' right=Primary)*;
+		//   Primary
+		public RuleCall getPrimaryParserRuleCall_0() { return cPrimaryParserRuleCall_0; }
+		
+		//({And.left=current} 'and' right=Primary)*
+		public Group getGroup_1() { return cGroup_1; }
+		
+		//{And.left=current}
+		public Action getAndLeftAction_1_0() { return cAndLeftAction_1_0; }
+		
+		//'and'
+		public Keyword getAndKeyword_1_1() { return cAndKeyword_1_1; }
+		
+		//right=Primary
+		public Assignment getRightAssignment_1_2() { return cRightAssignment_1_2; }
+		
+		//Primary
+		public RuleCall getRightPrimaryParserRuleCall_1_2_0() { return cRightPrimaryParserRuleCall_1_2_0; }
+	}
+	public class PrimaryElements extends AbstractParserRuleElementFinder {
+		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "net.seralyne.coursework.mdsd.ifictiondsl.Ifictiondsl.Primary");
+		private final Alternatives cAlternatives = (Alternatives)rule.eContents().get(1);
+		private final Group cGroup_0 = (Group)cAlternatives.eContents().get(0);
+		private final Keyword cLeftParenthesisKeyword_0_0 = (Keyword)cGroup_0.eContents().get(0);
+		private final RuleCall cConditionParserRuleCall_0_1 = (RuleCall)cGroup_0.eContents().get(1);
+		private final Keyword cRightParenthesisKeyword_0_2 = (Keyword)cGroup_0.eContents().get(2);
+		private final RuleCall cComparisonParserRuleCall_1 = (RuleCall)cAlternatives.eContents().get(1);
+		
+		//Primary returns Condition:
+		//    '(' Condition ')' | Comparison;
+		@Override public ParserRule getRule() { return rule; }
+		
+		//'(' Condition ')' | Comparison
+		public Alternatives getAlternatives() { return cAlternatives; }
+		
+		//'(' Condition ')'
+		public Group getGroup_0() { return cGroup_0; }
+		
+		//'('
+		public Keyword getLeftParenthesisKeyword_0_0() { return cLeftParenthesisKeyword_0_0; }
+		
+		//Condition
+		public RuleCall getConditionParserRuleCall_0_1() { return cConditionParserRuleCall_0_1; }
+		
+		//')'
+		public Keyword getRightParenthesisKeyword_0_2() { return cRightParenthesisKeyword_0_2; }
+		
+		//Comparison
+		public RuleCall getComparisonParserRuleCall_1() { return cComparisonParserRuleCall_1; }
+	}
+	public class ComparisonElements extends AbstractParserRuleElementFinder {
+		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "net.seralyne.coursework.mdsd.ifictiondsl.Ifictiondsl.Comparison");
 		private final Group cGroup = (Group)rule.eContents().get(1);
 		private final Assignment cVariableAssignment_0 = (Assignment)cGroup.eContents().get(0);
 		private final RuleCall cVariableIDTerminalRuleCall_0_0 = (RuleCall)cVariableAssignment_0.eContents().get(0);
 		private final Assignment cOperatorAssignment_1 = (Assignment)cGroup.eContents().get(1);
-		private final Alternatives cOperatorAlternatives_1_0 = (Alternatives)cOperatorAssignment_1.eContents().get(0);
-		private final Keyword cOperatorEqualsSignKeyword_1_0_0 = (Keyword)cOperatorAlternatives_1_0.eContents().get(0);
-		private final Keyword cOperatorExclamationMarkEqualsSignKeyword_1_0_1 = (Keyword)cOperatorAlternatives_1_0.eContents().get(1);
-		private final Keyword cOperatorGreaterThanSignKeyword_1_0_2 = (Keyword)cOperatorAlternatives_1_0.eContents().get(2);
-		private final Keyword cOperatorLessThanSignKeyword_1_0_3 = (Keyword)cOperatorAlternatives_1_0.eContents().get(3);
+		private final RuleCall cOperatorOperatorParserRuleCall_1_0 = (RuleCall)cOperatorAssignment_1.eContents().get(0);
 		private final Assignment cValueAssignment_2 = (Assignment)cGroup.eContents().get(2);
 		private final RuleCall cValueINTTerminalRuleCall_2_0 = (RuleCall)cValueAssignment_2.eContents().get(0);
 		
-		//Condition:
-		//    variable= ID operator=('='|'!='|'>'|'<') value=INT;
+		//Comparison:
+		//    (variable=ID operator=Operator value=INT);
 		@Override public ParserRule getRule() { return rule; }
 		
-		//variable= ID operator=('='|'!='|'>'|'<') value=INT
+		//(variable=ID operator=Operator value=INT)
 		public Group getGroup() { return cGroup; }
 		
-		//variable= ID
+		//variable=ID
 		public Assignment getVariableAssignment_0() { return cVariableAssignment_0; }
 		
 		//ID
 		public RuleCall getVariableIDTerminalRuleCall_0_0() { return cVariableIDTerminalRuleCall_0_0; }
 		
-		//operator=('='|'!='|'>'|'<')
+		//operator=Operator
 		public Assignment getOperatorAssignment_1() { return cOperatorAssignment_1; }
 		
-		//('='|'!='|'>'|'<')
-		public Alternatives getOperatorAlternatives_1_0() { return cOperatorAlternatives_1_0; }
-		
-		//'='
-		public Keyword getOperatorEqualsSignKeyword_1_0_0() { return cOperatorEqualsSignKeyword_1_0_0; }
-		
-		//'!='
-		public Keyword getOperatorExclamationMarkEqualsSignKeyword_1_0_1() { return cOperatorExclamationMarkEqualsSignKeyword_1_0_1; }
-		
-		//'>'
-		public Keyword getOperatorGreaterThanSignKeyword_1_0_2() { return cOperatorGreaterThanSignKeyword_1_0_2; }
-		
-		//'<'
-		public Keyword getOperatorLessThanSignKeyword_1_0_3() { return cOperatorLessThanSignKeyword_1_0_3; }
+		//Operator
+		public RuleCall getOperatorOperatorParserRuleCall_1_0() { return cOperatorOperatorParserRuleCall_1_0; }
 		
 		//value=INT
 		public Assignment getValueAssignment_2() { return cValueAssignment_2; }
 		
 		//INT
 		public RuleCall getValueINTTerminalRuleCall_2_0() { return cValueINTTerminalRuleCall_2_0; }
+	}
+	public class OperatorElements extends AbstractParserRuleElementFinder {
+		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "net.seralyne.coursework.mdsd.ifictiondsl.Ifictiondsl.Operator");
+		private final Alternatives cAlternatives = (Alternatives)rule.eContents().get(1);
+		private final Keyword cEqualsSignKeyword_0 = (Keyword)cAlternatives.eContents().get(0);
+		private final Keyword cExclamationMarkEqualsSignKeyword_1 = (Keyword)cAlternatives.eContents().get(1);
+		private final Keyword cGreaterThanSignKeyword_2 = (Keyword)cAlternatives.eContents().get(2);
+		private final Keyword cLessThanSignKeyword_3 = (Keyword)cAlternatives.eContents().get(3);
+		private final Keyword cGreaterThanSignEqualsSignKeyword_4 = (Keyword)cAlternatives.eContents().get(4);
+		private final Keyword cLessThanSignEqualsSignKeyword_5 = (Keyword)cAlternatives.eContents().get(5);
+		
+		//Operator: ('='|'!='|'>'|'<'|'>='|'<=');
+		@Override public ParserRule getRule() { return rule; }
+		
+		//('='|'!='|'>'|'<'|'>='|'<=')
+		public Alternatives getAlternatives() { return cAlternatives; }
+		
+		//'='
+		public Keyword getEqualsSignKeyword_0() { return cEqualsSignKeyword_0; }
+		
+		//'!='
+		public Keyword getExclamationMarkEqualsSignKeyword_1() { return cExclamationMarkEqualsSignKeyword_1; }
+		
+		//'>'
+		public Keyword getGreaterThanSignKeyword_2() { return cGreaterThanSignKeyword_2; }
+		
+		//'<'
+		public Keyword getLessThanSignKeyword_3() { return cLessThanSignKeyword_3; }
+		
+		//'>='
+		public Keyword getGreaterThanSignEqualsSignKeyword_4() { return cGreaterThanSignEqualsSignKeyword_4; }
+		
+		//'<='
+		public Keyword getLessThanSignEqualsSignKeyword_5() { return cLessThanSignEqualsSignKeyword_5; }
 	}
 	public class SystemStateChangeNodeElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "net.seralyne.coursework.mdsd.ifictiondsl.Ifictiondsl.SystemStateChangeNode");
@@ -520,31 +660,30 @@ public class IfictiondslGrammarAccess extends AbstractElementFinder.AbstractGram
 		private final Assignment cTextAssignment_5 = (Assignment)cGroup.eContents().get(5);
 		private final RuleCall cTextSTRINGTerminalRuleCall_5_0 = (RuleCall)cTextAssignment_5.eContents().get(0);
 		private final Keyword cCommaKeyword_6 = (Keyword)cGroup.eContents().get(6);
-		private final Assignment cVariableAssignment_7 = (Assignment)cGroup.eContents().get(7);
-		private final RuleCall cVariableSTRINGTerminalRuleCall_7_0 = (RuleCall)cVariableAssignment_7.eContents().get(0);
-		private final Assignment cOperatorAssignment_8 = (Assignment)cGroup.eContents().get(8);
-		private final Alternatives cOperatorAlternatives_8_0 = (Alternatives)cOperatorAssignment_8.eContents().get(0);
-		private final Keyword cOperatorPlusSignEqualsSignKeyword_8_0_0 = (Keyword)cOperatorAlternatives_8_0.eContents().get(0);
-		private final Keyword cOperatorHyphenMinusEqualsSignKeyword_8_0_1 = (Keyword)cOperatorAlternatives_8_0.eContents().get(1);
-		private final Keyword cOperatorEqualsSignKeyword_8_0_2 = (Keyword)cOperatorAlternatives_8_0.eContents().get(2);
-		private final Assignment cValueAssignment_9 = (Assignment)cGroup.eContents().get(9);
-		private final RuleCall cValueINTTerminalRuleCall_9_0 = (RuleCall)cValueAssignment_9.eContents().get(0);
-		private final Keyword cCommaKeyword_10 = (Keyword)cGroup.eContents().get(10);
-		private final Assignment cTransitionAssignment_11 = (Assignment)cGroup.eContents().get(11);
-		private final RuleCall cTransitionTransitionParserRuleCall_11_0 = (RuleCall)cTransitionAssignment_11.eContents().get(0);
-		private final Keyword cRightCurlyBracketKeyword_12 = (Keyword)cGroup.eContents().get(12);
+		private final Assignment cStateUpdatesAssignment_7 = (Assignment)cGroup.eContents().get(7);
+		private final RuleCall cStateUpdatesStateUpdateParserRuleCall_7_0 = (RuleCall)cStateUpdatesAssignment_7.eContents().get(0);
+		private final Group cGroup_8 = (Group)cGroup.eContents().get(8);
+		private final Keyword cCommaKeyword_8_0 = (Keyword)cGroup_8.eContents().get(0);
+		private final Assignment cStateUpdatesAssignment_8_1 = (Assignment)cGroup_8.eContents().get(1);
+		private final RuleCall cStateUpdatesStateUpdateParserRuleCall_8_1_0 = (RuleCall)cStateUpdatesAssignment_8_1.eContents().get(0);
+		private final Assignment cTransitionAssignment_9 = (Assignment)cGroup.eContents().get(9);
+		private final RuleCall cTransitionTransitionParserRuleCall_9_0 = (RuleCall)cTransitionAssignment_9.eContents().get(0);
+		private final Keyword cRightCurlyBracketKeyword_10 = (Keyword)cGroup.eContents().get(10);
 		
+		////===================================================
+		////Condition:
+		//    //(variable= ID Operator value=INT ('and'|'or' conditions+=Condition)*);
 		//SystemStateChangeNode:
 		//    'SystemStateChangeNode' name=ID '{'
 		//    'displayText' ':' text=STRING ','
-		//    variable=STRING operator=('+='|'-='|'=') value=INT ','
+		//    stateUpdates+=StateUpdate(',' stateUpdates+=StateUpdate)*
 		//    transition=Transition
 		//    '}';
 		@Override public ParserRule getRule() { return rule; }
 		
 		//'SystemStateChangeNode' name=ID '{'
 		//'displayText' ':' text=STRING ','
-		//variable=STRING operator=('+='|'-='|'=') value=INT ','
+		//stateUpdates+=StateUpdate(',' stateUpdates+=StateUpdate)*
 		//transition=Transition
 		//'}'
 		public Group getGroup() { return cGroup; }
@@ -576,44 +715,79 @@ public class IfictiondslGrammarAccess extends AbstractElementFinder.AbstractGram
 		//','
 		public Keyword getCommaKeyword_6() { return cCommaKeyword_6; }
 		
-		//variable=STRING
-		public Assignment getVariableAssignment_7() { return cVariableAssignment_7; }
+		//stateUpdates+=StateUpdate
+		public Assignment getStateUpdatesAssignment_7() { return cStateUpdatesAssignment_7; }
 		
-		//STRING
-		public RuleCall getVariableSTRINGTerminalRuleCall_7_0() { return cVariableSTRINGTerminalRuleCall_7_0; }
+		//StateUpdate
+		public RuleCall getStateUpdatesStateUpdateParserRuleCall_7_0() { return cStateUpdatesStateUpdateParserRuleCall_7_0; }
 		
-		//operator=('+='|'-='|'=')
-		public Assignment getOperatorAssignment_8() { return cOperatorAssignment_8; }
-		
-		//('+='|'-='|'=')
-		public Alternatives getOperatorAlternatives_8_0() { return cOperatorAlternatives_8_0; }
-		
-		//'+='
-		public Keyword getOperatorPlusSignEqualsSignKeyword_8_0_0() { return cOperatorPlusSignEqualsSignKeyword_8_0_0; }
-		
-		//'-='
-		public Keyword getOperatorHyphenMinusEqualsSignKeyword_8_0_1() { return cOperatorHyphenMinusEqualsSignKeyword_8_0_1; }
-		
-		//'='
-		public Keyword getOperatorEqualsSignKeyword_8_0_2() { return cOperatorEqualsSignKeyword_8_0_2; }
-		
-		//value=INT
-		public Assignment getValueAssignment_9() { return cValueAssignment_9; }
-		
-		//INT
-		public RuleCall getValueINTTerminalRuleCall_9_0() { return cValueINTTerminalRuleCall_9_0; }
+		//(',' stateUpdates+=StateUpdate)*
+		public Group getGroup_8() { return cGroup_8; }
 		
 		//','
-		public Keyword getCommaKeyword_10() { return cCommaKeyword_10; }
+		public Keyword getCommaKeyword_8_0() { return cCommaKeyword_8_0; }
+		
+		//stateUpdates+=StateUpdate
+		public Assignment getStateUpdatesAssignment_8_1() { return cStateUpdatesAssignment_8_1; }
+		
+		//StateUpdate
+		public RuleCall getStateUpdatesStateUpdateParserRuleCall_8_1_0() { return cStateUpdatesStateUpdateParserRuleCall_8_1_0; }
 		
 		//transition=Transition
-		public Assignment getTransitionAssignment_11() { return cTransitionAssignment_11; }
+		public Assignment getTransitionAssignment_9() { return cTransitionAssignment_9; }
 		
 		//Transition
-		public RuleCall getTransitionTransitionParserRuleCall_11_0() { return cTransitionTransitionParserRuleCall_11_0; }
+		public RuleCall getTransitionTransitionParserRuleCall_9_0() { return cTransitionTransitionParserRuleCall_9_0; }
 		
 		//'}'
-		public Keyword getRightCurlyBracketKeyword_12() { return cRightCurlyBracketKeyword_12; }
+		public Keyword getRightCurlyBracketKeyword_10() { return cRightCurlyBracketKeyword_10; }
+	}
+	public class StateUpdateElements extends AbstractParserRuleElementFinder {
+		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "net.seralyne.coursework.mdsd.ifictiondsl.Ifictiondsl.StateUpdate");
+		private final Group cGroup = (Group)rule.eContents().get(1);
+		private final Assignment cVariableAssignment_0 = (Assignment)cGroup.eContents().get(0);
+		private final RuleCall cVariableSTRINGTerminalRuleCall_0_0 = (RuleCall)cVariableAssignment_0.eContents().get(0);
+		private final Assignment cOperatorAssignment_1 = (Assignment)cGroup.eContents().get(1);
+		private final Alternatives cOperatorAlternatives_1_0 = (Alternatives)cOperatorAssignment_1.eContents().get(0);
+		private final Keyword cOperatorPlusSignEqualsSignKeyword_1_0_0 = (Keyword)cOperatorAlternatives_1_0.eContents().get(0);
+		private final Keyword cOperatorHyphenMinusEqualsSignKeyword_1_0_1 = (Keyword)cOperatorAlternatives_1_0.eContents().get(1);
+		private final Keyword cOperatorEqualsSignKeyword_1_0_2 = (Keyword)cOperatorAlternatives_1_0.eContents().get(2);
+		private final Assignment cValueAssignment_2 = (Assignment)cGroup.eContents().get(2);
+		private final RuleCall cValueINTTerminalRuleCall_2_0 = (RuleCall)cValueAssignment_2.eContents().get(0);
+		
+		//StateUpdate:
+		//    (variable=STRING operator=('+='|'-='|'=') value=INT);
+		@Override public ParserRule getRule() { return rule; }
+		
+		//(variable=STRING operator=('+='|'-='|'=') value=INT)
+		public Group getGroup() { return cGroup; }
+		
+		//variable=STRING
+		public Assignment getVariableAssignment_0() { return cVariableAssignment_0; }
+		
+		//STRING
+		public RuleCall getVariableSTRINGTerminalRuleCall_0_0() { return cVariableSTRINGTerminalRuleCall_0_0; }
+		
+		//operator=('+='|'-='|'=')
+		public Assignment getOperatorAssignment_1() { return cOperatorAssignment_1; }
+		
+		//('+='|'-='|'=')
+		public Alternatives getOperatorAlternatives_1_0() { return cOperatorAlternatives_1_0; }
+		
+		//'+='
+		public Keyword getOperatorPlusSignEqualsSignKeyword_1_0_0() { return cOperatorPlusSignEqualsSignKeyword_1_0_0; }
+		
+		//'-='
+		public Keyword getOperatorHyphenMinusEqualsSignKeyword_1_0_1() { return cOperatorHyphenMinusEqualsSignKeyword_1_0_1; }
+		
+		//'='
+		public Keyword getOperatorEqualsSignKeyword_1_0_2() { return cOperatorEqualsSignKeyword_1_0_2; }
+		
+		//value=INT
+		public Assignment getValueAssignment_2() { return cValueAssignment_2; }
+		
+		//INT
+		public RuleCall getValueINTTerminalRuleCall_2_0() { return cValueINTTerminalRuleCall_2_0; }
 	}
 	public class EndNodeElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "net.seralyne.coursework.mdsd.ifictiondsl.Ifictiondsl.EndNode");
@@ -631,12 +805,12 @@ public class IfictiondslGrammarAccess extends AbstractElementFinder.AbstractGram
 		//EndNode:
 		//    'EndNode' name=ID '{'
 		//        'displayText' ':' text=STRING
-		//        '}';
+		//    '}';
 		@Override public ParserRule getRule() { return rule; }
 		
 		//'EndNode' name=ID '{'
 		//    'displayText' ':' text=STRING
-		//    '}'
+		//'}'
 		public Group getGroup() { return cGroup; }
 		
 		//'EndNode'
@@ -676,7 +850,13 @@ public class IfictiondslGrammarAccess extends AbstractElementFinder.AbstractGram
 	private final StartNodeElements pStartNode;
 	private final DialogueNodeElements pDialogueNode;
 	private final ConditionElements pCondition;
+	private final OrConditionElements pOrCondition;
+	private final AndConditionElements pAndCondition;
+	private final PrimaryElements pPrimary;
+	private final ComparisonElements pComparison;
+	private final OperatorElements pOperator;
 	private final SystemStateChangeNodeElements pSystemStateChangeNode;
+	private final StateUpdateElements pStateUpdate;
 	private final EndNodeElements pEndNode;
 	
 	private final Grammar grammar;
@@ -696,7 +876,13 @@ public class IfictiondslGrammarAccess extends AbstractElementFinder.AbstractGram
 		this.pStartNode = new StartNodeElements();
 		this.pDialogueNode = new DialogueNodeElements();
 		this.pCondition = new ConditionElements();
+		this.pOrCondition = new OrConditionElements();
+		this.pAndCondition = new AndConditionElements();
+		this.pPrimary = new PrimaryElements();
+		this.pComparison = new ComparisonElements();
+		this.pOperator = new OperatorElements();
 		this.pSystemStateChangeNode = new SystemStateChangeNodeElements();
+		this.pStateUpdate = new StateUpdateElements();
 		this.pEndNode = new EndNodeElements();
 	}
 	
@@ -818,8 +1004,9 @@ public class IfictiondslGrammarAccess extends AbstractElementFinder.AbstractGram
 		return getDialogueNodeAccess().getRule();
 	}
 	
-	//Condition:
-	//    variable= ID operator=('='|'!='|'>'|'<') value=INT;
+	////===================================================
+	//Condition: // entry
+	//    OrCondition;
 	public ConditionElements getConditionAccess() {
 		return pCondition;
 	}
@@ -828,10 +1015,63 @@ public class IfictiondslGrammarAccess extends AbstractElementFinder.AbstractGram
 		return getConditionAccess().getRule();
 	}
 	
+	//OrCondition returns Condition: // low priority
+	//    AndCondition ({Or.left=current} 'or' right=AndCondition)*;
+	public OrConditionElements getOrConditionAccess() {
+		return pOrCondition;
+	}
+	
+	public ParserRule getOrConditionRule() {
+		return getOrConditionAccess().getRule();
+	}
+	
+	//AndCondition returns Condition: // high priority
+	//    // Primary ({And.left=current} 'and' right=Primary)*;
+	//    Primary ({And.left=current} 'and' right=Primary)*;
+	public AndConditionElements getAndConditionAccess() {
+		return pAndCondition;
+	}
+	
+	public ParserRule getAndConditionRule() {
+		return getAndConditionAccess().getRule();
+	}
+	
+	//Primary returns Condition:
+	//    '(' Condition ')' | Comparison;
+	public PrimaryElements getPrimaryAccess() {
+		return pPrimary;
+	}
+	
+	public ParserRule getPrimaryRule() {
+		return getPrimaryAccess().getRule();
+	}
+	
+	//Comparison:
+	//    (variable=ID operator=Operator value=INT);
+	public ComparisonElements getComparisonAccess() {
+		return pComparison;
+	}
+	
+	public ParserRule getComparisonRule() {
+		return getComparisonAccess().getRule();
+	}
+	
+	//Operator: ('='|'!='|'>'|'<'|'>='|'<=');
+	public OperatorElements getOperatorAccess() {
+		return pOperator;
+	}
+	
+	public ParserRule getOperatorRule() {
+		return getOperatorAccess().getRule();
+	}
+	
+	////===================================================
+	////Condition:
+	//    //(variable= ID Operator value=INT ('and'|'or' conditions+=Condition)*);
 	//SystemStateChangeNode:
 	//    'SystemStateChangeNode' name=ID '{'
 	//    'displayText' ':' text=STRING ','
-	//    variable=STRING operator=('+='|'-='|'=') value=INT ','
+	//    stateUpdates+=StateUpdate(',' stateUpdates+=StateUpdate)*
 	//    transition=Transition
 	//    '}';
 	public SystemStateChangeNodeElements getSystemStateChangeNodeAccess() {
@@ -842,10 +1082,20 @@ public class IfictiondslGrammarAccess extends AbstractElementFinder.AbstractGram
 		return getSystemStateChangeNodeAccess().getRule();
 	}
 	
+	//StateUpdate:
+	//    (variable=STRING operator=('+='|'-='|'=') value=INT);
+	public StateUpdateElements getStateUpdateAccess() {
+		return pStateUpdate;
+	}
+	
+	public ParserRule getStateUpdateRule() {
+		return getStateUpdateAccess().getRule();
+	}
+	
 	//EndNode:
 	//    'EndNode' name=ID '{'
 	//        'displayText' ':' text=STRING
-	//        '}';
+	//    '}';
 	public EndNodeElements getEndNodeAccess() {
 		return pEndNode;
 	}

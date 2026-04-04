@@ -22,4 +22,4 @@ class IfictiondslGenerator extends AbstractGenerator {
 //				.map[name]
 //				.join(', '))
 	}
-}
+} 

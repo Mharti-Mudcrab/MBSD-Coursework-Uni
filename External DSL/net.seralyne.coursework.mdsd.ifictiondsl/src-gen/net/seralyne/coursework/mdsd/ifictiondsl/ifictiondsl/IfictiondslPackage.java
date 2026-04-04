@@ -345,13 +345,32 @@ public interface IfictiondslPackage extends EPackage
   int CONDITION = 7;
 
   /**
+   * The number of structural features of the '<em>Condition</em>' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int CONDITION_FEATURE_COUNT = 0;
+
+  /**
+   * The meta object id for the '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.impl.ComparisonImpl <em>Comparison</em>}' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.impl.ComparisonImpl
+   * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.impl.IfictiondslPackageImpl#getComparison()
+   * @generated
+   */
+  int COMPARISON = 8;
+
+  /**
    * The feature id for the '<em><b>Variable</b></em>' attribute.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
    * @generated
    * @ordered
    */
-  int CONDITION__VARIABLE = 0;
+  int COMPARISON__VARIABLE = CONDITION_FEATURE_COUNT + 0;
 
   /**
    * The feature id for the '<em><b>Operator</b></em>' attribute.
@@ -360,7 +379,7 @@ public interface IfictiondslPackage extends EPackage
    * @generated
    * @ordered
    */
-  int CONDITION__OPERATOR = 1;
+  int COMPARISON__OPERATOR = CONDITION_FEATURE_COUNT + 1;
 
   /**
    * The feature id for the '<em><b>Value</b></em>' attribute.
@@ -369,16 +388,16 @@ public interface IfictiondslPackage extends EPackage
    * @generated
    * @ordered
    */
-  int CONDITION__VALUE = 2;
+  int COMPARISON__VALUE = CONDITION_FEATURE_COUNT + 2;
 
   /**
-   * The number of structural features of the '<em>Condition</em>' class.
+   * The number of structural features of the '<em>Comparison</em>' class.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
    * @generated
    * @ordered
    */
-  int CONDITION_FEATURE_COUNT = 3;
+  int COMPARISON_FEATURE_COUNT = CONDITION_FEATURE_COUNT + 3;
 
   /**
    * The meta object id for the '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.impl.SystemStateChangeNodeImpl <em>System State Change Node</em>}' class.
@@ -388,7 +407,7 @@ public interface IfictiondslPackage extends EPackage
    * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.impl.IfictiondslPackageImpl#getSystemStateChangeNode()
    * @generated
    */
-  int SYSTEM_STATE_CHANGE_NODE = 8;
+  int SYSTEM_STATE_CHANGE_NODE = 9;
 
   /**
    * The feature id for the '<em><b>Name</b></em>' attribute.
@@ -409,31 +428,13 @@ public interface IfictiondslPackage extends EPackage
   int SYSTEM_STATE_CHANGE_NODE__TEXT = NODE_FEATURE_COUNT + 0;
 
   /**
-   * The feature id for the '<em><b>Variable</b></em>' attribute.
+   * The feature id for the '<em><b>State Updates</b></em>' containment reference list.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
    * @generated
    * @ordered
    */
-  int SYSTEM_STATE_CHANGE_NODE__VARIABLE = NODE_FEATURE_COUNT + 1;
-
-  /**
-   * The feature id for the '<em><b>Operator</b></em>' attribute.
-   * <!-- begin-user-doc -->
-   * <!-- end-user-doc -->
-   * @generated
-   * @ordered
-   */
-  int SYSTEM_STATE_CHANGE_NODE__OPERATOR = NODE_FEATURE_COUNT + 2;
-
-  /**
-   * The feature id for the '<em><b>Value</b></em>' attribute.
-   * <!-- begin-user-doc -->
-   * <!-- end-user-doc -->
-   * @generated
-   * @ordered
-   */
-  int SYSTEM_STATE_CHANGE_NODE__VALUE = NODE_FEATURE_COUNT + 3;
+  int SYSTEM_STATE_CHANGE_NODE__STATE_UPDATES = NODE_FEATURE_COUNT + 1;
 
   /**
    * The feature id for the '<em><b>Transition</b></em>' containment reference.
@@ -442,7 +443,7 @@ public interface IfictiondslPackage extends EPackage
    * @generated
    * @ordered
    */
-  int SYSTEM_STATE_CHANGE_NODE__TRANSITION = NODE_FEATURE_COUNT + 4;
+  int SYSTEM_STATE_CHANGE_NODE__TRANSITION = NODE_FEATURE_COUNT + 2;
 
   /**
    * The number of structural features of the '<em>System State Change Node</em>' class.
@@ -451,7 +452,53 @@ public interface IfictiondslPackage extends EPackage
    * @generated
    * @ordered
    */
-  int SYSTEM_STATE_CHANGE_NODE_FEATURE_COUNT = NODE_FEATURE_COUNT + 5;
+  int SYSTEM_STATE_CHANGE_NODE_FEATURE_COUNT = NODE_FEATURE_COUNT + 3;
+
+  /**
+   * The meta object id for the '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.impl.StateUpdateImpl <em>State Update</em>}' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.impl.StateUpdateImpl
+   * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.impl.IfictiondslPackageImpl#getStateUpdate()
+   * @generated
+   */
+  int STATE_UPDATE = 10;
+
+  /**
+   * The feature id for the '<em><b>Variable</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int STATE_UPDATE__VARIABLE = 0;
+
+  /**
+   * The feature id for the '<em><b>Operator</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int STATE_UPDATE__OPERATOR = 1;
+
+  /**
+   * The feature id for the '<em><b>Value</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int STATE_UPDATE__VALUE = 2;
+
+  /**
+   * The number of structural features of the '<em>State Update</em>' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int STATE_UPDATE_FEATURE_COUNT = 3;
 
   /**
    * The meta object id for the '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.impl.EndNodeImpl <em>End Node</em>}' class.
@@ -461,7 +508,7 @@ public interface IfictiondslPackage extends EPackage
    * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.impl.IfictiondslPackageImpl#getEndNode()
    * @generated
    */
-  int END_NODE = 9;
+  int END_NODE = 11;
 
   /**
    * The feature id for the '<em><b>Name</b></em>' attribute.
@@ -489,6 +536,80 @@ public interface IfictiondslPackage extends EPackage
    * @ordered
    */
   int END_NODE_FEATURE_COUNT = NODE_FEATURE_COUNT + 1;
+
+  /**
+   * The meta object id for the '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.impl.OrImpl <em>Or</em>}' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.impl.OrImpl
+   * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.impl.IfictiondslPackageImpl#getOr()
+   * @generated
+   */
+  int OR = 12;
+
+  /**
+   * The feature id for the '<em><b>Left</b></em>' containment reference.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int OR__LEFT = CONDITION_FEATURE_COUNT + 0;
+
+  /**
+   * The feature id for the '<em><b>Right</b></em>' containment reference.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int OR__RIGHT = CONDITION_FEATURE_COUNT + 1;
+
+  /**
+   * The number of structural features of the '<em>Or</em>' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int OR_FEATURE_COUNT = CONDITION_FEATURE_COUNT + 2;
+
+  /**
+   * The meta object id for the '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.impl.AndImpl <em>And</em>}' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.impl.AndImpl
+   * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.impl.IfictiondslPackageImpl#getAnd()
+   * @generated
+   */
+  int AND = 13;
+
+  /**
+   * The feature id for the '<em><b>Left</b></em>' containment reference.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int AND__LEFT = CONDITION_FEATURE_COUNT + 0;
+
+  /**
+   * The feature id for the '<em><b>Right</b></em>' containment reference.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int AND__RIGHT = CONDITION_FEATURE_COUNT + 1;
+
+  /**
+   * The number of structural features of the '<em>And</em>' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int AND_FEATURE_COUNT = CONDITION_FEATURE_COUNT + 2;
 
 
   /**
@@ -715,37 +836,47 @@ public interface IfictiondslPackage extends EPackage
   EClass getCondition();
 
   /**
-   * Returns the meta object for the attribute '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.Condition#getVariable <em>Variable</em>}'.
+   * Returns the meta object for class '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.Comparison <em>Comparison</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for class '<em>Comparison</em>'.
+   * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.Comparison
+   * @generated
+   */
+  EClass getComparison();
+
+  /**
+   * Returns the meta object for the attribute '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.Comparison#getVariable <em>Variable</em>}'.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
    * @return the meta object for the attribute '<em>Variable</em>'.
-   * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.Condition#getVariable()
-   * @see #getCondition()
+   * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.Comparison#getVariable()
+   * @see #getComparison()
    * @generated
    */
-  EAttribute getCondition_Variable();
+  EAttribute getComparison_Variable();
 
   /**
-   * Returns the meta object for the attribute '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.Condition#getOperator <em>Operator</em>}'.
+   * Returns the meta object for the attribute '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.Comparison#getOperator <em>Operator</em>}'.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
    * @return the meta object for the attribute '<em>Operator</em>'.
-   * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.Condition#getOperator()
-   * @see #getCondition()
+   * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.Comparison#getOperator()
+   * @see #getComparison()
    * @generated
    */
-  EAttribute getCondition_Operator();
+  EAttribute getComparison_Operator();
 
   /**
-   * Returns the meta object for the attribute '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.Condition#getValue <em>Value</em>}'.
+   * Returns the meta object for the attribute '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.Comparison#getValue <em>Value</em>}'.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
    * @return the meta object for the attribute '<em>Value</em>'.
-   * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.Condition#getValue()
-   * @see #getCondition()
+   * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.Comparison#getValue()
+   * @see #getComparison()
    * @generated
    */
-  EAttribute getCondition_Value();
+  EAttribute getComparison_Value();
 
   /**
    * Returns the meta object for class '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.SystemStateChangeNode <em>System State Change Node</em>}'.
@@ -769,37 +900,15 @@ public interface IfictiondslPackage extends EPackage
   EAttribute getSystemStateChangeNode_Text();
 
   /**
-   * Returns the meta object for the attribute '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.SystemStateChangeNode#getVariable <em>Variable</em>}'.
+   * Returns the meta object for the containment reference list '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.SystemStateChangeNode#getStateUpdates <em>State Updates</em>}'.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
-   * @return the meta object for the attribute '<em>Variable</em>'.
-   * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.SystemStateChangeNode#getVariable()
+   * @return the meta object for the containment reference list '<em>State Updates</em>'.
+   * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.SystemStateChangeNode#getStateUpdates()
    * @see #getSystemStateChangeNode()
    * @generated
    */
-  EAttribute getSystemStateChangeNode_Variable();
-
-  /**
-   * Returns the meta object for the attribute '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.SystemStateChangeNode#getOperator <em>Operator</em>}'.
-   * <!-- begin-user-doc -->
-   * <!-- end-user-doc -->
-   * @return the meta object for the attribute '<em>Operator</em>'.
-   * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.SystemStateChangeNode#getOperator()
-   * @see #getSystemStateChangeNode()
-   * @generated
-   */
-  EAttribute getSystemStateChangeNode_Operator();
-
-  /**
-   * Returns the meta object for the attribute '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.SystemStateChangeNode#getValue <em>Value</em>}'.
-   * <!-- begin-user-doc -->
-   * <!-- end-user-doc -->
-   * @return the meta object for the attribute '<em>Value</em>'.
-   * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.SystemStateChangeNode#getValue()
-   * @see #getSystemStateChangeNode()
-   * @generated
-   */
-  EAttribute getSystemStateChangeNode_Value();
+  EReference getSystemStateChangeNode_StateUpdates();
 
   /**
    * Returns the meta object for the containment reference '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.SystemStateChangeNode#getTransition <em>Transition</em>}'.
@@ -811,6 +920,49 @@ public interface IfictiondslPackage extends EPackage
    * @generated
    */
   EReference getSystemStateChangeNode_Transition();
+
+  /**
+   * Returns the meta object for class '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.StateUpdate <em>State Update</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for class '<em>State Update</em>'.
+   * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.StateUpdate
+   * @generated
+   */
+  EClass getStateUpdate();
+
+  /**
+   * Returns the meta object for the attribute '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.StateUpdate#getVariable <em>Variable</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>Variable</em>'.
+   * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.StateUpdate#getVariable()
+   * @see #getStateUpdate()
+   * @generated
+   */
+  EAttribute getStateUpdate_Variable();
+
+  /**
+   * Returns the meta object for the attribute '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.StateUpdate#getOperator <em>Operator</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>Operator</em>'.
+   * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.StateUpdate#getOperator()
+   * @see #getStateUpdate()
+   * @generated
+   */
+  EAttribute getStateUpdate_Operator();
+
+  /**
+   * Returns the meta object for the attribute '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.StateUpdate#getValue <em>Value</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>Value</em>'.
+   * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.StateUpdate#getValue()
+   * @see #getStateUpdate()
+   * @generated
+   */
+  EAttribute getStateUpdate_Value();
 
   /**
    * Returns the meta object for class '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.EndNode <em>End Node</em>}'.
@@ -832,6 +984,70 @@ public interface IfictiondslPackage extends EPackage
    * @generated
    */
   EAttribute getEndNode_Text();
+
+  /**
+   * Returns the meta object for class '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.Or <em>Or</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for class '<em>Or</em>'.
+   * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.Or
+   * @generated
+   */
+  EClass getOr();
+
+  /**
+   * Returns the meta object for the containment reference '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.Or#getLeft <em>Left</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the containment reference '<em>Left</em>'.
+   * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.Or#getLeft()
+   * @see #getOr()
+   * @generated
+   */
+  EReference getOr_Left();
+
+  /**
+   * Returns the meta object for the containment reference '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.Or#getRight <em>Right</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the containment reference '<em>Right</em>'.
+   * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.Or#getRight()
+   * @see #getOr()
+   * @generated
+   */
+  EReference getOr_Right();
+
+  /**
+   * Returns the meta object for class '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.And <em>And</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for class '<em>And</em>'.
+   * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.And
+   * @generated
+   */
+  EClass getAnd();
+
+  /**
+   * Returns the meta object for the containment reference '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.And#getLeft <em>Left</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the containment reference '<em>Left</em>'.
+   * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.And#getLeft()
+   * @see #getAnd()
+   * @generated
+   */
+  EReference getAnd_Left();
+
+  /**
+   * Returns the meta object for the containment reference '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.And#getRight <em>Right</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the containment reference '<em>Right</em>'.
+   * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.And#getRight()
+   * @see #getAnd()
+   * @generated
+   */
+  EReference getAnd_Right();
 
   /**
    * Returns the factory that creates the instances of the model.
@@ -1041,12 +1257,22 @@ public interface IfictiondslPackage extends EPackage
     EClass CONDITION = eINSTANCE.getCondition();
 
     /**
+     * The meta object literal for the '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.impl.ComparisonImpl <em>Comparison</em>}' class.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.impl.ComparisonImpl
+     * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.impl.IfictiondslPackageImpl#getComparison()
+     * @generated
+     */
+    EClass COMPARISON = eINSTANCE.getComparison();
+
+    /**
      * The meta object literal for the '<em><b>Variable</b></em>' attribute feature.
      * <!-- begin-user-doc -->
      * <!-- end-user-doc -->
      * @generated
      */
-    EAttribute CONDITION__VARIABLE = eINSTANCE.getCondition_Variable();
+    EAttribute COMPARISON__VARIABLE = eINSTANCE.getComparison_Variable();
 
     /**
      * The meta object literal for the '<em><b>Operator</b></em>' attribute feature.
@@ -1054,7 +1280,7 @@ public interface IfictiondslPackage extends EPackage
      * <!-- end-user-doc -->
      * @generated
      */
-    EAttribute CONDITION__OPERATOR = eINSTANCE.getCondition_Operator();
+    EAttribute COMPARISON__OPERATOR = eINSTANCE.getComparison_Operator();
 
     /**
      * The meta object literal for the '<em><b>Value</b></em>' attribute feature.
@@ -1062,7 +1288,7 @@ public interface IfictiondslPackage extends EPackage
      * <!-- end-user-doc -->
      * @generated
      */
-    EAttribute CONDITION__VALUE = eINSTANCE.getCondition_Value();
+    EAttribute COMPARISON__VALUE = eINSTANCE.getComparison_Value();
 
     /**
      * The meta object literal for the '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.impl.SystemStateChangeNodeImpl <em>System State Change Node</em>}' class.
@@ -1083,28 +1309,12 @@ public interface IfictiondslPackage extends EPackage
     EAttribute SYSTEM_STATE_CHANGE_NODE__TEXT = eINSTANCE.getSystemStateChangeNode_Text();
 
     /**
-     * The meta object literal for the '<em><b>Variable</b></em>' attribute feature.
+     * The meta object literal for the '<em><b>State Updates</b></em>' containment reference list feature.
      * <!-- begin-user-doc -->
      * <!-- end-user-doc -->
      * @generated
      */
-    EAttribute SYSTEM_STATE_CHANGE_NODE__VARIABLE = eINSTANCE.getSystemStateChangeNode_Variable();
-
-    /**
-     * The meta object literal for the '<em><b>Operator</b></em>' attribute feature.
-     * <!-- begin-user-doc -->
-     * <!-- end-user-doc -->
-     * @generated
-     */
-    EAttribute SYSTEM_STATE_CHANGE_NODE__OPERATOR = eINSTANCE.getSystemStateChangeNode_Operator();
-
-    /**
-     * The meta object literal for the '<em><b>Value</b></em>' attribute feature.
-     * <!-- begin-user-doc -->
-     * <!-- end-user-doc -->
-     * @generated
-     */
-    EAttribute SYSTEM_STATE_CHANGE_NODE__VALUE = eINSTANCE.getSystemStateChangeNode_Value();
+    EReference SYSTEM_STATE_CHANGE_NODE__STATE_UPDATES = eINSTANCE.getSystemStateChangeNode_StateUpdates();
 
     /**
      * The meta object literal for the '<em><b>Transition</b></em>' containment reference feature.
@@ -1113,6 +1323,40 @@ public interface IfictiondslPackage extends EPackage
      * @generated
      */
     EReference SYSTEM_STATE_CHANGE_NODE__TRANSITION = eINSTANCE.getSystemStateChangeNode_Transition();
+
+    /**
+     * The meta object literal for the '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.impl.StateUpdateImpl <em>State Update</em>}' class.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.impl.StateUpdateImpl
+     * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.impl.IfictiondslPackageImpl#getStateUpdate()
+     * @generated
+     */
+    EClass STATE_UPDATE = eINSTANCE.getStateUpdate();
+
+    /**
+     * The meta object literal for the '<em><b>Variable</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute STATE_UPDATE__VARIABLE = eINSTANCE.getStateUpdate_Variable();
+
+    /**
+     * The meta object literal for the '<em><b>Operator</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute STATE_UPDATE__OPERATOR = eINSTANCE.getStateUpdate_Operator();
+
+    /**
+     * The meta object literal for the '<em><b>Value</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute STATE_UPDATE__VALUE = eINSTANCE.getStateUpdate_Value();
 
     /**
      * The meta object literal for the '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.impl.EndNodeImpl <em>End Node</em>}' class.
@@ -1131,6 +1375,58 @@ public interface IfictiondslPackage extends EPackage
      * @generated
      */
     EAttribute END_NODE__TEXT = eINSTANCE.getEndNode_Text();
+
+    /**
+     * The meta object literal for the '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.impl.OrImpl <em>Or</em>}' class.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.impl.OrImpl
+     * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.impl.IfictiondslPackageImpl#getOr()
+     * @generated
+     */
+    EClass OR = eINSTANCE.getOr();
+
+    /**
+     * The meta object literal for the '<em><b>Left</b></em>' containment reference feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EReference OR__LEFT = eINSTANCE.getOr_Left();
+
+    /**
+     * The meta object literal for the '<em><b>Right</b></em>' containment reference feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EReference OR__RIGHT = eINSTANCE.getOr_Right();
+
+    /**
+     * The meta object literal for the '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.impl.AndImpl <em>And</em>}' class.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.impl.AndImpl
+     * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.impl.IfictiondslPackageImpl#getAnd()
+     * @generated
+     */
+    EClass AND = eINSTANCE.getAnd();
+
+    /**
+     * The meta object literal for the '<em><b>Left</b></em>' containment reference feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EReference AND__LEFT = eINSTANCE.getAnd_Left();
+
+    /**
+     * The meta object literal for the '<em><b>Right</b></em>' containment reference feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EReference AND__RIGHT = eINSTANCE.getAnd_Right();
 
   }
 

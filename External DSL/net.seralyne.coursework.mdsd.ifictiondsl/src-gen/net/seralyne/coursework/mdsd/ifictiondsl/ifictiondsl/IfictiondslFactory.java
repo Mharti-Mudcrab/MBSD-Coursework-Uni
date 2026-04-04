@@ -96,6 +96,15 @@ public interface IfictiondslFactory extends EFactory
   Condition createCondition();
 
   /**
+   * Returns a new object of class '<em>Comparison</em>'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return a new object of class '<em>Comparison</em>'.
+   * @generated
+   */
+  Comparison createComparison();
+
+  /**
    * Returns a new object of class '<em>System State Change Node</em>'.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
@@ -105,6 +114,15 @@ public interface IfictiondslFactory extends EFactory
   SystemStateChangeNode createSystemStateChangeNode();
 
   /**
+   * Returns a new object of class '<em>State Update</em>'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return a new object of class '<em>State Update</em>'.
+   * @generated
+   */
+  StateUpdate createStateUpdate();
+
+  /**
    * Returns a new object of class '<em>End Node</em>'.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
@@ -112,6 +130,24 @@ public interface IfictiondslFactory extends EFactory
    * @generated
    */
   EndNode createEndNode();
+
+  /**
+   * Returns a new object of class '<em>Or</em>'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return a new object of class '<em>Or</em>'.
+   * @generated
+   */
+  Or createOr();
+
+  /**
+   * Returns a new object of class '<em>And</em>'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return a new object of class '<em>And</em>'.
+   * @generated
+   */
+  And createAnd();
 
   /**
    * Returns the package supported by this factory.

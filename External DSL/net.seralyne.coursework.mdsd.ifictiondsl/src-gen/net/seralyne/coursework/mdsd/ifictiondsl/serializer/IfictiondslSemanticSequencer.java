@@ -5,13 +5,16 @@ package net.seralyne.coursework.mdsd.ifictiondsl.serializer;
 
 import com.google.inject.Inject;
 import java.util.Set;
+import net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.And;
 import net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.ChoiceNode;
 import net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.ChoiceOption;
-import net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.Condition;
+import net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.Comparison;
 import net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.DialogueNode;
 import net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.EndNode;
 import net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.IfictiondslPackage;
+import net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.Or;
 import net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.StartNode;
+import net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.StateUpdate;
 import net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.Story;
 import net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.SystemStateChangeNode;
 import net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.Transition;
@@ -40,14 +43,17 @@ public class IfictiondslSemanticSequencer extends AbstractDelegatingSemanticSequ
 		Set<Parameter> parameters = context.getEnabledBooleanParameters();
 		if (epackage == IfictiondslPackage.eINSTANCE)
 			switch (semanticObject.eClass().getClassifierID()) {
+			case IfictiondslPackage.AND:
+				sequence_AndCondition(context, (And) semanticObject); 
+				return; 
 			case IfictiondslPackage.CHOICE_NODE:
 				sequence_ChoiceNode(context, (ChoiceNode) semanticObject); 
 				return; 
 			case IfictiondslPackage.CHOICE_OPTION:
 				sequence_ChoiceOption(context, (ChoiceOption) semanticObject); 
 				return; 
-			case IfictiondslPackage.CONDITION:
-				sequence_Condition(context, (Condition) semanticObject); 
+			case IfictiondslPackage.COMPARISON:
+				sequence_Comparison(context, (Comparison) semanticObject); 
 				return; 
 			case IfictiondslPackage.DIALOGUE_NODE:
 				sequence_DialogueNode(context, (DialogueNode) semanticObject); 
@@ -55,8 +61,14 @@ public class IfictiondslSemanticSequencer extends AbstractDelegatingSemanticSequ
 			case IfictiondslPackage.END_NODE:
 				sequence_EndNode(context, (EndNode) semanticObject); 
 				return; 
+			case IfictiondslPackage.OR:
+				sequence_OrCondition(context, (Or) semanticObject); 
+				return; 
 			case IfictiondslPackage.START_NODE:
 				sequence_StartNode(context, (StartNode) semanticObject); 
+				return; 
+			case IfictiondslPackage.STATE_UPDATE:
+				sequence_StateUpdate(context, (StateUpdate) semanticObject); 
 				return; 
 			case IfictiondslPackage.STORY:
 				sequence_Story(context, (Story) semanticObject); 
@@ -71,6 +83,34 @@ public class IfictiondslSemanticSequencer extends AbstractDelegatingSemanticSequ
 		if (errorAcceptor != null)
 			errorAcceptor.accept(diagnosticProvider.createInvalidContextOrTypeDiagnostic(semanticObject, context));
 	}
+	
+	/**
+	 * <pre>
+	 * Contexts:
+	 *     Condition returns And
+	 *     OrCondition returns And
+	 *     OrCondition.Or_1_0 returns And
+	 *     AndCondition returns And
+	 *     AndCondition.And_1_0 returns And
+	 *     Primary returns And
+	 *
+	 * Constraint:
+	 *     (left=AndCondition_And_1_0 right=Primary)
+	 * </pre>
+	 */
+	protected void sequence_AndCondition(ISerializationContext context, And semanticObject) {
+		if (errorAcceptor != null) {
+			if (transientValues.isValueTransient(semanticObject, IfictiondslPackage.Literals.AND__LEFT) == ValueTransient.YES)
+				errorAcceptor.accept(diagnosticProvider.createFeatureValueMissing(semanticObject, IfictiondslPackage.Literals.AND__LEFT));
+			if (transientValues.isValueTransient(semanticObject, IfictiondslPackage.Literals.AND__RIGHT) == ValueTransient.YES)
+				errorAcceptor.accept(diagnosticProvider.createFeatureValueMissing(semanticObject, IfictiondslPackage.Literals.AND__RIGHT));
+		}
+		SequenceFeeder feeder = createSequencerFeeder(context, semanticObject);
+		feeder.accept(grammarAccess.getAndConditionAccess().getAndLeftAction_1_0(), semanticObject.getLeft());
+		feeder.accept(grammarAccess.getAndConditionAccess().getRightPrimaryParserRuleCall_1_2_0(), semanticObject.getRight());
+		feeder.finish();
+	}
+	
 	
 	/**
 	 * <pre>
@@ -104,14 +144,32 @@ public class IfictiondslSemanticSequencer extends AbstractDelegatingSemanticSequ
 	/**
 	 * <pre>
 	 * Contexts:
-	 *     Condition returns Condition
+	 *     Condition returns Comparison
+	 *     OrCondition returns Comparison
+	 *     OrCondition.Or_1_0 returns Comparison
+	 *     AndCondition returns Comparison
+	 *     AndCondition.And_1_0 returns Comparison
+	 *     Primary returns Comparison
+	 *     Comparison returns Comparison
 	 *
 	 * Constraint:
-	 *     (variable=ID (operator='=' | operator='!=' | operator='&gt;' | operator='&lt;') value=INT)
+	 *     (variable=ID operator=Operator value=INT)
 	 * </pre>
 	 */
-	protected void sequence_Condition(ISerializationContext context, Condition semanticObject) {
-		genericSequencer.createSequence(context, semanticObject);
+	protected void sequence_Comparison(ISerializationContext context, Comparison semanticObject) {
+		if (errorAcceptor != null) {
+			if (transientValues.isValueTransient(semanticObject, IfictiondslPackage.Literals.COMPARISON__VARIABLE) == ValueTransient.YES)
+				errorAcceptor.accept(diagnosticProvider.createFeatureValueMissing(semanticObject, IfictiondslPackage.Literals.COMPARISON__VARIABLE));
+			if (transientValues.isValueTransient(semanticObject, IfictiondslPackage.Literals.COMPARISON__OPERATOR) == ValueTransient.YES)
+				errorAcceptor.accept(diagnosticProvider.createFeatureValueMissing(semanticObject, IfictiondslPackage.Literals.COMPARISON__OPERATOR));
+			if (transientValues.isValueTransient(semanticObject, IfictiondslPackage.Literals.COMPARISON__VALUE) == ValueTransient.YES)
+				errorAcceptor.accept(diagnosticProvider.createFeatureValueMissing(semanticObject, IfictiondslPackage.Literals.COMPARISON__VALUE));
+		}
+		SequenceFeeder feeder = createSequencerFeeder(context, semanticObject);
+		feeder.accept(grammarAccess.getComparisonAccess().getVariableIDTerminalRuleCall_0_0(), semanticObject.getVariable());
+		feeder.accept(grammarAccess.getComparisonAccess().getOperatorOperatorParserRuleCall_1_0(), semanticObject.getOperator());
+		feeder.accept(grammarAccess.getComparisonAccess().getValueINTTerminalRuleCall_2_0(), semanticObject.getValue());
+		feeder.finish();
 	}
 	
 	
@@ -169,6 +227,34 @@ public class IfictiondslSemanticSequencer extends AbstractDelegatingSemanticSequ
 	/**
 	 * <pre>
 	 * Contexts:
+	 *     Condition returns Or
+	 *     OrCondition returns Or
+	 *     OrCondition.Or_1_0 returns Or
+	 *     AndCondition returns Or
+	 *     AndCondition.And_1_0 returns Or
+	 *     Primary returns Or
+	 *
+	 * Constraint:
+	 *     (left=OrCondition_Or_1_0 right=AndCondition)
+	 * </pre>
+	 */
+	protected void sequence_OrCondition(ISerializationContext context, Or semanticObject) {
+		if (errorAcceptor != null) {
+			if (transientValues.isValueTransient(semanticObject, IfictiondslPackage.Literals.OR__LEFT) == ValueTransient.YES)
+				errorAcceptor.accept(diagnosticProvider.createFeatureValueMissing(semanticObject, IfictiondslPackage.Literals.OR__LEFT));
+			if (transientValues.isValueTransient(semanticObject, IfictiondslPackage.Literals.OR__RIGHT) == ValueTransient.YES)
+				errorAcceptor.accept(diagnosticProvider.createFeatureValueMissing(semanticObject, IfictiondslPackage.Literals.OR__RIGHT));
+		}
+		SequenceFeeder feeder = createSequencerFeeder(context, semanticObject);
+		feeder.accept(grammarAccess.getOrConditionAccess().getOrLeftAction_1_0(), semanticObject.getLeft());
+		feeder.accept(grammarAccess.getOrConditionAccess().getRightAndConditionParserRuleCall_1_2_0(), semanticObject.getRight());
+		feeder.finish();
+	}
+	
+	
+	/**
+	 * <pre>
+	 * Contexts:
 	 *     Node returns StartNode
 	 *     StartNode returns StartNode
 	 *
@@ -196,6 +282,20 @@ public class IfictiondslSemanticSequencer extends AbstractDelegatingSemanticSequ
 	/**
 	 * <pre>
 	 * Contexts:
+	 *     StateUpdate returns StateUpdate
+	 *
+	 * Constraint:
+	 *     (variable=STRING (operator='+=' | operator='-=' | operator='=') value=INT)
+	 * </pre>
+	 */
+	protected void sequence_StateUpdate(ISerializationContext context, StateUpdate semanticObject) {
+		genericSequencer.createSequence(context, semanticObject);
+	}
+	
+	
+	/**
+	 * <pre>
+	 * Contexts:
 	 *     Story returns Story
 	 *
 	 * Constraint:
@@ -214,14 +314,7 @@ public class IfictiondslSemanticSequencer extends AbstractDelegatingSemanticSequ
 	 *     SystemStateChangeNode returns SystemStateChangeNode
 	 *
 	 * Constraint:
-	 *     (
-	 *         name=ID 
-	 *         text=STRING 
-	 *         variable=STRING 
-	 *         (operator='+=' | operator='-=' | operator='=') 
-	 *         value=INT 
-	 *         transition=Transition
-	 *     )
+	 *     (name=ID text=STRING stateUpdates+=StateUpdate stateUpdates+=StateUpdate* transition=Transition)
 	 * </pre>
 	 */
 	protected void sequence_SystemStateChangeNode(ISerializationContext context, SystemStateChangeNode semanticObject) {

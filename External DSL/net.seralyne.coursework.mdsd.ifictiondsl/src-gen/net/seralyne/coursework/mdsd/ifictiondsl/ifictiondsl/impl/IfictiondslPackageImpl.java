@@ -3,15 +3,19 @@
  */
 package net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.impl;
 
+import net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.And;
 import net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.ChoiceNode;
 import net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.ChoiceOption;
+import net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.Comparison;
 import net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.Condition;
 import net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.DialogueNode;
 import net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.EndNode;
 import net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.IfictiondslFactory;
 import net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.IfictiondslPackage;
 import net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.Node;
+import net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.Or;
 import net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.StartNode;
+import net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.StateUpdate;
 import net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.Story;
 import net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.SystemStateChangeNode;
 import net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.Transition;
@@ -92,6 +96,13 @@ public class IfictiondslPackageImpl extends EPackageImpl implements IfictiondslP
    * <!-- end-user-doc -->
    * @generated
    */
+  private EClass comparisonEClass = null;
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
   private EClass systemStateChangeNodeEClass = null;
 
   /**
@@ -99,7 +110,28 @@ public class IfictiondslPackageImpl extends EPackageImpl implements IfictiondslP
    * <!-- end-user-doc -->
    * @generated
    */
+  private EClass stateUpdateEClass = null;
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
   private EClass endNodeEClass = null;
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  private EClass orEClass = null;
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  private EClass andEClass = null;
 
   /**
    * Creates an instance of the model <b>Package</b>, registered with
@@ -400,9 +432,9 @@ public class IfictiondslPackageImpl extends EPackageImpl implements IfictiondslP
    * @generated
    */
   @Override
-  public EAttribute getCondition_Variable()
+  public EClass getComparison()
   {
-    return (EAttribute)conditionEClass.getEStructuralFeatures().get(0);
+    return comparisonEClass;
   }
 
   /**
@@ -411,9 +443,9 @@ public class IfictiondslPackageImpl extends EPackageImpl implements IfictiondslP
    * @generated
    */
   @Override
-  public EAttribute getCondition_Operator()
+  public EAttribute getComparison_Variable()
   {
-    return (EAttribute)conditionEClass.getEStructuralFeatures().get(1);
+    return (EAttribute)comparisonEClass.getEStructuralFeatures().get(0);
   }
 
   /**
@@ -422,9 +454,20 @@ public class IfictiondslPackageImpl extends EPackageImpl implements IfictiondslP
    * @generated
    */
   @Override
-  public EAttribute getCondition_Value()
+  public EAttribute getComparison_Operator()
   {
-    return (EAttribute)conditionEClass.getEStructuralFeatures().get(2);
+    return (EAttribute)comparisonEClass.getEStructuralFeatures().get(1);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getComparison_Value()
+  {
+    return (EAttribute)comparisonEClass.getEStructuralFeatures().get(2);
   }
 
   /**
@@ -455,31 +498,9 @@ public class IfictiondslPackageImpl extends EPackageImpl implements IfictiondslP
    * @generated
    */
   @Override
-  public EAttribute getSystemStateChangeNode_Variable()
+  public EReference getSystemStateChangeNode_StateUpdates()
   {
-    return (EAttribute)systemStateChangeNodeEClass.getEStructuralFeatures().get(1);
-  }
-
-  /**
-   * <!-- begin-user-doc -->
-   * <!-- end-user-doc -->
-   * @generated
-   */
-  @Override
-  public EAttribute getSystemStateChangeNode_Operator()
-  {
-    return (EAttribute)systemStateChangeNodeEClass.getEStructuralFeatures().get(2);
-  }
-
-  /**
-   * <!-- begin-user-doc -->
-   * <!-- end-user-doc -->
-   * @generated
-   */
-  @Override
-  public EAttribute getSystemStateChangeNode_Value()
-  {
-    return (EAttribute)systemStateChangeNodeEClass.getEStructuralFeatures().get(3);
+    return (EReference)systemStateChangeNodeEClass.getEStructuralFeatures().get(1);
   }
 
   /**
@@ -490,7 +511,51 @@ public class IfictiondslPackageImpl extends EPackageImpl implements IfictiondslP
   @Override
   public EReference getSystemStateChangeNode_Transition()
   {
-    return (EReference)systemStateChangeNodeEClass.getEStructuralFeatures().get(4);
+    return (EReference)systemStateChangeNodeEClass.getEStructuralFeatures().get(2);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EClass getStateUpdate()
+  {
+    return stateUpdateEClass;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getStateUpdate_Variable()
+  {
+    return (EAttribute)stateUpdateEClass.getEStructuralFeatures().get(0);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getStateUpdate_Operator()
+  {
+    return (EAttribute)stateUpdateEClass.getEStructuralFeatures().get(1);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getStateUpdate_Value()
+  {
+    return (EAttribute)stateUpdateEClass.getEStructuralFeatures().get(2);
   }
 
   /**
@@ -513,6 +578,72 @@ public class IfictiondslPackageImpl extends EPackageImpl implements IfictiondslP
   public EAttribute getEndNode_Text()
   {
     return (EAttribute)endNodeEClass.getEStructuralFeatures().get(0);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EClass getOr()
+  {
+    return orEClass;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EReference getOr_Left()
+  {
+    return (EReference)orEClass.getEStructuralFeatures().get(0);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EReference getOr_Right()
+  {
+    return (EReference)orEClass.getEStructuralFeatures().get(1);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EClass getAnd()
+  {
+    return andEClass;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EReference getAnd_Left()
+  {
+    return (EReference)andEClass.getEStructuralFeatures().get(0);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EReference getAnd_Right()
+  {
+    return (EReference)andEClass.getEStructuralFeatures().get(1);
   }
 
   /**
@@ -574,19 +705,32 @@ public class IfictiondslPackageImpl extends EPackageImpl implements IfictiondslP
     createEReference(dialogueNodeEClass, DIALOGUE_NODE__TRANSITION);
 
     conditionEClass = createEClass(CONDITION);
-    createEAttribute(conditionEClass, CONDITION__VARIABLE);
-    createEAttribute(conditionEClass, CONDITION__OPERATOR);
-    createEAttribute(conditionEClass, CONDITION__VALUE);
+
+    comparisonEClass = createEClass(COMPARISON);
+    createEAttribute(comparisonEClass, COMPARISON__VARIABLE);
+    createEAttribute(comparisonEClass, COMPARISON__OPERATOR);
+    createEAttribute(comparisonEClass, COMPARISON__VALUE);
 
     systemStateChangeNodeEClass = createEClass(SYSTEM_STATE_CHANGE_NODE);
     createEAttribute(systemStateChangeNodeEClass, SYSTEM_STATE_CHANGE_NODE__TEXT);
-    createEAttribute(systemStateChangeNodeEClass, SYSTEM_STATE_CHANGE_NODE__VARIABLE);
-    createEAttribute(systemStateChangeNodeEClass, SYSTEM_STATE_CHANGE_NODE__OPERATOR);
-    createEAttribute(systemStateChangeNodeEClass, SYSTEM_STATE_CHANGE_NODE__VALUE);
+    createEReference(systemStateChangeNodeEClass, SYSTEM_STATE_CHANGE_NODE__STATE_UPDATES);
     createEReference(systemStateChangeNodeEClass, SYSTEM_STATE_CHANGE_NODE__TRANSITION);
+
+    stateUpdateEClass = createEClass(STATE_UPDATE);
+    createEAttribute(stateUpdateEClass, STATE_UPDATE__VARIABLE);
+    createEAttribute(stateUpdateEClass, STATE_UPDATE__OPERATOR);
+    createEAttribute(stateUpdateEClass, STATE_UPDATE__VALUE);
 
     endNodeEClass = createEClass(END_NODE);
     createEAttribute(endNodeEClass, END_NODE__TEXT);
+
+    orEClass = createEClass(OR);
+    createEReference(orEClass, OR__LEFT);
+    createEReference(orEClass, OR__RIGHT);
+
+    andEClass = createEClass(AND);
+    createEReference(andEClass, AND__LEFT);
+    createEReference(andEClass, AND__RIGHT);
   }
 
   /**
@@ -621,8 +765,11 @@ public class IfictiondslPackageImpl extends EPackageImpl implements IfictiondslP
     choiceNodeEClass.getESuperTypes().add(this.getNode());
     startNodeEClass.getESuperTypes().add(this.getNode());
     dialogueNodeEClass.getESuperTypes().add(this.getNode());
+    comparisonEClass.getESuperTypes().add(this.getCondition());
     systemStateChangeNodeEClass.getESuperTypes().add(this.getNode());
     endNodeEClass.getESuperTypes().add(this.getNode());
+    orEClass.getESuperTypes().add(this.getCondition());
+    andEClass.getESuperTypes().add(this.getCondition());
 
     // Initialize classes and features; add operations and parameters
     initEClass(storyEClass, Story.class, "Story", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
@@ -653,19 +800,32 @@ public class IfictiondslPackageImpl extends EPackageImpl implements IfictiondslP
     initEReference(getDialogueNode_Transition(), this.getTransition(), null, "transition", null, 0, 1, DialogueNode.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
 
     initEClass(conditionEClass, Condition.class, "Condition", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
-    initEAttribute(getCondition_Variable(), ecorePackage.getEString(), "variable", null, 0, 1, Condition.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
-    initEAttribute(getCondition_Operator(), ecorePackage.getEString(), "operator", null, 0, 1, Condition.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
-    initEAttribute(getCondition_Value(), ecorePackage.getEInt(), "value", null, 0, 1, Condition.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+
+    initEClass(comparisonEClass, Comparison.class, "Comparison", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
+    initEAttribute(getComparison_Variable(), ecorePackage.getEString(), "variable", null, 0, 1, Comparison.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getComparison_Operator(), ecorePackage.getEString(), "operator", null, 0, 1, Comparison.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getComparison_Value(), ecorePackage.getEInt(), "value", null, 0, 1, Comparison.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
 
     initEClass(systemStateChangeNodeEClass, SystemStateChangeNode.class, "SystemStateChangeNode", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
     initEAttribute(getSystemStateChangeNode_Text(), ecorePackage.getEString(), "text", null, 0, 1, SystemStateChangeNode.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
-    initEAttribute(getSystemStateChangeNode_Variable(), ecorePackage.getEString(), "variable", null, 0, 1, SystemStateChangeNode.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
-    initEAttribute(getSystemStateChangeNode_Operator(), ecorePackage.getEString(), "operator", null, 0, 1, SystemStateChangeNode.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
-    initEAttribute(getSystemStateChangeNode_Value(), ecorePackage.getEInt(), "value", null, 0, 1, SystemStateChangeNode.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEReference(getSystemStateChangeNode_StateUpdates(), this.getStateUpdate(), null, "stateUpdates", null, 0, -1, SystemStateChangeNode.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
     initEReference(getSystemStateChangeNode_Transition(), this.getTransition(), null, "transition", null, 0, 1, SystemStateChangeNode.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+
+    initEClass(stateUpdateEClass, StateUpdate.class, "StateUpdate", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
+    initEAttribute(getStateUpdate_Variable(), ecorePackage.getEString(), "variable", null, 0, 1, StateUpdate.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getStateUpdate_Operator(), ecorePackage.getEString(), "operator", null, 0, 1, StateUpdate.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getStateUpdate_Value(), ecorePackage.getEInt(), "value", null, 0, 1, StateUpdate.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
 
     initEClass(endNodeEClass, EndNode.class, "EndNode", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
     initEAttribute(getEndNode_Text(), ecorePackage.getEString(), "text", null, 0, 1, EndNode.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+
+    initEClass(orEClass, Or.class, "Or", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
+    initEReference(getOr_Left(), this.getCondition(), null, "left", null, 0, 1, Or.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEReference(getOr_Right(), this.getCondition(), null, "right", null, 0, 1, Or.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+
+    initEClass(andEClass, And.class, "And", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
+    initEReference(getAnd_Left(), this.getCondition(), null, "left", null, 0, 1, And.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEReference(getAnd_Right(), this.getCondition(), null, "right", null, 0, 1, And.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
 
     // Create resource
     createResource(eNS_URI);

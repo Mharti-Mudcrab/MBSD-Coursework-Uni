@@ -3,17 +3,25 @@
  */
 package net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.impl;
 
+import java.util.Collection;
+
 import net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.IfictiondslPackage;
+import net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.StateUpdate;
 import net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.SystemStateChangeNode;
 import net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.Transition;
 
 import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.common.notify.NotificationChain;
 
+import org.eclipse.emf.common.util.EList;
+
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.InternalEObject;
 
 import org.eclipse.emf.ecore.impl.ENotificationImpl;
+
+import org.eclipse.emf.ecore.util.EObjectContainmentEList;
+import org.eclipse.emf.ecore.util.InternalEList;
 
 /**
  * <!-- begin-user-doc -->
@@ -24,9 +32,7 @@ import org.eclipse.emf.ecore.impl.ENotificationImpl;
  * </p>
  * <ul>
  *   <li>{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.impl.SystemStateChangeNodeImpl#getText <em>Text</em>}</li>
- *   <li>{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.impl.SystemStateChangeNodeImpl#getVariable <em>Variable</em>}</li>
- *   <li>{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.impl.SystemStateChangeNodeImpl#getOperator <em>Operator</em>}</li>
- *   <li>{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.impl.SystemStateChangeNodeImpl#getValue <em>Value</em>}</li>
+ *   <li>{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.impl.SystemStateChangeNodeImpl#getStateUpdates <em>State Updates</em>}</li>
  *   <li>{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.impl.SystemStateChangeNodeImpl#getTransition <em>Transition</em>}</li>
  * </ul>
  *
@@ -55,64 +61,14 @@ public class SystemStateChangeNodeImpl extends NodeImpl implements SystemStateCh
   protected String text = TEXT_EDEFAULT;
 
   /**
-   * The default value of the '{@link #getVariable() <em>Variable</em>}' attribute.
+   * The cached value of the '{@link #getStateUpdates() <em>State Updates</em>}' containment reference list.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
-   * @see #getVariable()
+   * @see #getStateUpdates()
    * @generated
    * @ordered
    */
-  protected static final String VARIABLE_EDEFAULT = null;
-
-  /**
-   * The cached value of the '{@link #getVariable() <em>Variable</em>}' attribute.
-   * <!-- begin-user-doc -->
-   * <!-- end-user-doc -->
-   * @see #getVariable()
-   * @generated
-   * @ordered
-   */
-  protected String variable = VARIABLE_EDEFAULT;
-
-  /**
-   * The default value of the '{@link #getOperator() <em>Operator</em>}' attribute.
-   * <!-- begin-user-doc -->
-   * <!-- end-user-doc -->
-   * @see #getOperator()
-   * @generated
-   * @ordered
-   */
-  protected static final String OPERATOR_EDEFAULT = null;
-
-  /**
-   * The cached value of the '{@link #getOperator() <em>Operator</em>}' attribute.
-   * <!-- begin-user-doc -->
-   * <!-- end-user-doc -->
-   * @see #getOperator()
-   * @generated
-   * @ordered
-   */
-  protected String operator = OPERATOR_EDEFAULT;
-
-  /**
-   * The default value of the '{@link #getValue() <em>Value</em>}' attribute.
-   * <!-- begin-user-doc -->
-   * <!-- end-user-doc -->
-   * @see #getValue()
-   * @generated
-   * @ordered
-   */
-  protected static final int VALUE_EDEFAULT = 0;
-
-  /**
-   * The cached value of the '{@link #getValue() <em>Value</em>}' attribute.
-   * <!-- begin-user-doc -->
-   * <!-- end-user-doc -->
-   * @see #getValue()
-   * @generated
-   * @ordered
-   */
-  protected int value = VALUE_EDEFAULT;
+  protected EList<StateUpdate> stateUpdates;
 
   /**
    * The cached value of the '{@link #getTransition() <em>Transition</em>}' containment reference.
@@ -176,73 +132,13 @@ public class SystemStateChangeNodeImpl extends NodeImpl implements SystemStateCh
    * @generated
    */
   @Override
-  public String getVariable()
+  public EList<StateUpdate> getStateUpdates()
   {
-    return variable;
-  }
-
-  /**
-   * <!-- begin-user-doc -->
-   * <!-- end-user-doc -->
-   * @generated
-   */
-  @Override
-  public void setVariable(String newVariable)
-  {
-    String oldVariable = variable;
-    variable = newVariable;
-    if (eNotificationRequired())
-      eNotify(new ENotificationImpl(this, Notification.SET, IfictiondslPackage.SYSTEM_STATE_CHANGE_NODE__VARIABLE, oldVariable, variable));
-  }
-
-  /**
-   * <!-- begin-user-doc -->
-   * <!-- end-user-doc -->
-   * @generated
-   */
-  @Override
-  public String getOperator()
-  {
-    return operator;
-  }
-
-  /**
-   * <!-- begin-user-doc -->
-   * <!-- end-user-doc -->
-   * @generated
-   */
-  @Override
-  public void setOperator(String newOperator)
-  {
-    String oldOperator = operator;
-    operator = newOperator;
-    if (eNotificationRequired())
-      eNotify(new ENotificationImpl(this, Notification.SET, IfictiondslPackage.SYSTEM_STATE_CHANGE_NODE__OPERATOR, oldOperator, operator));
-  }
-
-  /**
-   * <!-- begin-user-doc -->
-   * <!-- end-user-doc -->
-   * @generated
-   */
-  @Override
-  public int getValue()
-  {
-    return value;
-  }
-
-  /**
-   * <!-- begin-user-doc -->
-   * <!-- end-user-doc -->
-   * @generated
-   */
-  @Override
-  public void setValue(int newValue)
-  {
-    int oldValue = value;
-    value = newValue;
-    if (eNotificationRequired())
-      eNotify(new ENotificationImpl(this, Notification.SET, IfictiondslPackage.SYSTEM_STATE_CHANGE_NODE__VALUE, oldValue, value));
+    if (stateUpdates == null)
+    {
+      stateUpdates = new EObjectContainmentEList<StateUpdate>(StateUpdate.class, this, IfictiondslPackage.SYSTEM_STATE_CHANGE_NODE__STATE_UPDATES);
+    }
+    return stateUpdates;
   }
 
   /**
@@ -305,6 +201,8 @@ public class SystemStateChangeNodeImpl extends NodeImpl implements SystemStateCh
   {
     switch (featureID)
     {
+      case IfictiondslPackage.SYSTEM_STATE_CHANGE_NODE__STATE_UPDATES:
+        return ((InternalEList<?>)getStateUpdates()).basicRemove(otherEnd, msgs);
       case IfictiondslPackage.SYSTEM_STATE_CHANGE_NODE__TRANSITION:
         return basicSetTransition(null, msgs);
     }
@@ -323,12 +221,8 @@ public class SystemStateChangeNodeImpl extends NodeImpl implements SystemStateCh
     {
       case IfictiondslPackage.SYSTEM_STATE_CHANGE_NODE__TEXT:
         return getText();
-      case IfictiondslPackage.SYSTEM_STATE_CHANGE_NODE__VARIABLE:
-        return getVariable();
-      case IfictiondslPackage.SYSTEM_STATE_CHANGE_NODE__OPERATOR:
-        return getOperator();
-      case IfictiondslPackage.SYSTEM_STATE_CHANGE_NODE__VALUE:
-        return getValue();
+      case IfictiondslPackage.SYSTEM_STATE_CHANGE_NODE__STATE_UPDATES:
+        return getStateUpdates();
       case IfictiondslPackage.SYSTEM_STATE_CHANGE_NODE__TRANSITION:
         return getTransition();
     }
@@ -340,6 +234,7 @@ public class SystemStateChangeNodeImpl extends NodeImpl implements SystemStateCh
    * <!-- end-user-doc -->
    * @generated
    */
+  @SuppressWarnings("unchecked")
   @Override
   public void eSet(int featureID, Object newValue)
   {
@@ -348,14 +243,9 @@ public class SystemStateChangeNodeImpl extends NodeImpl implements SystemStateCh
       case IfictiondslPackage.SYSTEM_STATE_CHANGE_NODE__TEXT:
         setText((String)newValue);
         return;
-      case IfictiondslPackage.SYSTEM_STATE_CHANGE_NODE__VARIABLE:
-        setVariable((String)newValue);
-        return;
-      case IfictiondslPackage.SYSTEM_STATE_CHANGE_NODE__OPERATOR:
-        setOperator((String)newValue);
-        return;
-      case IfictiondslPackage.SYSTEM_STATE_CHANGE_NODE__VALUE:
-        setValue((Integer)newValue);
+      case IfictiondslPackage.SYSTEM_STATE_CHANGE_NODE__STATE_UPDATES:
+        getStateUpdates().clear();
+        getStateUpdates().addAll((Collection<? extends StateUpdate>)newValue);
         return;
       case IfictiondslPackage.SYSTEM_STATE_CHANGE_NODE__TRANSITION:
         setTransition((Transition)newValue);
@@ -377,14 +267,8 @@ public class SystemStateChangeNodeImpl extends NodeImpl implements SystemStateCh
       case IfictiondslPackage.SYSTEM_STATE_CHANGE_NODE__TEXT:
         setText(TEXT_EDEFAULT);
         return;
-      case IfictiondslPackage.SYSTEM_STATE_CHANGE_NODE__VARIABLE:
-        setVariable(VARIABLE_EDEFAULT);
-        return;
-      case IfictiondslPackage.SYSTEM_STATE_CHANGE_NODE__OPERATOR:
-        setOperator(OPERATOR_EDEFAULT);
-        return;
-      case IfictiondslPackage.SYSTEM_STATE_CHANGE_NODE__VALUE:
-        setValue(VALUE_EDEFAULT);
+      case IfictiondslPackage.SYSTEM_STATE_CHANGE_NODE__STATE_UPDATES:
+        getStateUpdates().clear();
         return;
       case IfictiondslPackage.SYSTEM_STATE_CHANGE_NODE__TRANSITION:
         setTransition((Transition)null);
@@ -405,12 +289,8 @@ public class SystemStateChangeNodeImpl extends NodeImpl implements SystemStateCh
     {
       case IfictiondslPackage.SYSTEM_STATE_CHANGE_NODE__TEXT:
         return TEXT_EDEFAULT == null ? text != null : !TEXT_EDEFAULT.equals(text);
-      case IfictiondslPackage.SYSTEM_STATE_CHANGE_NODE__VARIABLE:
-        return VARIABLE_EDEFAULT == null ? variable != null : !VARIABLE_EDEFAULT.equals(variable);
-      case IfictiondslPackage.SYSTEM_STATE_CHANGE_NODE__OPERATOR:
-        return OPERATOR_EDEFAULT == null ? operator != null : !OPERATOR_EDEFAULT.equals(operator);
-      case IfictiondslPackage.SYSTEM_STATE_CHANGE_NODE__VALUE:
-        return value != VALUE_EDEFAULT;
+      case IfictiondslPackage.SYSTEM_STATE_CHANGE_NODE__STATE_UPDATES:
+        return stateUpdates != null && !stateUpdates.isEmpty();
       case IfictiondslPackage.SYSTEM_STATE_CHANGE_NODE__TRANSITION:
         return transition != null;
     }
@@ -430,12 +310,6 @@ public class SystemStateChangeNodeImpl extends NodeImpl implements SystemStateCh
     StringBuilder result = new StringBuilder(super.toString());
     result.append(" (text: ");
     result.append(text);
-    result.append(", variable: ");
-    result.append(variable);
-    result.append(", operator: ");
-    result.append(operator);
-    result.append(", value: ");
-    result.append(value);
     result.append(')');
     return result.toString();
   }

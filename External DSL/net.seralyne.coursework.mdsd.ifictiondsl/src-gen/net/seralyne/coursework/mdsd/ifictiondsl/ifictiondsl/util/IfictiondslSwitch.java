@@ -132,6 +132,14 @@ public class IfictiondslSwitch<T> extends Switch<T>
         if (result == null) result = defaultCase(theEObject);
         return result;
       }
+      case IfictiondslPackage.COMPARISON:
+      {
+        Comparison comparison = (Comparison)theEObject;
+        T result = caseComparison(comparison);
+        if (result == null) result = caseCondition(comparison);
+        if (result == null) result = defaultCase(theEObject);
+        return result;
+      }
       case IfictiondslPackage.SYSTEM_STATE_CHANGE_NODE:
       {
         SystemStateChangeNode systemStateChangeNode = (SystemStateChangeNode)theEObject;
@@ -140,11 +148,34 @@ public class IfictiondslSwitch<T> extends Switch<T>
         if (result == null) result = defaultCase(theEObject);
         return result;
       }
+      case IfictiondslPackage.STATE_UPDATE:
+      {
+        StateUpdate stateUpdate = (StateUpdate)theEObject;
+        T result = caseStateUpdate(stateUpdate);
+        if (result == null) result = defaultCase(theEObject);
+        return result;
+      }
       case IfictiondslPackage.END_NODE:
       {
         EndNode endNode = (EndNode)theEObject;
         T result = caseEndNode(endNode);
         if (result == null) result = caseNode(endNode);
+        if (result == null) result = defaultCase(theEObject);
+        return result;
+      }
+      case IfictiondslPackage.OR:
+      {
+        Or or = (Or)theEObject;
+        T result = caseOr(or);
+        if (result == null) result = caseCondition(or);
+        if (result == null) result = defaultCase(theEObject);
+        return result;
+      }
+      case IfictiondslPackage.AND:
+      {
+        And and = (And)theEObject;
+        T result = caseAnd(and);
+        if (result == null) result = caseCondition(and);
         if (result == null) result = defaultCase(theEObject);
         return result;
       }
@@ -281,6 +312,22 @@ public class IfictiondslSwitch<T> extends Switch<T>
   }
 
   /**
+   * Returns the result of interpreting the object as an instance of '<em>Comparison</em>'.
+   * <!-- begin-user-doc -->
+   * This implementation returns null;
+   * returning a non-null result will terminate the switch.
+   * <!-- end-user-doc -->
+   * @param object the target of the switch.
+   * @return the result of interpreting the object as an instance of '<em>Comparison</em>'.
+   * @see #doSwitch(org.eclipse.emf.ecore.EObject) doSwitch(EObject)
+   * @generated
+   */
+  public T caseComparison(Comparison object)
+  {
+    return null;
+  }
+
+  /**
    * Returns the result of interpreting the object as an instance of '<em>System State Change Node</em>'.
    * <!-- begin-user-doc -->
    * This implementation returns null;
@@ -297,6 +344,22 @@ public class IfictiondslSwitch<T> extends Switch<T>
   }
 
   /**
+   * Returns the result of interpreting the object as an instance of '<em>State Update</em>'.
+   * <!-- begin-user-doc -->
+   * This implementation returns null;
+   * returning a non-null result will terminate the switch.
+   * <!-- end-user-doc -->
+   * @param object the target of the switch.
+   * @return the result of interpreting the object as an instance of '<em>State Update</em>'.
+   * @see #doSwitch(org.eclipse.emf.ecore.EObject) doSwitch(EObject)
+   * @generated
+   */
+  public T caseStateUpdate(StateUpdate object)
+  {
+    return null;
+  }
+
+  /**
    * Returns the result of interpreting the object as an instance of '<em>End Node</em>'.
    * <!-- begin-user-doc -->
    * This implementation returns null;
@@ -308,6 +371,38 @@ public class IfictiondslSwitch<T> extends Switch<T>
    * @generated
    */
   public T caseEndNode(EndNode object)
+  {
+    return null;
+  }
+
+  /**
+   * Returns the result of interpreting the object as an instance of '<em>Or</em>'.
+   * <!-- begin-user-doc -->
+   * This implementation returns null;
+   * returning a non-null result will terminate the switch.
+   * <!-- end-user-doc -->
+   * @param object the target of the switch.
+   * @return the result of interpreting the object as an instance of '<em>Or</em>'.
+   * @see #doSwitch(org.eclipse.emf.ecore.EObject) doSwitch(EObject)
+   * @generated
+   */
+  public T caseOr(Or object)
+  {
+    return null;
+  }
+
+  /**
+   * Returns the result of interpreting the object as an instance of '<em>And</em>'.
+   * <!-- begin-user-doc -->
+   * This implementation returns null;
+   * returning a non-null result will terminate the switch.
+   * <!-- end-user-doc -->
+   * @param object the target of the switch.
+   * @return the result of interpreting the object as an instance of '<em>And</em>'.
+   * @see #doSwitch(org.eclipse.emf.ecore.EObject) doSwitch(EObject)
+   * @generated
+   */
+  public T caseAnd(And object)
   {
     return null;
   }

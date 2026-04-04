@@ -32,8 +32,9 @@ public class IfictiondslParser extends AbstractContentAssistParser {
 		
 		private static void init(ImmutableMap.Builder<AbstractElement, String> builder, IfictiondslGrammarAccess grammarAccess) {
 			builder.put(grammarAccess.getNodeAccess().getAlternatives(), "rule__Node__Alternatives");
-			builder.put(grammarAccess.getConditionAccess().getOperatorAlternatives_1_0(), "rule__Condition__OperatorAlternatives_1_0");
-			builder.put(grammarAccess.getSystemStateChangeNodeAccess().getOperatorAlternatives_8_0(), "rule__SystemStateChangeNode__OperatorAlternatives_8_0");
+			builder.put(grammarAccess.getPrimaryAccess().getAlternatives(), "rule__Primary__Alternatives");
+			builder.put(grammarAccess.getOperatorAccess().getAlternatives(), "rule__Operator__Alternatives");
+			builder.put(grammarAccess.getStateUpdateAccess().getOperatorAlternatives_1_0(), "rule__StateUpdate__OperatorAlternatives_1_0");
 			builder.put(grammarAccess.getStoryAccess().getGroup(), "rule__Story__Group__0");
 			builder.put(grammarAccess.getChoiceNodeAccess().getGroup(), "rule__ChoiceNode__Group__0");
 			builder.put(grammarAccess.getChoiceNodeAccess().getGroup_6(), "rule__ChoiceNode__Group_6__0");
@@ -46,8 +47,15 @@ public class IfictiondslParser extends AbstractContentAssistParser {
 			builder.put(grammarAccess.getTransitionAccess().getGroup_3(), "rule__Transition__Group_3__0");
 			builder.put(grammarAccess.getStartNodeAccess().getGroup(), "rule__StartNode__Group__0");
 			builder.put(grammarAccess.getDialogueNodeAccess().getGroup(), "rule__DialogueNode__Group__0");
-			builder.put(grammarAccess.getConditionAccess().getGroup(), "rule__Condition__Group__0");
+			builder.put(grammarAccess.getOrConditionAccess().getGroup(), "rule__OrCondition__Group__0");
+			builder.put(grammarAccess.getOrConditionAccess().getGroup_1(), "rule__OrCondition__Group_1__0");
+			builder.put(grammarAccess.getAndConditionAccess().getGroup(), "rule__AndCondition__Group__0");
+			builder.put(grammarAccess.getAndConditionAccess().getGroup_1(), "rule__AndCondition__Group_1__0");
+			builder.put(grammarAccess.getPrimaryAccess().getGroup_0(), "rule__Primary__Group_0__0");
+			builder.put(grammarAccess.getComparisonAccess().getGroup(), "rule__Comparison__Group__0");
 			builder.put(grammarAccess.getSystemStateChangeNodeAccess().getGroup(), "rule__SystemStateChangeNode__Group__0");
+			builder.put(grammarAccess.getSystemStateChangeNodeAccess().getGroup_8(), "rule__SystemStateChangeNode__Group_8__0");
+			builder.put(grammarAccess.getStateUpdateAccess().getGroup(), "rule__StateUpdate__Group__0");
 			builder.put(grammarAccess.getEndNodeAccess().getGroup(), "rule__EndNode__Group__0");
 			builder.put(grammarAccess.getStoryAccess().getNameAssignment_1(), "rule__Story__NameAssignment_1");
 			builder.put(grammarAccess.getStoryAccess().getNodesAssignment_2(), "rule__Story__NodesAssignment_2");
@@ -66,15 +74,19 @@ public class IfictiondslParser extends AbstractContentAssistParser {
 			builder.put(grammarAccess.getDialogueNodeAccess().getNameAssignment_1(), "rule__DialogueNode__NameAssignment_1");
 			builder.put(grammarAccess.getDialogueNodeAccess().getTextAssignment_5(), "rule__DialogueNode__TextAssignment_5");
 			builder.put(grammarAccess.getDialogueNodeAccess().getTransitionAssignment_7(), "rule__DialogueNode__TransitionAssignment_7");
-			builder.put(grammarAccess.getConditionAccess().getVariableAssignment_0(), "rule__Condition__VariableAssignment_0");
-			builder.put(grammarAccess.getConditionAccess().getOperatorAssignment_1(), "rule__Condition__OperatorAssignment_1");
-			builder.put(grammarAccess.getConditionAccess().getValueAssignment_2(), "rule__Condition__ValueAssignment_2");
+			builder.put(grammarAccess.getOrConditionAccess().getRightAssignment_1_2(), "rule__OrCondition__RightAssignment_1_2");
+			builder.put(grammarAccess.getAndConditionAccess().getRightAssignment_1_2(), "rule__AndCondition__RightAssignment_1_2");
+			builder.put(grammarAccess.getComparisonAccess().getVariableAssignment_0(), "rule__Comparison__VariableAssignment_0");
+			builder.put(grammarAccess.getComparisonAccess().getOperatorAssignment_1(), "rule__Comparison__OperatorAssignment_1");
+			builder.put(grammarAccess.getComparisonAccess().getValueAssignment_2(), "rule__Comparison__ValueAssignment_2");
 			builder.put(grammarAccess.getSystemStateChangeNodeAccess().getNameAssignment_1(), "rule__SystemStateChangeNode__NameAssignment_1");
 			builder.put(grammarAccess.getSystemStateChangeNodeAccess().getTextAssignment_5(), "rule__SystemStateChangeNode__TextAssignment_5");
-			builder.put(grammarAccess.getSystemStateChangeNodeAccess().getVariableAssignment_7(), "rule__SystemStateChangeNode__VariableAssignment_7");
-			builder.put(grammarAccess.getSystemStateChangeNodeAccess().getOperatorAssignment_8(), "rule__SystemStateChangeNode__OperatorAssignment_8");
-			builder.put(grammarAccess.getSystemStateChangeNodeAccess().getValueAssignment_9(), "rule__SystemStateChangeNode__ValueAssignment_9");
-			builder.put(grammarAccess.getSystemStateChangeNodeAccess().getTransitionAssignment_11(), "rule__SystemStateChangeNode__TransitionAssignment_11");
+			builder.put(grammarAccess.getSystemStateChangeNodeAccess().getStateUpdatesAssignment_7(), "rule__SystemStateChangeNode__StateUpdatesAssignment_7");
+			builder.put(grammarAccess.getSystemStateChangeNodeAccess().getStateUpdatesAssignment_8_1(), "rule__SystemStateChangeNode__StateUpdatesAssignment_8_1");
+			builder.put(grammarAccess.getSystemStateChangeNodeAccess().getTransitionAssignment_9(), "rule__SystemStateChangeNode__TransitionAssignment_9");
+			builder.put(grammarAccess.getStateUpdateAccess().getVariableAssignment_0(), "rule__StateUpdate__VariableAssignment_0");
+			builder.put(grammarAccess.getStateUpdateAccess().getOperatorAssignment_1(), "rule__StateUpdate__OperatorAssignment_1");
+			builder.put(grammarAccess.getStateUpdateAccess().getValueAssignment_2(), "rule__StateUpdate__ValueAssignment_2");
 			builder.put(grammarAccess.getEndNodeAccess().getNameAssignment_1(), "rule__EndNode__NameAssignment_1");
 			builder.put(grammarAccess.getEndNodeAccess().getTextAssignment_5(), "rule__EndNode__TextAssignment_5");
 		}

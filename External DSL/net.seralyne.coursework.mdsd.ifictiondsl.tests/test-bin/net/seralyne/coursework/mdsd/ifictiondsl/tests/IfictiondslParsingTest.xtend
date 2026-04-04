@@ -4,19 +4,19 @@
 package net.seralyne.coursework.mdsd.ifictiondsl.tests
 
 import com.google.inject.Inject
-import net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.Model
 import org.eclipse.xtext.testing.InjectWith
 import org.eclipse.xtext.testing.extensions.InjectionExtension
 import org.eclipse.xtext.testing.util.ParseHelper
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.^extension.ExtendWith
+import net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.Story
 
 @ExtendWith(InjectionExtension)
 @InjectWith(IfictiondslInjectorProvider)
 class IfictiondslParsingTest {
 	@Inject
-	ParseHelper<Model> parseHelper
+	ParseHelper<Story> parseHelper
 	
 	@Test
 	def void loadModel() {

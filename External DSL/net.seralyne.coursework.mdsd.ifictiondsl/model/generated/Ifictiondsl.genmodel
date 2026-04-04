@@ -33,20 +33,32 @@
       <genFeatures createChild="false" ecoreFeature="ecore:EAttribute Ifictiondsl.ecore#//DialogueNode/text"/>
       <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Ifictiondsl.ecore#//DialogueNode/transition"/>
     </genClasses>
-    <genClasses ecoreClass="Ifictiondsl.ecore#//Condition">
-      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute Ifictiondsl.ecore#//Condition/variable"/>
-      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute Ifictiondsl.ecore#//Condition/operator"/>
-      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute Ifictiondsl.ecore#//Condition/value"/>
+    <genClasses ecoreClass="Ifictiondsl.ecore#//Condition"/>
+    <genClasses ecoreClass="Ifictiondsl.ecore#//Comparison">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute Ifictiondsl.ecore#//Comparison/variable"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute Ifictiondsl.ecore#//Comparison/operator"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute Ifictiondsl.ecore#//Comparison/value"/>
     </genClasses>
     <genClasses ecoreClass="Ifictiondsl.ecore#//SystemStateChangeNode">
       <genFeatures createChild="false" ecoreFeature="ecore:EAttribute Ifictiondsl.ecore#//SystemStateChangeNode/text"/>
-      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute Ifictiondsl.ecore#//SystemStateChangeNode/variable"/>
-      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute Ifictiondsl.ecore#//SystemStateChangeNode/operator"/>
-      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute Ifictiondsl.ecore#//SystemStateChangeNode/value"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Ifictiondsl.ecore#//SystemStateChangeNode/stateUpdates"/>
       <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Ifictiondsl.ecore#//SystemStateChangeNode/transition"/>
+    </genClasses>
+    <genClasses ecoreClass="Ifictiondsl.ecore#//StateUpdate">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute Ifictiondsl.ecore#//StateUpdate/variable"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute Ifictiondsl.ecore#//StateUpdate/operator"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute Ifictiondsl.ecore#//StateUpdate/value"/>
     </genClasses>
     <genClasses ecoreClass="Ifictiondsl.ecore#//EndNode">
       <genFeatures createChild="false" ecoreFeature="ecore:EAttribute Ifictiondsl.ecore#//EndNode/text"/>
+    </genClasses>
+    <genClasses ecoreClass="Ifictiondsl.ecore#//Or">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Ifictiondsl.ecore#//Or/left"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Ifictiondsl.ecore#//Or/right"/>
+    </genClasses>
+    <genClasses ecoreClass="Ifictiondsl.ecore#//And">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Ifictiondsl.ecore#//And/left"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Ifictiondsl.ecore#//And/right"/>
     </genClasses>
   </genPackages>
 </genmodel:GenModel>

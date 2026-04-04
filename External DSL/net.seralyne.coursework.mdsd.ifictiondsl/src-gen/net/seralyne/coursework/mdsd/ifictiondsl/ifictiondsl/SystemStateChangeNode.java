@@ -3,6 +3,7 @@
  */
 package net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl;
 
+import org.eclipse.emf.common.util.EList;
 
 /**
  * <!-- begin-user-doc -->
@@ -14,9 +15,7 @@ package net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl;
  * </p>
  * <ul>
  *   <li>{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.SystemStateChangeNode#getText <em>Text</em>}</li>
- *   <li>{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.SystemStateChangeNode#getVariable <em>Variable</em>}</li>
- *   <li>{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.SystemStateChangeNode#getOperator <em>Operator</em>}</li>
- *   <li>{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.SystemStateChangeNode#getValue <em>Value</em>}</li>
+ *   <li>{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.SystemStateChangeNode#getStateUpdates <em>State Updates</em>}</li>
  *   <li>{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.SystemStateChangeNode#getTransition <em>Transition</em>}</li>
  * </ul>
  *
@@ -49,70 +48,16 @@ public interface SystemStateChangeNode extends Node
   void setText(String value);
 
   /**
-   * Returns the value of the '<em><b>Variable</b></em>' attribute.
+   * Returns the value of the '<em><b>State Updates</b></em>' containment reference list.
+   * The list contents are of type {@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.StateUpdate}.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
-   * @return the value of the '<em>Variable</em>' attribute.
-   * @see #setVariable(String)
-   * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.IfictiondslPackage#getSystemStateChangeNode_Variable()
-   * @model
+   * @return the value of the '<em>State Updates</em>' containment reference list.
+   * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.IfictiondslPackage#getSystemStateChangeNode_StateUpdates()
+   * @model containment="true"
    * @generated
    */
-  String getVariable();
-
-  /**
-   * Sets the value of the '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.SystemStateChangeNode#getVariable <em>Variable</em>}' attribute.
-   * <!-- begin-user-doc -->
-   * <!-- end-user-doc -->
-   * @param value the new value of the '<em>Variable</em>' attribute.
-   * @see #getVariable()
-   * @generated
-   */
-  void setVariable(String value);
-
-  /**
-   * Returns the value of the '<em><b>Operator</b></em>' attribute.
-   * <!-- begin-user-doc -->
-   * <!-- end-user-doc -->
-   * @return the value of the '<em>Operator</em>' attribute.
-   * @see #setOperator(String)
-   * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.IfictiondslPackage#getSystemStateChangeNode_Operator()
-   * @model
-   * @generated
-   */
-  String getOperator();
-
-  /**
-   * Sets the value of the '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.SystemStateChangeNode#getOperator <em>Operator</em>}' attribute.
-   * <!-- begin-user-doc -->
-   * <!-- end-user-doc -->
-   * @param value the new value of the '<em>Operator</em>' attribute.
-   * @see #getOperator()
-   * @generated
-   */
-  void setOperator(String value);
-
-  /**
-   * Returns the value of the '<em><b>Value</b></em>' attribute.
-   * <!-- begin-user-doc -->
-   * <!-- end-user-doc -->
-   * @return the value of the '<em>Value</em>' attribute.
-   * @see #setValue(int)
-   * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.IfictiondslPackage#getSystemStateChangeNode_Value()
-   * @model
-   * @generated
-   */
-  int getValue();
-
-  /**
-   * Sets the value of the '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.SystemStateChangeNode#getValue <em>Value</em>}' attribute.
-   * <!-- begin-user-doc -->
-   * <!-- end-user-doc -->
-   * @param value the new value of the '<em>Value</em>' attribute.
-   * @see #getValue()
-   * @generated
-   */
-  void setValue(int value);
+  EList<StateUpdate> getStateUpdates();
 
   /**
    * Returns the value of the '<em><b>Transition</b></em>' containment reference.

@@ -73,8 +73,12 @@ public class IfictiondslFactoryImpl extends EFactoryImpl implements IfictiondslF
       case IfictiondslPackage.START_NODE: return createStartNode();
       case IfictiondslPackage.DIALOGUE_NODE: return createDialogueNode();
       case IfictiondslPackage.CONDITION: return createCondition();
+      case IfictiondslPackage.COMPARISON: return createComparison();
       case IfictiondslPackage.SYSTEM_STATE_CHANGE_NODE: return createSystemStateChangeNode();
+      case IfictiondslPackage.STATE_UPDATE: return createStateUpdate();
       case IfictiondslPackage.END_NODE: return createEndNode();
+      case IfictiondslPackage.OR: return createOr();
+      case IfictiondslPackage.AND: return createAnd();
       default:
         throw new IllegalArgumentException("The class '" + eClass.getName() + "' is not a valid classifier");
     }
@@ -182,6 +186,18 @@ public class IfictiondslFactoryImpl extends EFactoryImpl implements IfictiondslF
    * @generated
    */
   @Override
+  public Comparison createComparison()
+  {
+    ComparisonImpl comparison = new ComparisonImpl();
+    return comparison;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
   public SystemStateChangeNode createSystemStateChangeNode()
   {
     SystemStateChangeNodeImpl systemStateChangeNode = new SystemStateChangeNodeImpl();
@@ -194,10 +210,46 @@ public class IfictiondslFactoryImpl extends EFactoryImpl implements IfictiondslF
    * @generated
    */
   @Override
+  public StateUpdate createStateUpdate()
+  {
+    StateUpdateImpl stateUpdate = new StateUpdateImpl();
+    return stateUpdate;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
   public EndNode createEndNode()
   {
     EndNodeImpl endNode = new EndNodeImpl();
     return endNode;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public Or createOr()
+  {
+    OrImpl or = new OrImpl();
+    return or;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public And createAnd()
+  {
+    AndImpl and = new AndImpl();
+    return and;
   }
 
   /**

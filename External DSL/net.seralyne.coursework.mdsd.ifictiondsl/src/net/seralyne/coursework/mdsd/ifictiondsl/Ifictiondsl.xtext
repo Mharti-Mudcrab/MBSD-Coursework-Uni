@@ -59,11 +59,11 @@ Condition: // entry
 	OrCondition;
 
 OrCondition returns Condition: // low priority
-	({Or.left=current} 'or' right=AndCondition)*;
+	AndCondition ({Or.left=current} 'or' right=AndCondition)*;
 
 AndCondition returns Condition: // high priority
 	// Primary ({And.left=current} 'and' right=Primary)*;
-	({And.left=current} 'and' right=Primary)*;
+	Primary ({And.left=current} 'and' right=Primary)*;
 
 Primary returns Condition:
 	'(' Condition ')' | Comparison;
@@ -74,19 +74,19 @@ Comparison:
 Operator: ('='|'!='|'>'|'<'|'>='|'<=');
 //===================================================
 
-Condition:
-	(variable= ID Operator value=INT ('and'|'or' conditions+=Condition)*);
+//Condition:
+	//(variable= ID Operator value=INT ('and'|'or' conditions+=Condition)*);
 
 
 SystemStateChangeNode: 
 	'SystemStateChangeNode' name=ID '{'
 	'displayText' ':' text=STRING ','
-	StateUpdate(, StateUpdate)* ','
+	stateUpdates+=StateUpdate(',' stateUpdates+=StateUpdate)*
 	transition=Transition
 	'}';
 	
 StateUpdate:
-	(variable=String operator=('+='|'-='|'=') value=INT);
+	(variable=STRING operator=('+='|'-='|'=') value=INT);
 
 EndNode:
 	'EndNode' name=ID '{'

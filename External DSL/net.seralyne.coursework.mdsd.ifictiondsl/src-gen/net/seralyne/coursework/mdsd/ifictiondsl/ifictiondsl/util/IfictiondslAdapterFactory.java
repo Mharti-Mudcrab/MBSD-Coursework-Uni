@@ -116,14 +116,34 @@ public class IfictiondslAdapterFactory extends AdapterFactoryImpl
         return createConditionAdapter();
       }
       @Override
+      public Adapter caseComparison(Comparison object)
+      {
+        return createComparisonAdapter();
+      }
+      @Override
       public Adapter caseSystemStateChangeNode(SystemStateChangeNode object)
       {
         return createSystemStateChangeNodeAdapter();
       }
       @Override
+      public Adapter caseStateUpdate(StateUpdate object)
+      {
+        return createStateUpdateAdapter();
+      }
+      @Override
       public Adapter caseEndNode(EndNode object)
       {
         return createEndNodeAdapter();
+      }
+      @Override
+      public Adapter caseOr(Or object)
+      {
+        return createOrAdapter();
+      }
+      @Override
+      public Adapter caseAnd(And object)
+      {
+        return createAndAdapter();
       }
       @Override
       public Adapter defaultCase(EObject object)
@@ -268,6 +288,21 @@ public class IfictiondslAdapterFactory extends AdapterFactoryImpl
   }
 
   /**
+   * Creates a new adapter for an object of class '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.Comparison <em>Comparison</em>}'.
+   * <!-- begin-user-doc -->
+   * This default implementation returns null so that we can easily ignore cases;
+   * it's useful to ignore a case when inheritance will catch all the cases anyway.
+   * <!-- end-user-doc -->
+   * @return the new adapter.
+   * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.Comparison
+   * @generated
+   */
+  public Adapter createComparisonAdapter()
+  {
+    return null;
+  }
+
+  /**
    * Creates a new adapter for an object of class '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.SystemStateChangeNode <em>System State Change Node</em>}'.
    * <!-- begin-user-doc -->
    * This default implementation returns null so that we can easily ignore cases;
@@ -283,6 +318,21 @@ public class IfictiondslAdapterFactory extends AdapterFactoryImpl
   }
 
   /**
+   * Creates a new adapter for an object of class '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.StateUpdate <em>State Update</em>}'.
+   * <!-- begin-user-doc -->
+   * This default implementation returns null so that we can easily ignore cases;
+   * it's useful to ignore a case when inheritance will catch all the cases anyway.
+   * <!-- end-user-doc -->
+   * @return the new adapter.
+   * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.StateUpdate
+   * @generated
+   */
+  public Adapter createStateUpdateAdapter()
+  {
+    return null;
+  }
+
+  /**
    * Creates a new adapter for an object of class '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.EndNode <em>End Node</em>}'.
    * <!-- begin-user-doc -->
    * This default implementation returns null so that we can easily ignore cases;
@@ -293,6 +343,36 @@ public class IfictiondslAdapterFactory extends AdapterFactoryImpl
    * @generated
    */
   public Adapter createEndNodeAdapter()
+  {
+    return null;
+  }
+
+  /**
+   * Creates a new adapter for an object of class '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.Or <em>Or</em>}'.
+   * <!-- begin-user-doc -->
+   * This default implementation returns null so that we can easily ignore cases;
+   * it's useful to ignore a case when inheritance will catch all the cases anyway.
+   * <!-- end-user-doc -->
+   * @return the new adapter.
+   * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.Or
+   * @generated
+   */
+  public Adapter createOrAdapter()
+  {
+    return null;
+  }
+
+  /**
+   * Creates a new adapter for an object of class '{@link net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.And <em>And</em>}'.
+   * <!-- begin-user-doc -->
+   * This default implementation returns null so that we can easily ignore cases;
+   * it's useful to ignore a case when inheritance will catch all the cases anyway.
+   * <!-- end-user-doc -->
+   * @return the new adapter.
+   * @see net.seralyne.coursework.mdsd.ifictiondsl.ifictiondsl.And
+   * @generated
+   */
+  public Adapter createAndAdapter()
   {
     return null;
   }

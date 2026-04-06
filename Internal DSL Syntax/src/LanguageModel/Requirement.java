@@ -1,17 +1,5 @@
 package LanguageModel;
 
-<<<<<<< HEAD
-public class Requirement {
-    public Item item;
-    public int quantity;
-
-    public Requirement(Item item, int quantity) {
-        this.item = item;
-        this.quantity = quantity;
-     
-    }
-
-=======
 import java.lang.IllegalStateException;
 
 public class Requirement {
@@ -76,5 +64,4 @@ public class Requirement {
                 throw new IllegalStateException("Invalid operator: " + relationalOperator);
         }
     }  
->>>>>>> 23e094c0adf1119a9e45c094b4eb4075f9253dcf
 }

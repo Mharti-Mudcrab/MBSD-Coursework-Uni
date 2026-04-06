@@ -3,25 +3,12 @@ package LanguageModel;
 import Utils.Output;
 
 public abstract class Node {
-<<<<<<< HEAD
-    public String name;
-    String displayText;
-    Transition transition;
-
-
-    public abstract void displayText();
-    public abstract void execute();
-
-    public void setTransition(Transition transition) {
-        this.transition = transition;
-=======
     protected String name;
     protected String displayText;
     protected Transition transition;
 
     public Node (String name) {
         this.name = name;
->>>>>>> 23e094c0adf1119a9e45c094b4eb4075f9253dcf
     }
 
     public Node (String name, String displayText) {

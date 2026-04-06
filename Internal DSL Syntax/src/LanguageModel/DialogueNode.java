@@ -8,13 +8,6 @@ public class DialogueNode extends Node {
         super(name, displayText);
     }
     
-<<<<<<< HEAD
-    public void execute() {
-        displayText();
-
-        if (transition != null) {
-            transition.execute();
-=======
     public void execute(SystemState systemState) throws IllegalStateException {
         displayText();
 
@@ -23,7 +16,6 @@ public class DialogueNode extends Node {
         }
         else {
             throw new IllegalStateException("Dialogue node has no transition");
->>>>>>> 23e094c0adf1119a9e45c094b4eb4075f9253dcf
         }
     }
 

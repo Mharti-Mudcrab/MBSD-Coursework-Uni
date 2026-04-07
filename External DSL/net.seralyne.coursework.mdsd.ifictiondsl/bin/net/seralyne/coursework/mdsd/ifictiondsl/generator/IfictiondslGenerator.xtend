@@ -3,10 +3,25 @@
  */
 package net.seralyne.coursework.mdsd.ifictiondsl.generator
 
+import com.google.inject.Inject
+import net.mudcrab.coursework.mdsb.ifictiondsl.And
+import net.mudcrab.coursework.mdsb.ifictiondsl.ChoiceNode
+import net.mudcrab.coursework.mdsb.ifictiondsl.Comparison
+import net.mudcrab.coursework.mdsb.ifictiondsl.Condition
+import net.mudcrab.coursework.mdsb.ifictiondsl.DialogueNode
+import net.mudcrab.coursework.mdsb.ifictiondsl.EndNode
+import net.mudcrab.coursework.mdsb.ifictiondsl.Node
+import net.mudcrab.coursework.mdsb.ifictiondsl.Or
+import net.mudcrab.coursework.mdsb.ifictiondsl.Parentheses
+import net.mudcrab.coursework.mdsb.ifictiondsl.StartNode
+import net.mudcrab.coursework.mdsb.ifictiondsl.Story
+import net.mudcrab.coursework.mdsb.ifictiondsl.SystemStateChangeNode
+import net.mudcrab.coursework.mdsb.ifictiondsl.Transition
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
+import org.eclipse.xtext.naming.IQualifiedNameProvider
 
 /**
  * Generates code from your model files on save.
@@ -15,11 +30,82 @@ import org.eclipse.xtext.generator.IGeneratorContext
  */
 class IfictiondslGenerator extends AbstractGenerator {
 
+	@Inject extension IQualifiedNameProvider
+	
 	override void doGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) {
-//		fsa.generateFile('greetings.txt', 'People to greet: ' + 
-//			resource.allContents
-//				.filter(Greeting)
-//				.map[name]
-//				.join(', '))
+		for (story : resource.allContents.toIterable.filter(Story)) {
+			fsa.generateFile(
+				story.name.sanitize + ".java",
+				story.generate)
+		}
 	}
-} 
+    
+	private def generate(Story story) '''
+		«IF story.eContainer.fullyQualifiedName !== null»
+			package «story.eContainer.fullyQualifiedName»;
+		«ENDIF»
+		
+		import LanguageModel.StoryBuilder;
+		import Utils.Priority;
+		import java.lang.IllegalStateException;
+		
+		public class «story.name.sanitize» extends StoryBuilder {
+			@Override
+		    public void build() throws IllegalStateException {
+		        Story("«story.name»")
+			        «FOR node : story.nodes»
+			        	«node.generateNode»
+			        «ENDFOR»;
+			}
+		}
+	'''
+	
+	private def String generateNode(Node node) {
+		switch (node) {
+			StartNode: 
+			'''		.Start("«node.name»", "«node.text»",
+		 				.Transition(«node.transition.generateTransition»)
+			
+			'''
+			DialogueNode: '''
+			'''
+			ChoiceNode: '''
+			'''
+			SystemStateChangeNode: '''
+			'''
+			EndNode: '''
+			'''
+			default: ""
+		}
+	}
+	
+	private def String generateTransition(Transition transition) {
+		if (transition.condition === null) {
+			return '''"«transition.destination»"'''
+		}	
+		else {
+			switch (transition.priority) {
+				case 3: return '''"«transition.destination»", Priority.HIGH, "«transition.condition.generateCondition.trim»"'''
+				case 2: return '''"«transition.destination»", Priority.MEDIUM, "«transition.condition.generateCondition.trim»"'''
+				case 1: return '''"«transition.destination»", Priority.LOW, "«transition.condition.generateCondition.trim»"'''
+				default: return ''''''
+			}
+		}	
+	}
+	
+	private def String generateCondition(Condition cond) {
+		switch (cond) {
+			Parentheses:	'''(«cond.inner.generateCondition») '''
+			And: 			'''«cond.left.generateCondition» and «cond.right.generateCondition» '''
+			Or: 			'''«cond.left.generateCondition» or «cond.right.generateCondition» '''
+			Comparison:		'''«cond.variable» «cond.operator» «cond.value» '''
+			default:		''''''
+		}
+	}
+	
+	private def String sanitize(String s) {
+		s.replace(" ", "_")
+		 .replace("-", "_")
+		 .toFirstUpper
+	}
+}

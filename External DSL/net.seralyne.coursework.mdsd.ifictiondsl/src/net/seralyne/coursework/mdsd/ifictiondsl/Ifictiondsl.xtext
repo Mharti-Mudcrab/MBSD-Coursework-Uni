@@ -2,7 +2,7 @@ grammar net.seralyne.coursework.mdsd.ifictiondsl.Ifictiondsl with org.eclipse.xt
 
 generate ifictiondsl "http://www.seralyne.net/coursework/mdsd/ifictiondsl/Ifictiondsl"
 
- 
+
 /*Model:
 	greetings+=Greeting*;
 	
@@ -66,7 +66,7 @@ AndCondition returns Condition: // high priority
 	Primary ({And.left=current} 'and' right=Primary)*;
 
 Primary returns Condition:
-	'(' Condition ')' | Comparison;
+	{Parentheses} '(' inner=Condition ')' | Comparison;
 
 Comparison:
 	(variable=ID operator=Operator value=INT);
@@ -80,13 +80,13 @@ Operator: ('='|'!='|'>'|'<'|'>='|'<=');
 
 SystemStateChangeNode: 
 	'SystemStateChangeNode' name=ID '{'
-	'displayText' ':' text=STRING ','
-	stateUpdates+=StateUpdate(',' stateUpdates+=StateUpdate)*
-	transition=Transition
+		'displayText' ':' text=STRING ','
+		stateUpdates+=StateUpdate(',' stateUpdates+=StateUpdate)* ','
+		transition=Transition
 	'}';
 	
 StateUpdate:
-	(variable=STRING operator=('+='|'-='|'=') value=INT);
+	(variable=ID operator=('+='|'-='|'=') value=INT);
 
 EndNode:
 	'EndNode' name=ID '{'

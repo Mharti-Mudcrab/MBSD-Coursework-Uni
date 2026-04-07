@@ -70,7 +70,7 @@ public class SystemState {
         currentOption = option;
     }
 
-    public void setTransition(String targetName, Priority priority, String condition) {
+    public void setTransition(String targetName, int priority, String condition) {
         if (currentNode instanceof ChoiceNode) {
             currentOption.setTransition(new Transition(targetName, priority, condition));
         }

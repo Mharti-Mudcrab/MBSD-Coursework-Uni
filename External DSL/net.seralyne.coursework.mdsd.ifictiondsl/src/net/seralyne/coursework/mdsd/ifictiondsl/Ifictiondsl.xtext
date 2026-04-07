@@ -2,7 +2,6 @@ grammar net.seralyne.coursework.mdsd.ifictiondsl.Ifictiondsl with org.eclipse.xt
 
 generate ifictiondsl "http://www.seralyne.net/coursework/mdsd/ifictiondsl/Ifictiondsl"
 
-
 /*Model:
 	greetings+=Greeting*;
 	

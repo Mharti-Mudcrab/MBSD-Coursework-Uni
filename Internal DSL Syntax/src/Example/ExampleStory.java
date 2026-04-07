@@ -12,7 +12,7 @@ public class ExampleStory extends StoryBuilder {
         Story("Encanhted Forest")
             .Start("start",
                     "You are in an enchanted forest. Magic fills the air and you feel enchanted\nYou see 2 roads to go down and some bushes around.")
-                .Transition("roadChoice") // PRIOIRTY_1 is default
+                .Transition("roadChoice") // Priority.LOW is default
             
             .Choice("roadChoice")
                 .ChoiceOption("Go down road number 1")

@@ -24,7 +24,7 @@ DialogueNode foundTalismanDialogue {
 
 SystemStateChangeNode addTalismanSystemStateChange {
     displayText: "Adds talisman to backpack",
-    "Talisman"+=1,
+    Talisman+=1,
     -> roadChoice
 }
 

@@ -9,10 +9,10 @@ public class Transition {
     
     private Node nextNode;
     protected String nextNodeName;
-    private Priority priority;
+    private int priority;
     private ArrayList<Requirement> requirements; 
 
-    public Transition(String nextNodeName, Priority priority, String condition) {
+    public Transition(String nextNodeName, int priority, String condition) {
         this.nextNodeName = nextNodeName;
         this.priority = priority;
         this.requirements = new ArrayList<>();
@@ -78,7 +78,7 @@ public class Transition {
         return nextNode;
     }
 
-    public Priority getPriority() {
+    public int getPriority() {
         return priority;
     }
 

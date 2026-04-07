@@ -39,7 +39,7 @@ public class ChoiceOption {
         Transition bestTransition = null;
         for (Transition transition : transitions) {
             if (transition.satisfiesCondition(systemState)) {
-                if (bestTransition == null || transition.getPriority().value() > bestTransition.getPriority().value()) {
+                if (bestTransition == null || transition.getPriority() > bestTransition.getPriority()) {
                     bestTransition = transition;
                 }
             }

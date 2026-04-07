@@ -59,10 +59,10 @@ public abstract class StoryBuilder {
     }
 
     public StoryBuilder Transition(String targetName) throws IllegalStateException {
-        return Transition(targetName, Priority.LOW, null);
+        return Transition(targetName, 0, null);
     }
 
-    public StoryBuilder Transition(String targetName, Priority priority, String condition) {
+    public StoryBuilder Transition(String targetName, int priority, String condition) {
         state.setTransition(targetName, priority, condition);
         return this;
     }

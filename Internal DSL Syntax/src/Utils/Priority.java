@@ -1,5 +1,6 @@
 package Utils;
 
+@Deprecated
 public enum Priority {
     HIGH,
     MEDIUM,

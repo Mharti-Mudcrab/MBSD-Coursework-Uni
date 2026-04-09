@@ -3,6 +3,9 @@ package LanguageModel;
 import java.util.ArrayList;
 import java.lang.Integer;
 import java.lang.IllegalStateException;
+import java.util.regex.Pattern;
+
+import Utils.Output;
 
 
 public class SystemStateChangeNode extends Node {
@@ -30,9 +33,9 @@ public class SystemStateChangeNode extends Node {
         ArrayList<SystemStateChangeItem> returnList = new ArrayList<>();
         for(String stateChangeItem : stateChangeExpression.trim().split(",")) {
             String operatorType = findOperatorType(stateChangeItem);
-            String keyValuePair[] = stateChangeItem.trim().split(operatorType);
-            String key = keyValuePair[0];
-            String value = keyValuePair[1];
+            String keyValuePair[] = stateChangeItem.trim().split(Pattern.quote(operatorType)); // To handle metacharacters like + in +=
+            String key = keyValuePair[0].trim();
+            String value = keyValuePair[1].trim();
             returnList.add(new SystemStateChangeItem(key, operatorType, Integer.parseInt(value)));
         }
         return returnList;
@@ -52,7 +55,7 @@ public class SystemStateChangeNode extends Node {
             throw new IllegalArgumentException("Invalid operator in state change item: " + stateChangeItem);
         }
     }
-
+    
     @Override
     public void execute(SystemState systemState) {
         displayText();

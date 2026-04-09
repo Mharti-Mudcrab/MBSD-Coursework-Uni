@@ -7,24 +7,33 @@ StartNode Start {
 ChoiceNode roadChoice {
     choices: [
         ChoiceOption {displayText: "Go down road number 1", 
-            -> road1DialogueTalisman with priority 2 with condition: Talisman=1,
+            -> road1DialogueTalisman with priority 2 with condition: Talisman==1 and Coin==5 or ((Cucumber<10 and Favor>=15) or ((CancanDancers==1))) or Grit==100,
             -> road1DialogueNoTalisman},
-        ChoiceOption {displayText: "Go down road number 2", 
+        ChoiceOption {displayText: "Go down road number 2 ", 
             -> road2Dialogue},
         ChoiceOption {displayText: "Look in bushes", 
-            -> foundTalismanDialogue with priority 2 with condition: Talisman=1,
+            -> addTalismanSystemStateChange with priority 3 with condition: Talisman==0,
+            -> addCoinSystemStateChange with priority 3 with condition: Talisman==1 and BushLookup<3,
+            -> addPictureSystemStateChange with priority 2 with condition: Talisman==1 and BushLookup<4,
             -> foundNothingDialogue}
     ]
 }
 
-DialogueNode foundTalismanDialogue {
-    displayText: "You found a Talisman! It looks important", 
-    -> addTalismanSystemStateChange
+SystemStateChangeNode addPictureSystemStateChange {
+    displayText: "You found a picture of your mom! aaaw...\nThat goes right in the shoulder pocket <3", 
+    BushLookup+=1, PictureOfMom=1,
+    -> roadChoice
+}
+
+SystemStateChangeNode addCoinSystemStateChange {
+    displayText: "You found some coin! neat...\nAdded 5 coins to backpack!", 
+    BushLookup+=1, Coin+=5,
+    -> roadChoice
 }
 
 SystemStateChangeNode addTalismanSystemStateChange {
-    displayText: "Adds talisman to backpack",
-    Talisman+=1,
+    displayText: "You found a Talisman! It looks important!\nAdded the talisman to backpack ", 
+    Talisman=1, Coind+=10, Cucumber-=1,
     -> roadChoice
 }
 
@@ -43,7 +52,7 @@ ChoiceNode shieldChoice {
         ChoiceOption {displayText: "Go back to start", 
             -> Start},
         ChoiceOption {displayText: "Try to go through",
-            -> goThroughOpeningDialogueSuccess with priority 2 with condition: Talisman=1,
+            -> goThroughOpeningDialogueSuccess with priority 2 with condition: Talisman==1,
             -> goThroughOpeningDialogueFail}
     ]
 }
@@ -73,7 +82,7 @@ ChoiceNode movePastWitchChoice {
         ChoiceOption {displayText: "Go back to start", 
             -> Start},
         ChoiceOption {displayText: "Go past her",
-             -> walkPastWitch with priority 2 with condition: Talisman=1,
+             -> walkPastWitch with priority 2 with condition: Talisman==1,
              -> witchBadEnd}
     ]
 }

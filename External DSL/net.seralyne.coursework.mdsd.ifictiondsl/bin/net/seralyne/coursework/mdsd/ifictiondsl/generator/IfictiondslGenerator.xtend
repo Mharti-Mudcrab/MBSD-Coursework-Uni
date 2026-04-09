@@ -3,25 +3,24 @@
  */
 package net.seralyne.coursework.mdsd.ifictiondsl.generator
 
-import com.google.inject.Inject
-import net.mudcrab.coursework.mdsb.ifictiondsl.And
-import net.mudcrab.coursework.mdsb.ifictiondsl.ChoiceNode
-import net.mudcrab.coursework.mdsb.ifictiondsl.Comparison
-import net.mudcrab.coursework.mdsb.ifictiondsl.Condition
-import net.mudcrab.coursework.mdsb.ifictiondsl.DialogueNode
-import net.mudcrab.coursework.mdsb.ifictiondsl.EndNode
-import net.mudcrab.coursework.mdsb.ifictiondsl.Node
-import net.mudcrab.coursework.mdsb.ifictiondsl.Or
-import net.mudcrab.coursework.mdsb.ifictiondsl.Parentheses
-import net.mudcrab.coursework.mdsb.ifictiondsl.StartNode
-import net.mudcrab.coursework.mdsb.ifictiondsl.Story
-import net.mudcrab.coursework.mdsb.ifictiondsl.SystemStateChangeNode
-import net.mudcrab.coursework.mdsb.ifictiondsl.Transition
+import net.mudcrab.coursework.mbsd.ifictiondsl.And
+import net.mudcrab.coursework.mbsd.ifictiondsl.ChoiceNode
+import net.mudcrab.coursework.mbsd.ifictiondsl.Comparison
+import net.mudcrab.coursework.mbsd.ifictiondsl.Condition
+import net.mudcrab.coursework.mbsd.ifictiondsl.DialogueNode
+import net.mudcrab.coursework.mbsd.ifictiondsl.EndNode
+import net.mudcrab.coursework.mbsd.ifictiondsl.Node
+import net.mudcrab.coursework.mbsd.ifictiondsl.Or
+import net.mudcrab.coursework.mbsd.ifictiondsl.Parentheses
+import net.mudcrab.coursework.mbsd.ifictiondsl.StartNode
+import net.mudcrab.coursework.mbsd.ifictiondsl.StateUpdate
+import net.mudcrab.coursework.mbsd.ifictiondsl.Story
+import net.mudcrab.coursework.mbsd.ifictiondsl.SystemStateChangeNode
+import net.mudcrab.coursework.mbsd.ifictiondsl.Transition
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
-import org.eclipse.xtext.naming.IQualifiedNameProvider
 
 /**
  * Generates code from your model files on save.
@@ -29,33 +28,25 @@ import org.eclipse.xtext.naming.IQualifiedNameProvider
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#code-generation
  */
 class IfictiondslGenerator extends AbstractGenerator {
-
-	@Inject extension IQualifiedNameProvider
 	
 	override void doGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) {
+		System.out.println("New version generated!!")
 		for (story : resource.allContents.toIterable.filter(Story)) {
 			fsa.generateFile(
-				story.name.sanitize + ".java",
+				story.name.sanitizeClassName + "Builder.java",
 				story.generate)
 		}
 	}
     
-	private def generate(Story story) '''
-		«IF story.eContainer.fullyQualifiedName !== null»
-			package «story.eContainer.fullyQualifiedName»;
-		«ENDIF»
-		
+	private def generate(Story story) '''		
 		import LanguageModel.StoryBuilder;
-		import Utils.Priority;
-		import java.lang.IllegalStateException;
 		
-		public class «story.name.sanitize» extends StoryBuilder {
+		public class «story.name.sanitizeClassName»Builder extends StoryBuilder {
 			@Override
-		    public void build() throws IllegalStateException {
-		        Story("«story.name»")
-			        «FOR node : story.nodes»
-			        	«node.generateNode»
-			        «ENDFOR»;
+			public void build() throws IllegalStateException {
+				Story("«story.name»")
+					«FOR node : story.nodes»
+						«node.generateNode»«ENDFOR»«/* Hacky way of avoiding newline for ; */»;
 			}
 		}
 	'''
@@ -63,49 +54,79 @@ class IfictiondslGenerator extends AbstractGenerator {
 	private def String generateNode(Node node) {
 		switch (node) {
 			StartNode: 
-			'''		.Start("«node.name»", "«node.text»",
-		 				.Transition(«node.transition.generateTransition»)
+			'''
+			.Start("«node.name»",
+					"«node.text.sanitizeText»")
+				.Transition(«node.transition.generateTransition»)
+			'''
+			DialogueNode: 
+			'''
 			
+			.Dialogue("«node.name»",
+					"«node.text.sanitizeText»")
+				.Transition(«node.transition.generateTransition»)
 			'''
-			DialogueNode: '''
+			ChoiceNode: 
 			'''
-			ChoiceNode: '''
+			
+			.Choice("«node.name»")
+				«FOR option : node.options»
+					.ChoiceOption("«option.text.sanitizeText»")
+						«FOR trans : option.transitions»
+							.Transition(«trans.generateTransition»)
+						«ENDFOR»
+				«ENDFOR»
 			'''
-			SystemStateChangeNode: '''
+			SystemStateChangeNode: 
 			'''
-			EndNode: '''
+			
+			.SystemStateChange("«node.name»",
+					"«node.text.sanitizeText»",
+					"«node.stateUpdates.map[generateStateUpdate].join(", ")»")
+				.Transition(«node.transition.generateTransition»)
 			'''
-			default: ""
+			EndNode: 
+			'''
+			
+			
+			.End("«node.name»",
+					"«node.text.sanitizeText»")'''
+			default: ''''''
 		}
 	}
 	
+	private def String generateStateUpdate(StateUpdate stateUpd) {
+		'''«stateUpd.variable»«stateUpd.operator»«stateUpd.value»'''
+	}
+	
 	private def String generateTransition(Transition transition) {
-		if (transition.condition === null) {
-			return '''"«transition.destination»"'''
-		}	
-		else {
-			switch (transition.priority) {
-				case 3: return '''"«transition.destination»", Priority.HIGH, "«transition.condition.generateCondition.trim»"'''
-				case 2: return '''"«transition.destination»", Priority.MEDIUM, "«transition.condition.generateCondition.trim»"'''
-				case 1: return '''"«transition.destination»", Priority.LOW, "«transition.condition.generateCondition.trim»"'''
-				default: return ''''''
-			}
-		}	
+		val prio = transition.priority
+		if (prio <= 1) {
+			return '''"«transition.destination.name»"'''
+		} else {
+			return '''"«transition.destination.name»", «prio», "«transition.condition.generateCondition.trim»"'''
+		}
 	}
 	
 	private def String generateCondition(Condition cond) {
 		switch (cond) {
-			Parentheses:	'''(«cond.inner.generateCondition») '''
-			And: 			'''«cond.left.generateCondition» and «cond.right.generateCondition» '''
-			Or: 			'''«cond.left.generateCondition» or «cond.right.generateCondition» '''
-			Comparison:		'''«cond.variable» «cond.operator» «cond.value» '''
+			Parentheses:	'''(«cond.inner.generateCondition»)'''
+			And: 			'''«cond.left.generateCondition» and «cond.right.generateCondition»'''
+			Or: 			'''«cond.left.generateCondition» or «cond.right.generateCondition»'''
+			Comparison:		'''«cond.variable»«cond.operator»«cond.value»'''
 			default:		''''''
 		}
 	}
 	
-	private def String sanitize(String s) {
-		s.replace(" ", "_")
+	private def String sanitizeClassName(String s) {
+		s.split(" ").map[toFirstUpper]
+		 .join("")
 		 .replace("-", "_")
-		 .toFirstUpper
+	}
+	
+	private def String sanitizeText(String s) {
+		s.replace("\n", "\\n")
+	     .replace("\r", "\\r")
+	     .replace('\"', '\\"')
 	}
 }

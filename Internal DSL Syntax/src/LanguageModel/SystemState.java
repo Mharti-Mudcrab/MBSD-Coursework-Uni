@@ -54,7 +54,7 @@ public class SystemState {
 
     public void addChoiceOption(ChoiceOption option) {
         if (currentNode instanceof ChoiceNode) {
-            ((ChoiceNode) currentNode).addOption(option);
+            ((ChoiceNode)currentNode).addOption(option);
             currentOption = option;
         }
         else {

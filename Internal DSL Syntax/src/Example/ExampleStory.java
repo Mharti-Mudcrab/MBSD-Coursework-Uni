@@ -1,8 +1,6 @@
 package Example;
 
 import LanguageModel.StoryBuilder;
-import Utils.Priority;
-import java.lang.IllegalStateException;
 
 
 public class ExampleStory extends StoryBuilder {

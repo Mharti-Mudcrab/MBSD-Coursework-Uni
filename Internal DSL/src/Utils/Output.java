@@ -20,4 +20,11 @@ public class Output extends PrintStream {
         }
         instance.println(x);
     }
+    
+    public static void printNoLine(String x) {
+        if (instance == null) {
+            instance = new Output();
+        }
+        instance.print(x);
+    }
 }

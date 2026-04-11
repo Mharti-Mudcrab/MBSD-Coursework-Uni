@@ -2,22 +2,12 @@ grammar net.seralyne.coursework.mdsd.ifictiondsl.Ifictiondsl with org.eclipse.xt
 
 generate ifictiondsl "http://www.seralyne.net/coursework/mdsd/ifictiondsl/Ifictiondsl"
 
-
-/*Model:
-	greetings+=Greeting*;
-	
-Greeting:
-	'Hello' name=ID '!';
- */
- 
 Story: 
 	'Story' name=ID
 	(nodes+=Node)*;
 	
 Node: 
 	StartNode | ChoiceNode | DialogueNode | SystemStateChangeNode | EndNode;
-
-
 
 ChoiceNode: 
 	'ChoiceNode' name=ID '{'
@@ -53,8 +43,6 @@ DialogueNode:
 		transition=Transition
 		'}';
 
-
-//===================================================
 Condition: // entry
 	OrCondition;
 
@@ -62,21 +50,15 @@ OrCondition returns Condition: // low priority
 	AndCondition ({Or.left=current} 'or' right=AndCondition)*;
 
 AndCondition returns Condition: // high priority
-	// Primary ({And.left=current} 'and' right=Primary)*;
 	Primary ({And.left=current} 'and' right=Primary)*;
 
-Primary returns Condition:
+Primary returns Condition: // higher
 	{Parentheses} '(' inner=Condition ')' | Comparison;
 
 Comparison:
 	(variable=ID operator=Operator value=INT);
 
 Operator: ('='|'!='|'>'|'<'|'>='|'<=');
-//===================================================
-
-//Condition:
-	//(variable= ID Operator value=INT ('and'|'or' conditions+=Condition)*);
-
 
 SystemStateChangeNode: 
 	'SystemStateChangeNode' name=ID '{'

@@ -15,7 +15,7 @@ ChoiceNode roadChoice {
             -> addTalismanSystemStateChange with priority 3 with condition: Talisman==0,
             -> addCoinSystemStateChange with priority 3 with condition: Talisman==1 and BushLookup<3,
             -> addPictureSystemStateChange with priority 2 with condition: Talisman==1 and BushLookup<4,
-            -> foundNothingDialogue}
+            -> foundNothingSystemStateChange with priority 1 with condition: BushLookup<5}
     ]
 }
 
@@ -37,8 +37,9 @@ SystemStateChangeNode addTalismanSystemStateChange {
     -> roadChoice
 }
 
-DialogueNode foundNothingDialogue {
-    displayText: "You find nothing", 
+SystemStateChangeNode foundNothingSystemStateChange {
+    displayText: "You find nothing...", 
+    BushLookup+=1,
     -> roadChoice
 }
 

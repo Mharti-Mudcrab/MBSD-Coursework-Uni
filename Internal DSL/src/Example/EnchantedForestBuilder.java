@@ -19,7 +19,7 @@ public class EnchantedForestBuilder extends StoryBuilder {
 					.Transition("addTalismanSystemStateChange", 3, "Talisman==0")
 					.Transition("addCoinSystemStateChange", 3, "Talisman==1 and BushLookup<3")
 					.Transition("addPictureSystemStateChange", 2, "Talisman==1 and BushLookup<4")
-					.Transition("foundNothingDialogue")
+					.Transition("foundNothingSystemStateChange", 1, "BushLookup<5")
 						
 			.SystemStateChange("addPictureSystemStateChange",
 					"You found a picture of your mom! aaaw...\nThat goes right in the shoulder pocket <3",
@@ -36,8 +36,9 @@ public class EnchantedForestBuilder extends StoryBuilder {
 					"Talisman=1, Coind+=10, Cucumber-=1")
 				.Transition("roadChoice")
 						
-			.Dialogue("foundNothingDialogue",
-					"You find nothing")
+			.SystemStateChange("foundNothingSystemStateChange",
+					"You find nothing...",
+					"BushLookup+=1")
 				.Transition("roadChoice")
 						
 			.Dialogue("road2Dialogue",

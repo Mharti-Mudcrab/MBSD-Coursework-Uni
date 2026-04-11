@@ -46,6 +46,7 @@ public class ChoiceNode extends Node {
             throw new IllegalStateException("No viable options available for this choice node.");
         }
 
+        Output.printNoLine("> ");
         String answer = "";
         while (answer.isEmpty()) {
             answer = Input.readLine();
@@ -59,6 +60,7 @@ public class ChoiceNode extends Node {
                 }
             }
             Output.printLine("Invalid choice, please try again.");
+            Output.printNoLine("> ");
             answer = "";
         }
     }

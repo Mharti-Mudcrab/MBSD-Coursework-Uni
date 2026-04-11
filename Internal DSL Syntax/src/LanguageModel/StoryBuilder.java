@@ -1,7 +1,6 @@
 package LanguageModel;
 
 import java.lang.IllegalStateException;
-import Utils.Priority;
 
 public abstract class StoryBuilder {
 

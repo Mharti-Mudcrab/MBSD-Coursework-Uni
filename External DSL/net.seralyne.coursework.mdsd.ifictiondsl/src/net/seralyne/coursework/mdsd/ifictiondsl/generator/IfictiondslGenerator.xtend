@@ -3,6 +3,10 @@
  */
 package net.seralyne.coursework.mdsd.ifictiondsl.generator
 
+import java.net.URI
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+import java.nio.file.Paths
 import net.mudcrab.coursework.mbsd.ifictiondsl.And
 import net.mudcrab.coursework.mbsd.ifictiondsl.ChoiceNode
 import net.mudcrab.coursework.mbsd.ifictiondsl.Comparison
@@ -13,6 +17,7 @@ import net.mudcrab.coursework.mbsd.ifictiondsl.Node
 import net.mudcrab.coursework.mbsd.ifictiondsl.Or
 import net.mudcrab.coursework.mbsd.ifictiondsl.Parentheses
 import net.mudcrab.coursework.mbsd.ifictiondsl.StartNode
+import net.mudcrab.coursework.mbsd.ifictiondsl.StateUpdate
 import net.mudcrab.coursework.mbsd.ifictiondsl.Story
 import net.mudcrab.coursework.mbsd.ifictiondsl.SystemStateChangeNode
 import net.mudcrab.coursework.mbsd.ifictiondsl.Transition
@@ -20,7 +25,6 @@ import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
-import net.mudcrab.coursework.mbsd.ifictiondsl.StateUpdate
 
 /**
  * Generates code from your model files on save.
@@ -31,25 +35,53 @@ class IfictiondslGenerator extends AbstractGenerator {
 	
 	override void doGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) {
 		System.out.println("New version generated!!")
-		for (story : resource.allContents.toIterable.filter(Story)) {
+
+		copyTemplateFolder(fsa, "/src/net/mudcrab/coursework/mbsd/generator/Example/", "Example")
+		copyTemplateFolder(fsa, "/src/net/mudcrab/coursework/mbsd/generator/LanguageModel", "LanguageModel")
+		copyTemplateFolder(fsa, "/src/net/mudcrab/coursework/mbsd/generator/Utils", "Utils")
+
+		val stories = resource.allContents.toIterable.filter(Story).toList
+		for (story : stories) {
 			fsa.generateFile(
-				story.name.sanitizeClassName + ".java",
+				"Example/" + story.name.sanitizeClassName + "Builder.java",
 				story.generate)
+		}
+	}
+
+	private def void copyTemplateFolder(IFileSystemAccess2 fsa, String sourceFolder, String targetFolder) {
+		try {
+			// C:\Users\madsw\eclipse-workspace\net.mudcrab.coursework.mbsd\src\net\mudcrab\coursework\mbsd\generator
+			val codeSourceUrl = this.class.protectionDomain.codeSource.location
+		    val start = Paths.get(URI.create(codeSourceUrl.toString + sourceFolder))
+			val stream = Files.walk(start)
+			try {
+				stream.forEach [ file |
+						if (file.toString.endsWith(".java")) {
+							fsa.generateFile(targetFolder + "/" + file.fileName, 
+								Files.readString(file, StandardCharsets.UTF_8)
+							)
+						}
+					]
+			} finally {
+				stream.close
+			}
+		} catch (Exception e) {
+			System.err.println("Failed to copy template folder " + sourceFolder + ": " + e.message)
+			throw e
 		}
 	}
     
 	private def generate(Story story) '''
+		package Example;
+			
 		import LanguageModel.StoryBuilder;
-		import Utils.Priority;
-		import java.lang.IllegalStateException;
 		
-		public class «story.name.sanitizeClassName» extends StoryBuilder {
+		public class «story.name.sanitizeClassName»Builder extends StoryBuilder {
 			@Override
-		    public void build() throws IllegalStateException {
-		        Story("«story.name»")
-			        «FOR node : story.nodes»
-			        	«node.generateNode»
-			        «ENDFOR»;
+			public void build() throws IllegalStateException {
+				Story("«story.name»")
+					«FOR node : story.nodes»
+						«node.generateNode»«ENDFOR»«/* Hacky way of avoiding newline for ; */»;
 			}
 		}
 	'''
@@ -57,61 +89,66 @@ class IfictiondslGenerator extends AbstractGenerator {
 	private def String generateNode(Node node) {
 		switch (node) {
 			StartNode: 
-			'''.Start("«node.name»", 
-					"«node.text.sanitizeText»",
+			'''
+			.Start("«node.name»",
+					"«node.text.sanitizeText»")
 				.Transition(«node.transition.generateTransition»)
-			
 			'''
 			DialogueNode: 
-			'''.Dialogue("«node.name»",
-						"«node.text»")
-					.Transition(«node.transition.generateTransition»)
+			'''
 			
+			.Dialogue("«node.name»",
+					"«node.text.sanitizeText»")
+				.Transition(«node.transition.generateTransition»)
 			'''
 			ChoiceNode: 
-			'''.Choice("«node.name»")
-					«FOR option : node.options»
-						.ChoiceOption("«option.text.sanitizeText»")
-							«FOR trans : option.transitions»
-								.Transition(«trans.generateTransition»)
-							«ENDFOR»
-					«ENDFOR»
-						
+			'''
+			
+			.Choice("«node.name»")
+				«FOR option : node.options»
+					.ChoiceOption("«option.text.sanitizeText»")
+						«FOR trans : option.transitions»
+							.Transition(«trans.generateTransition»)
+						«ENDFOR»
+				«ENDFOR»
 			'''
 			SystemStateChangeNode: 
-			'''.SystemStateChange("«node.name»",
-					«node.text.sanitizeText»",
-					"«node.stateUpdates.map[generateStateUpdate].join(", ")»",
+			'''
+			
+			.SystemStateChange("«node.name»",
+					"«node.text.sanitizeText»",
+					"«node.stateUpdates.map[generateStateUpdate].join(", ")»")
 				.Transition(«node.transition.generateTransition»)
 			'''
 			EndNode: 
-			'''.End("«node.name»",
-				"«node.text.sanitizeText»")
 			'''
+			
+			
+			.End("«node.name»",
+					"«node.text.sanitizeText»")'''
 			default: ''''''
 		}
 	}
 	
 	private def String generateStateUpdate(StateUpdate stateUpd) {
-		'''«stateUpd.variable» «stateUpd.operator» «stateUpd.value»'''
+		'''«stateUpd.variable»«stateUpd.operator»«stateUpd.value»'''
 	}
 	
 	private def String generateTransition(Transition transition) {
 		val prio = transition.priority
-		val valueOptions = #["Priority.LOW", "Priority.MEDIUM", "Priority.HIGH"]
-		if (prio <= 1 || prio > 3) {
+		if (prio <= 0) {
 			return '''"«transition.destination.name»"'''
-		} else if (prio <= 3) {
-			return '''"«transition.destination.name»", «valueOptions.get(prio)», "«transition.condition.generateCondition.trim»"'''
+		} else {
+			return '''"«transition.destination.name»", «prio», "«transition.condition.generateCondition.trim»"'''
 		}
 	}
 	
 	private def String generateCondition(Condition cond) {
 		switch (cond) {
-			Parentheses:	'''(«cond.inner.generateCondition») '''
-			And: 			'''«cond.left.generateCondition» and «cond.right.generateCondition» '''
-			Or: 			'''«cond.left.generateCondition» or «cond.right.generateCondition» '''
-			Comparison:		'''«cond.variable» «cond.operator» «cond.value» '''
+			Parentheses:	'''(«cond.inner.generateCondition»)'''
+			And: 			'''«cond.left.generateCondition» and «cond.right.generateCondition»'''
+			Or: 			'''«cond.left.generateCondition» or «cond.right.generateCondition»'''
+			Comparison:		'''«cond.variable»«cond.operator»«cond.value»'''
 			default:		''''''
 		}
 	}
@@ -123,6 +160,8 @@ class IfictiondslGenerator extends AbstractGenerator {
 	}
 	
 	private def String sanitizeText(String s) {
-		s.replace("\\", "\\\\")
+		s.replace("\n", "\\n")
+	     .replace("\r", "\\r")
+	     .replace('\"', '\\"')
 	}
 }

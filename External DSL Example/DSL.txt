@@ -38,7 +38,7 @@ SystemStateChangeNode addTalismanSystemStateChange {
 }
 
 SystemStateChangeNode foundNothingSystemStateChange {
-    displayText: "You find nothing...", 
+    displayText: "You found nothing...", 
     BushLookup+=1,
     -> roadChoice
 }

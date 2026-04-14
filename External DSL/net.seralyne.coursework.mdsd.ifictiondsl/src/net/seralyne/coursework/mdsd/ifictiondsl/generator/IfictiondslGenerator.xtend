@@ -35,29 +35,33 @@ class IfictiondslGenerator extends AbstractGenerator {
 	
 	override void doGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) {
 		System.out.println("New version generated!!")
-
-		copyTemplateFolder(fsa, "/src/net/mudcrab/coursework/mbsd/generator/Example/", "Example")
-		copyTemplateFolder(fsa, "/src/net/mudcrab/coursework/mbsd/generator/LanguageModel", "LanguageModel")
-		copyTemplateFolder(fsa, "/src/net/mudcrab/coursework/mbsd/generator/Utils", "Utils")
-
+		
 		val stories = resource.allContents.toIterable.filter(Story).toList
 		for (story : stories) {
 			fsa.generateFile(
-				"Example/" + story.name.sanitizeClassName + "Builder.java",
-				story.generate)
+				"Example" + story.name.sanitizeClassName + "/" + story.name.sanitizeClassName + "Builder.java",
+				story.generateStory
+			)
+			fsa.generateFile(
+				"Example" + story.name.sanitizeClassName + "/Main.java",
+				story.generateMain
+			)
 		}
+
+		copyTemplateFolder(fsa, "/src/net/mudcrab/coursework/mbsd/generator/LanguageModel", "LanguageModel")
+		copyTemplateFolder(fsa, "/src/net/mudcrab/coursework/mbsd/generator/Utils", "Utils")
 	}
 
 	private def void copyTemplateFolder(IFileSystemAccess2 fsa, String sourceFolder, String targetFolder) {
 		try {
-			// C:\Users\madsw\eclipse-workspace\net.mudcrab.coursework.mbsd\src\net\mudcrab\coursework\mbsd\generator
+			// C:\Users\<user>\eclipse-workspace\net.mudcrab.coursework.mbsd\src\net\mudcrab\coursework\mbsd\generator
 			val codeSourceUrl = this.class.protectionDomain.codeSource.location
 		    val start = Paths.get(URI.create(codeSourceUrl.toString + sourceFolder))
 			val stream = Files.walk(start)
 			try {
 				stream.forEach [ file |
-						if (file.toString.endsWith(".java")) {
-							fsa.generateFile(targetFolder + "/" + file.fileName, 
+						if (file.toString.endsWith(".javaTmpl")) {
+							fsa.generateFile(targetFolder + "/" + file.fileName.toString.replace(".javaTmpl", ".java"), 
 								Files.readString(file, StandardCharsets.UTF_8)
 							)
 						}
@@ -70,9 +74,26 @@ class IfictiondslGenerator extends AbstractGenerator {
 			throw e
 		}
 	}
+	
+	private def generateMain(Story story) '''
+		package Example«story.name.sanitizeClassName»;
+					
+		import LanguageModel.StoryEngine;
+				
+		public class Main {
+		    public static void main(String args[]) {
+		        try {
+		            new StoryEngine(new «story.name.sanitizeClassName»Builder()).run();
+		        }
+		        catch (IllegalStateException e) {
+		            System.err.println(e.getMessage());
+		        }
+		    }
+		}
+	'''
     
-	private def generate(Story story) '''
-		package Example;
+	private def generateStory(Story story) '''
+		package Example«story.name.sanitizeClassName»;
 			
 		import LanguageModel.StoryBuilder;
 		

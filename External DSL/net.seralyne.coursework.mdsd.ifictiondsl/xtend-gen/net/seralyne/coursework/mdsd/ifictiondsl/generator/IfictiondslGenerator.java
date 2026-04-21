@@ -3,10 +3,25 @@
  */
 package net.seralyne.coursework.mdsd.ifictiondsl.generator;
 
+import java.net.URI;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.xtext.generator.AbstractGenerator;
 import org.eclipse.xtext.generator.IFileSystemAccess2;
 import org.eclipse.xtext.generator.IGeneratorContext;
+import org.eclipse.xtext.xbase.lib.Conversions;
+import org.eclipse.xtext.xbase.lib.Exceptions;
+import org.eclipse.xtext.xbase.lib.Functions.Function1;
+import org.eclipse.xtext.xbase.lib.IterableExtensions;
+import org.eclipse.xtext.xbase.lib.ListExtensions;
+import org.eclipse.xtext.xbase.lib.StringExtensions;
 
 /**
  * Generates code from your model files on save.
@@ -17,5 +32,172 @@ import org.eclipse.xtext.generator.IGeneratorContext;
 public class IfictiondslGenerator extends AbstractGenerator {
   @Override
   public void doGenerate(final Resource resource, final IFileSystemAccess2 fsa, final IGeneratorContext context) {
+    throw new Error("Unresolved compilation problems:"
+      + "\nThe method or field Story is undefined"
+      + "\nThe method or field name is undefined for the type EObject"
+      + "\nThe method or field name is undefined for the type EObject"
+      + "\nThe method or field name is undefined for the type EObject"
+      + "\nThe method generateStory(Story) from the type IfictiondslGenerator refers to the missing type Story"
+      + "\nThe method generateMain(Story) from the type IfictiondslGenerator refers to the missing type Story"
+      + "\nsanitizeClassName cannot be resolved"
+      + "\nsanitizeClassName cannot be resolved"
+      + "\nsanitizeClassName cannot be resolved");
+  }
+
+  private void copyTemplateFolder(final IFileSystemAccess2 fsa, final String sourceFolder, final String targetFolder) {
+    try {
+      try {
+        final URL codeSourceUrl = this.getClass().getProtectionDomain().getCodeSource().getLocation();
+        String _string = codeSourceUrl.toString();
+        String _plus = (_string + sourceFolder);
+        final Path start = Paths.get(URI.create(_plus));
+        final Stream<Path> stream = Files.walk(start);
+        try {
+          final Consumer<Path> _function = (Path file) -> {
+            try {
+              boolean _endsWith = file.toString().endsWith(".javaTmpl");
+              if (_endsWith) {
+                String _replace = file.getFileName().toString().replace(".javaTmpl", ".java");
+                String _plus_1 = ((targetFolder + "/") + _replace);
+                fsa.generateFile(_plus_1, 
+                  Files.readString(file, StandardCharsets.UTF_8));
+              }
+            } catch (Throwable _e) {
+              throw Exceptions.sneakyThrow(_e);
+            }
+          };
+          stream.forEach(_function);
+        } finally {
+          stream.close();
+        }
+      } catch (final Throwable _t) {
+        if (_t instanceof Exception) {
+          final Exception e = (Exception)_t;
+          String _message = e.getMessage();
+          String _plus_1 = ((("Failed to copy template folder " + sourceFolder) + ": ") + _message);
+          System.err.println(_plus_1);
+          throw e;
+        } else {
+          throw Exceptions.sneakyThrow(_t);
+        }
+      }
+    } catch (Throwable _e) {
+      throw Exceptions.sneakyThrow(_e);
+    }
+  }
+
+  private CharSequence generateMain(final /* Story */Object story) {
+    throw new Error("Unresolved compilation problems:"
+      + "\nname cannot be resolved"
+      + "\nsanitizeClassName cannot be resolved"
+      + "\nname cannot be resolved"
+      + "\nsanitizeClassName cannot be resolved");
+  }
+
+  private CharSequence generateStory(final /* Story */Object story) {
+    throw new Error("Unresolved compilation problems:"
+      + "\nname cannot be resolved"
+      + "\nsanitizeClassName cannot be resolved"
+      + "\nname cannot be resolved"
+      + "\nsanitizeClassName cannot be resolved"
+      + "\nname cannot be resolved"
+      + "\nnodes cannot be resolved"
+      + "\ngenerateNode cannot be resolved");
+  }
+
+  private String generateNode(final /* Node */Object node) {
+    throw new Error("Unresolved compilation problems:"
+      + "\nStartNode cannot be resolved to a type."
+      + "\nDialogueNode cannot be resolved to a type."
+      + "\nChoiceNode cannot be resolved to a type."
+      + "\nSystemStateChangeNode cannot be resolved to a type."
+      + "\nEndNode cannot be resolved to a type."
+      + "\nUnreachable code: The case can never match. It is already handled by a previous condition."
+      + "\nUnreachable code: The case can never match. It is already handled by a previous condition."
+      + "\nUnreachable code: The case can never match. It is already handled by a previous condition."
+      + "\nUnreachable code: The case can never match. It is already handled by a previous condition."
+      + "\nThe method generateStateUpdate(StateUpdate) from the type IfictiondslGenerator refers to the missing type StateUpdate"
+      + "\nname cannot be resolved"
+      + "\ntext cannot be resolved"
+      + "\nsanitizeText cannot be resolved"
+      + "\ntransition cannot be resolved"
+      + "\ngenerateTransition cannot be resolved"
+      + "\nname cannot be resolved"
+      + "\ntext cannot be resolved"
+      + "\nsanitizeText cannot be resolved"
+      + "\ntransition cannot be resolved"
+      + "\ngenerateTransition cannot be resolved"
+      + "\nname cannot be resolved"
+      + "\noptions cannot be resolved"
+      + "\ntext cannot be resolved"
+      + "\nsanitizeText cannot be resolved"
+      + "\ntransitions cannot be resolved"
+      + "\ngenerateTransition cannot be resolved"
+      + "\nname cannot be resolved"
+      + "\ntext cannot be resolved"
+      + "\nsanitizeText cannot be resolved"
+      + "\nstateUpdates cannot be resolved"
+      + "\nmap cannot be resolved"
+      + "\njoin cannot be resolved"
+      + "\ntransition cannot be resolved"
+      + "\ngenerateTransition cannot be resolved"
+      + "\nname cannot be resolved"
+      + "\ntext cannot be resolved"
+      + "\nsanitizeText cannot be resolved");
+  }
+
+  private String generateStateUpdate(final /* StateUpdate */Object stateUpd) {
+    throw new Error("Unresolved compilation problems:"
+      + "\nvariable cannot be resolved"
+      + "\noperator cannot be resolved"
+      + "\nvalue cannot be resolved");
+  }
+
+  private String generateTransition(final /* Transition */Object transition) {
+    throw new Error("Unresolved compilation problems:"
+      + "\npriority cannot be resolved"
+      + "\n<= cannot be resolved"
+      + "\ndestination cannot be resolved"
+      + "\nname cannot be resolved"
+      + "\ndestination cannot be resolved"
+      + "\nname cannot be resolved"
+      + "\ncondition cannot be resolved"
+      + "\ngenerateCondition cannot be resolved"
+      + "\ntrim cannot be resolved");
+  }
+
+  private String generateCondition(final /* Condition */Object cond) {
+    throw new Error("Unresolved compilation problems:"
+      + "\nParentheses cannot be resolved to a type."
+      + "\nAnd cannot be resolved to a type."
+      + "\nOr cannot be resolved to a type."
+      + "\nComparison cannot be resolved to a type."
+      + "\nUnreachable code: The case can never match. It is already handled by a previous condition."
+      + "\nUnreachable code: The case can never match. It is already handled by a previous condition."
+      + "\nUnreachable code: The case can never match. It is already handled by a previous condition."
+      + "\ninner cannot be resolved"
+      + "\ngenerateCondition cannot be resolved"
+      + "\nleft cannot be resolved"
+      + "\ngenerateCondition cannot be resolved"
+      + "\nright cannot be resolved"
+      + "\ngenerateCondition cannot be resolved"
+      + "\nleft cannot be resolved"
+      + "\ngenerateCondition cannot be resolved"
+      + "\nright cannot be resolved"
+      + "\ngenerateCondition cannot be resolved"
+      + "\nvariable cannot be resolved"
+      + "\noperator cannot be resolved"
+      + "\nvalue cannot be resolved");
+  }
+
+  private String sanitizeClassName(final String s) {
+    final Function1<String, String> _function = (String it) -> {
+      return StringExtensions.toFirstUpper(it);
+    };
+    return IterableExtensions.join(ListExtensions.<String, String>map(((List<String>)Conversions.doWrapArray(s.split(" "))), _function), "").replace("-", "_");
+  }
+
+  private String sanitizeText(final String s) {
+    return s.replace("\n", "\\n").replace("\r", "\\r").replace("\"", "\\\"");
   }
 }

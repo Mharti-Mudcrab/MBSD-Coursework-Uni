@@ -2,4 +2,20 @@
 **.class
 **/.vscode/
 #External-DSL-Mharti-IE/net.mudcrab.coursework.mbsd/
+External-DSL-Mharti-IE/net.mudcrab.coursework.mbsd.ide
+External-DSL-Mharti-IE/net.mudcrab.coursework.mbsd.tests
+External-DSL-Mharti-IE/net.mudcrab.coursework.mbsd.ui
+External-DSL-Mharti-IE/net.mudcrab.coursework.mbsd.ui.tests
+External-DSL-Mharti-IE/net.mudcrab.coursework.mbsd/.launch
+External-DSL-Mharti-IE/net.mudcrab.coursework.mbsd/.settings
+External-DSL-Mharti-IE/net.mudcrab.coursework.mbsd/META-INF
+External-DSL-Mharti-IE/net.mudcrab.coursework.mbsd/model/generated
+External-DSL-Mharti-IE/net.mudcrab.coursework.mbsd/bin/net/mudcrab/coursework/mbsd
+External-DSL-Mharti-IE/net.mudcrab.coursework.mbsd/src-gen/net/mudcrab/coursework/mbsd
+External-DSL-Mharti-IE/net.mudcrab.coursework.mbsd/xtend-gen/net/mudcrab/coursework/mbsd
+External-DSL-Mharti-IE/net.mudcrab.coursework.mbsd/.antlr-generator-3.2.0-patch.jar
+External-DSL-Mharti-IE/net.mudcrab.coursework.mbsd/.classpath
+External-DSL-Mharti-IE/net.mudcrab.coursework.mbsd/.project
+External-DSL-Mharti-IE/net.mudcrab.coursework.mbsd/build.properties
+External-DSL-Mharti-IE/net.mudcrab.coursework.mbsd/plugin.xml
 

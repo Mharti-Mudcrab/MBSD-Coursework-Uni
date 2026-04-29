@@ -1,0 +1,29 @@
+Manifest-Version: 1.0
+Automatic-Module-Name: net.mudcrab.coursework.mbsd
+Bundle-ManifestVersion: 2
+Bundle-Name: net.mudcrab.coursework.mbsd
+Bundle-Vendor: My Company
+Bundle-Version: 1.0.0.qualifier
+Bundle-SymbolicName: net.mudcrab.coursework.mbsd; singleton:=true
+Bundle-ActivationPolicy: lazy
+Require-Bundle: org.eclipse.xtext,
+ org.eclipse.xtext.xbase,
+ org.eclipse.equinox.common;bundle-version="3.19.0",
+ org.eclipse.emf.ecore,
+ org.eclipse.xtend.lib;bundle-version="2.41.0",
+ org.eclipse.xtext.xbase.lib;bundle-version="2.41.0",
+ org.eclipse.emf.common,
+ org.antlr.runtime;bundle-version="[3.2.0,3.2.1)"
+Bundle-RequiredExecutionEnvironment: JavaSE-21
+Export-Package: net.mudcrab.coursework.mbsd,
+ net.mudcrab.coursework.mbsd.ifictiondsl.impl,
+ net.mudcrab.coursework.mbsd.parser.antlr.internal,
+ net.mudcrab.coursework.mbsd.serializer,
+ net.mudcrab.coursework.mbsd.services,
+ net.mudcrab.coursework.mbsd.generator,
+ net.mudcrab.coursework.mbsd.parser.antlr,
+ net.mudcrab.coursework.mbsd.validation,
+ net.mudcrab.coursework.mbsd.scoping,
+ net.mudcrab.coursework.mbsd.ifictiondsl,
+ net.mudcrab.coursework.mbsd.ifictiondsl.util
+Import-Package: org.apache.log4j

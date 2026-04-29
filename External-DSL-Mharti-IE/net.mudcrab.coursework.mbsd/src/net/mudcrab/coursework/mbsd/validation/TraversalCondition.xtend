@@ -10,22 +10,20 @@ import sun.security.jca.GetInstance.Instance
 
 class TraversalCondition {
 	
-	private TraversalComparison currentTraversalComparison
-	private ArrayDeque<Comparison> comparisonChain
+	private ArrayDeque<Condition> comparisonChain
 	private Condition rootCondition
 	private Condition currentCondition
-	private Class<?> currentParentClass
 	
 	new (Condition condition) {
-		comparisonChain = new ArrayDeque<Comparison>()
+		comparisonChain = new ArrayDeque<Condition>()
 		rootCondition = condition
 		currentCondition = condition
 	}
 	
-	public def TraversalComparison getCurrentTraversalComparison() { currentTraversalComparison }
+	public def ArrayDeque<Condition> getComparisonChain() { comparisonChain }
 	
 	
-	public def boolean buildCondition() {
+	public def boolean buildNextComparisonChain() {
 		buildConditionHelper(currentCondition)		
 	}
 	
@@ -33,7 +31,6 @@ class TraversalCondition {
 		
 		switch (cond) {
 			Or: {
-				currentParentClass = Or
 				if (buildConditionHelper(cond.left)) {
 					return true					
 				}
@@ -43,7 +40,6 @@ class TraversalCondition {
 				return false
 			}
 			And: {
-				currentParentClass = And
 				buildConditionHelper(cond.right)
 				buildConditionHelper(cond.right)
 				if (cond.eContainer instanceof And)
@@ -55,10 +51,10 @@ class TraversalCondition {
 				return true
 			}
 			Comparison: {
-				if (currentTraversalComparison === null) {
+				if (comparisonChain === null) {
 					new TraversalComparison(cond)
 				} else {
-					currentTraversalComparison.addComparison(cond)
+					comparisonChain.add(cond)
 				}
 				
 				return true

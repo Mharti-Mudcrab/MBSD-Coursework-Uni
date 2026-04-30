@@ -25,7 +25,7 @@ ChoiceNode roadChoice {
 }
  
 DialogueNode hardToGetToNode { 
-	displayText: "How did we get here!?",
+	displayText: "How did we get here!?", 
 	-> furtherDownTheDeadBranch 
 }
 

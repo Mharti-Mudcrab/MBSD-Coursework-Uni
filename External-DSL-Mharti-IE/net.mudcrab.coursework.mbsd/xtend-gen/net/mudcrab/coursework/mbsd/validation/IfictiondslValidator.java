@@ -3,21 +3,25 @@
  */
 package net.mudcrab.coursework.mbsd.validation;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import net.mudcrab.coursework.mbsd.ifictiondsl.ChoiceOption;
 import net.mudcrab.coursework.mbsd.ifictiondsl.Comparison;
 import net.mudcrab.coursework.mbsd.ifictiondsl.Condition;
+import net.mudcrab.coursework.mbsd.ifictiondsl.IfictiondslPackage;
 import net.mudcrab.coursework.mbsd.ifictiondsl.Node;
+import net.mudcrab.coursework.mbsd.ifictiondsl.Parentheses;
 import net.mudcrab.coursework.mbsd.ifictiondsl.StateUpdate;
 import net.mudcrab.coursework.mbsd.ifictiondsl.Story;
 import net.mudcrab.coursework.mbsd.ifictiondsl.SystemStateChangeNode;
 import net.mudcrab.coursework.mbsd.ifictiondsl.Transition;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.util.EcoreUtil;
+import org.eclipse.xtend2.lib.StringConcatenation;
 import org.eclipse.xtext.EcoreUtil2;
 import org.eclipse.xtext.validation.Check;
 import org.eclipse.xtext.validation.CheckType;
@@ -32,6 +36,25 @@ import org.eclipse.xtext.xbase.lib.IterableExtensions;
  */
 @SuppressWarnings("all")
 public class IfictiondslValidator extends AbstractIfictiondslValidator {
+  public static final String NOT_REFERENCED_BY_TRANSITION = "notReferencedByTransition";
+
+  @Check(CheckType.FAST)
+  public void checkNotRefferencedByAnyTransitions(final Node node) {
+    System.out.println("checkNotRefferencedByAnyTransitions called");
+    int _size = EcoreUtil.UsageCrossReferencer.find(node, node.eContainer()).size();
+    boolean _tripleEquals = (_size == 0);
+    if (_tripleEquals) {
+      StringConcatenation _builder = new StringConcatenation();
+      _builder.append("Node with name \'");
+      String _name = node.getName();
+      _builder.append(_name);
+      _builder.append("\' is not referenced by any transitions!");
+      this.warning(_builder.toString(), 
+        IfictiondslPackage.Literals.NODE__NAME, 
+        IfictiondslValidator.NOT_REFERENCED_BY_TRANSITION);
+    }
+  }
+
   @Check(CheckType.NORMAL)
   public void checkDetectDeadLeaves(final Story story) {
     System.out.println("checkDetectDeadLeaves called");
@@ -115,51 +138,97 @@ public class IfictiondslValidator extends AbstractIfictiondslValidator {
       }
     } while((deadNodeCandidateCount > ((Object[])Conversions.unwrapArray(deadNodeCandidates, Object.class)).length));
     System.out.println("Got here 1");
-    for (final Transition transCand : transitionCandidates) {
+    final Function1<Transition, Integer> _function = (Transition it) -> {
+      int _priority = it.getPriority();
+      return Integer.valueOf((-_priority));
+    };
+    final List<Transition> transCandidatedsSortedByPriority = IterableExtensions.<Transition, Integer>sortBy(transitionCandidates, _function);
+    for (final Transition transCand : transCandidatedsSortedByPriority) {
+      boolean _analyseConditionAndTryToFulfillItByTraversingAST = this.analyseConditionAndTryToFulfillItByTraversingAST(transCand.getCondition(), traverser);
+      if (_analyseConditionAndTryToFulfillItByTraversingAST) {
+        System.out.println("Condition was fulfilled");
+      }
+    }
+    System.out.println("Got here final");
+  }
+
+  private boolean analyseConditionAndTryToFulfillItByTraversingAST(final Condition condition, final ASTTraverser traverser) {
+    EObject _eContainer = condition.eContainer();
+    boolean _not = (!(_eContainer instanceof Condition));
+    if (_not) {
+      final Function1<TraversalNode, Boolean> _function = (TraversalNode it) -> {
+        return Boolean.valueOf(ASTTraverser.checkCondition(condition, it.getStateSnapshot()));
+      };
+      final Iterable<TraversalNode> travNodesWithRightState = IterableExtensions.<TraversalNode>filter(traverser.getVisitedNodes().values(), _function);
+      int _size = IterableExtensions.size(travNodesWithRightState);
+      boolean _greaterThan = (_size > 0);
+      if (_greaterThan) {
+        System.out.println("Got here inside");
+        for (final TraversalNode travNode : travNodesWithRightState) {
+          String _plus = (travNode + ", ");
+          String _plus_1 = (_plus + condition);
+          System.out.println(_plus_1);
+        }
+      }
+    }
+    final TraversalCondition travCond = new TraversalCondition(condition);
+    boolean isConditionFulfillable = true;
+    while ((isConditionFulfillable && travCond.buildNextComparisonChain())) {
       {
-        Condition _condition = transCand.getCondition();
-        final TraversalCondition travCond = new TraversalCondition(_condition);
-        while (travCond.buildCondition()) {
-          ArrayList<Comparison> _comparisonList = travCond.getCurrentTraversalComparison().getComparisonList();
-          for (final Comparison comp : _comparisonList) {
-            while ((!this.checkIfComparisonIsAlreadyAchieved(comp, traverser))) {
-              {
-                final SystemStateChangeNode scnode = this.getFirstVisitedStateChangeNodeThatCanHelpAchieveComparison(comp, traverser);
-                if ((scnode != null)) {
-                  final Function1<TraversalNode, Boolean> _function = (TraversalNode it) -> {
-                    final Function1<Transition, Boolean> _function_1 = (Transition it_1) -> {
-                      Node _destination = it_1.getDestination();
-                      return Boolean.valueOf((_destination == scnode));
-                    };
-                    return Boolean.valueOf(ASTTraverser.checkCondition(
-                      IterableExtensions.<Transition>findFirst(traverser.getVisitedTransitions(), _function_1).getCondition(), 
-                      it.getStateSnapshot()));
+        final Function1<Condition, Boolean> _function_1 = (Condition comp) -> {
+          boolean _matched = false;
+          if (comp instanceof Comparison) {
+            _matched=true;
+            boolean _checkIfComparisonIsAlreadyAchieved = this.checkIfComparisonIsAlreadyAchieved(((Comparison)comp), traverser);
+            boolean _not_1 = (!_checkIfComparisonIsAlreadyAchieved);
+            if (_not_1) {
+              final Iterable<SystemStateChangeNode> scnodes = this.getVisitedStateChangeNodesThatCanHelpAchieveComparison(((Comparison)comp), traverser);
+              int _size_1 = IterableExtensions.size(scnodes);
+              boolean _tripleEquals = (_size_1 == 0);
+              if (_tripleEquals) {
+                return Boolean.valueOf(false);
+              }
+              for (final SystemStateChangeNode scnode : scnodes) {
+                {
+                  final Function1<TraversalNode, Boolean> _function_2 = (TraversalNode it) -> {
+                    return Boolean.valueOf((ASTTraverser.checkCondition(
+                      IterableExtensions.<Transition>findFirst(traverser.getVisitedTransitions(), 
+                        ((Function1<Transition, Boolean>) (Transition it_1) -> {
+                          Node _destination = it_1.getDestination();
+                          return Boolean.valueOf((_destination == scnode));
+                        })).getCondition(), 
+                      it.getStateSnapshot()) && (it != scnode)));
                   };
-                  final Node nodeWithRightStateToGetToScnode = IterableExtensions.<TraversalNode>findFirst(traverser.getVisitedNodes().values(), _function).getNode();
-                  traverser.findNodeFrom(nodeWithRightStateToGetToScnode, scnode);
+                  Node nodeWithRightStateToGetToScnode = IterableExtensions.<TraversalNode>findFirst(traverser.getVisitedNodes().values(), _function_2).getNode();
+                  boolean keepSearching = true;
+                  while ((keepSearching && traverser.findNodeFrom(nodeWithRightStateToGetToScnode, scnode, 
+                    true))) {
+                    {
+                      boolean _checkIfComparisonIsAlreadyAchieved_1 = this.checkIfComparisonIsAlreadyAchieved(((Comparison)comp), traverser);
+                      boolean _not_2 = (!_checkIfComparisonIsAlreadyAchieved_1);
+                      keepSearching = _not_2;
+                      nodeWithRightStateToGetToScnode = scnode;
+                    }
+                  }
+                  boolean _checkIfComparisonIsAlreadyAchieved_1 = this.checkIfComparisonIsAlreadyAchieved(((Comparison)comp), traverser);
+                  return Boolean.valueOf((!_checkIfComparisonIsAlreadyAchieved_1));
                 }
               }
             }
           }
-        }
+          if (!_matched) {
+            if (comp instanceof Parentheses) {
+              _matched=true;
+              return Boolean.valueOf(this.analyseConditionAndTryToFulfillItByTraversingAST(((Parentheses)comp).getInner(), traverser));
+            }
+          }
+          return Boolean.valueOf(false);
+        };
+        final Condition firstFailedComparison = IterableExtensions.<Condition>findFirst(travCond.getComparisonChain(), _function_1);
+        isConditionFulfillable = (firstFailedComparison != null);
       }
     }
-    System.out.println("Got here 2");
-  }
-
-  @Check(CheckType.FAST)
-  public void checkNotRefferencedByAnyTransitions(final Story story) {
-    System.out.println("checkNotRefferencedByAnyTransitions called");
-    final List<Transition> allTransitions = EcoreUtil2.<Transition>getAllContentsOfType(story, Transition.class);
-    HashSet<Node> _nodesNotRefferencedByAnyTransitions = this.getNodesNotRefferencedByAnyTransitions(story, allTransitions);
-    for (final Node node : _nodesNotRefferencedByAnyTransitions) {
-      String _name = node.getName();
-      String _plus = ("Node with name \'" + _name);
-      String _plus_1 = (_plus + "\' is not referenced by any transitions!");
-      this.warning(_plus_1, node, 
-        null, 
-        "Node-is-Dead");
-    }
+    return isConditionFulfillable;
   }
 
   private boolean checkIfComparisonIsAlreadyAchieved(final Comparison comp, final ASTTraverser traverser) {
@@ -167,20 +236,42 @@ public class IfictiondslValidator extends AbstractIfictiondslValidator {
     for (final TraversalNode travNode : _values) {
       boolean _containsKey = travNode.getStateSnapshot().containsKey(comp.getVariable());
       if (_containsKey) {
-        Integer _get = travNode.getStateSnapshot().get(comp.getVariable());
-        int _value = comp.getValue();
-        boolean _tripleEquals = ((_get).intValue() == _value);
-        if (_tripleEquals) {
-          return true;
+        String _operator = comp.getOperator();
+        if (_operator != null) {
+          switch (_operator) {
+            case "==":
+              Integer _orDefault = travNode.getStateSnapshot().getOrDefault(comp.getVariable(), Integer.valueOf(0));
+              int _value = comp.getValue();
+              return ((_orDefault).intValue() == _value);
+            case "!=":
+              Integer _orDefault_1 = travNode.getStateSnapshot().getOrDefault(comp.getVariable(), Integer.valueOf(0));
+              int _value_1 = comp.getValue();
+              return ((_orDefault_1).intValue() != _value_1);
+            case ">":
+              Integer _orDefault_2 = travNode.getStateSnapshot().getOrDefault(comp.getVariable(), Integer.valueOf(0));
+              int _value_2 = comp.getValue();
+              return ((_orDefault_2).intValue() > _value_2);
+            case "<":
+              Integer _orDefault_3 = travNode.getStateSnapshot().getOrDefault(comp.getVariable(), Integer.valueOf(0));
+              int _value_3 = comp.getValue();
+              return ((_orDefault_3).intValue() < _value_3);
+            case ">=":
+              Integer _orDefault_4 = travNode.getStateSnapshot().getOrDefault(comp.getVariable(), Integer.valueOf(0));
+              int _value_4 = comp.getValue();
+              return ((_orDefault_4).intValue() >= _value_4);
+            case "<=":
+              Integer _orDefault_5 = travNode.getStateSnapshot().getOrDefault(comp.getVariable(), Integer.valueOf(0));
+              int _value_5 = comp.getValue();
+              return ((_orDefault_5).intValue() <= _value_5);
+          }
         }
       }
     }
     return false;
   }
 
-  private SystemStateChangeNode getFirstVisitedStateChangeNodeThatCanHelpAchieveComparison(final Comparison comp, final ASTTraverser traverser) {
-    HashSet<SystemStateChangeNode> _visitedStateChangeNodes = traverser.getVisitedStateChangeNodes();
-    for (final SystemStateChangeNode scnode : _visitedStateChangeNodes) {
+  private Iterable<SystemStateChangeNode> getVisitedStateChangeNodesThatCanHelpAchieveComparison(final Comparison comp, final ASTTraverser traverser) {
+    final Function1<SystemStateChangeNode, Boolean> _function = (SystemStateChangeNode scnode) -> {
       EList<StateUpdate> _stateUpdates = scnode.getStateUpdates();
       for (final StateUpdate stateUpdate : _stateUpdates) {
         boolean _equals = stateUpdate.getVariable().equals(comp.getVariable());
@@ -189,70 +280,50 @@ public class IfictiondslValidator extends AbstractIfictiondslValidator {
           if (_equals_1) {
             boolean _contains = "<= >= ==".contains(comp.getOperator());
             if (_contains) {
-              SystemStateChangeNode _xifexpression = null;
               int _value = stateUpdate.getValue();
               int _value_1 = comp.getValue();
-              boolean _tripleEquals = (_value == _value_1);
-              if (_tripleEquals) {
-                _xifexpression = scnode;
-              } else {
-                _xifexpression = null;
-              }
-              return _xifexpression;
+              return Boolean.valueOf((_value == _value_1));
             } else {
-              return null;
+              return Boolean.valueOf(false);
             }
           } else {
             boolean _contains_1 = "< <=".contains(comp.getOperator());
             if (_contains_1) {
-              SystemStateChangeNode _xifexpression_1 = null;
-              boolean _equals_2 = "-=".equals(stateUpdate.getOperator());
-              if (_equals_2) {
-                _xifexpression_1 = scnode;
-              } else {
-                _xifexpression_1 = null;
-              }
-              return _xifexpression_1;
+              return Boolean.valueOf("-=".equals(stateUpdate.getOperator()));
             }
             boolean _contains_2 = "> >=".contains(comp.getOperator());
             if (_contains_2) {
-              SystemStateChangeNode _xifexpression_2 = null;
-              boolean _equals_3 = "+=".equals(stateUpdate.getOperator());
-              if (_equals_3) {
-                _xifexpression_2 = scnode;
-              } else {
-                _xifexpression_2 = null;
-              }
-              return _xifexpression_2;
+              return Boolean.valueOf("+=".equals(stateUpdate.getOperator()));
             }
-            boolean _equals_4 = "==".equals(comp.getOperator());
-            if (_equals_4) {
-              int _value_2 = stateUpdate.getValue();
-              int _value_3 = comp.getValue();
-              boolean _lessThan = (_value_2 < _value_3);
-              if (_lessThan) {
-                return null;
-              } else {
-                Collection<TraversalNode> _values = traverser.getVisitedNodes().values();
-                for (final TraversalNode travNode : _values) {
-                  Integer _get = travNode.getStateSnapshot().get(comp.getVariable());
-                  int _value_4 = comp.getValue();
-                  int _value_5 = stateUpdate.getValue();
-                  int _modulo = (_value_4 % _value_5);
-                  int _plus = ((_get).intValue() + _modulo);
-                  boolean _equals_5 = (_plus == 0);
-                  if (_equals_5) {
-                    return scnode;
+            boolean _equals_2 = "==".equals(comp.getOperator());
+            if (_equals_2) {
+              Collection<TraversalNode> _values = traverser.getVisitedNodes().values();
+              for (final TraversalNode travNode : _values) {
+                {
+                  final Integer current = travNode.getStateSnapshot().getOrDefault(comp.getVariable(), Integer.valueOf(0));
+                  int _value_2 = comp.getValue();
+                  int _minus = ((current).intValue() - _value_2);
+                  int _value_3 = stateUpdate.getValue();
+                  int _modulo = (_minus % _value_3);
+                  boolean _equals_3 = (_modulo == 0);
+                  if (_equals_3) {
+                    if ((Objects.equals(stateUpdate.getOperator(), "-=") && (((current).intValue() - stateUpdate.getValue()) >= comp.getValue()))) {
+                      return Boolean.valueOf(true);
+                    }
+                    if ((Objects.equals(stateUpdate.getOperator(), "+=") && (((current).intValue() + stateUpdate.getValue()) <= comp.getValue()))) {
+                      return Boolean.valueOf(true);
+                    }
                   }
                 }
-                return null;
               }
+              return Boolean.valueOf(false);
             }
           }
         }
       }
-    }
-    return null;
+      return Boolean.valueOf(false);
+    };
+    return IterableExtensions.<SystemStateChangeNode>filter(traverser.getVisitedStateChangeNodes(), _function);
   }
 
   private HashSet<Node> getNodesNotRefferencedByAnyTransitions(final Story story, final List<Transition> allTransitions) {

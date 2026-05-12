@@ -8,13 +8,17 @@ import java.util.HashSet
 import java.util.List
 import net.mudcrab.coursework.mbsd.ifictiondsl.ChoiceOption
 import net.mudcrab.coursework.mbsd.ifictiondsl.Comparison
+import net.mudcrab.coursework.mbsd.ifictiondsl.Condition
 import net.mudcrab.coursework.mbsd.ifictiondsl.Node
+import net.mudcrab.coursework.mbsd.ifictiondsl.Parentheses
 import net.mudcrab.coursework.mbsd.ifictiondsl.Story
 import net.mudcrab.coursework.mbsd.ifictiondsl.SystemStateChangeNode
 import net.mudcrab.coursework.mbsd.ifictiondsl.Transition
+import org.eclipse.emf.ecore.util.EcoreUtil
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.validation.Check
 import org.eclipse.xtext.validation.CheckType
+import net.mudcrab.coursework.mbsd.ifictiondsl.IfictiondslPackage
 
 /**
  * This class contains custom validation rules. 
@@ -23,6 +27,8 @@ import org.eclipse.xtext.validation.CheckType
  */
 class IfictiondslValidator extends AbstractIfictiondslValidator {
 	
+	public static val NOT_REFERENCED_BY_TRANSITION = 'notReferencedByTransition'
+
 //	public static val INVALID_NAME = 'invalidName'
 //
 //	@Check
@@ -33,6 +39,30 @@ class IfictiondslValidator extends AbstractIfictiondslValidator {
 //					INVALID_NAME)
 //		}
 //	}
+
+//	@Check(CheckType.FAST)
+//	def checkNotRefferencedByAnyTransitions(Node node) {
+//		System.out.println("checkNotRefferencedByAnyTransitions called")
+//		val allTransitions = EcoreUtil2.getAllContentsOfType(node.eContainer, Transition)
+//		if(allTransitions.findFirst[it.destination === node] === null) {
+//			warning("Node with name '" + node.name + "' is not referenced by any transitions!",
+//				node,
+//				null,
+//				NOT_REFERENCED_BY_TRANSITION
+//			)
+//		}
+//	}
+
+	@Check(CheckType.FAST)
+	def checkNotRefferencedByAnyTransitions(Node node) {
+		System.out.println("checkNotRefferencedByAnyTransitions called")
+		if(EcoreUtil.UsageCrossReferencer.find(node, node.eContainer).size === 0) {
+			warning('''Node with name '«node.name»' is not referenced by any transitions!''',
+				IfictiondslPackage.Literals.NODE__NAME,
+				NOT_REFERENCED_BY_TRANSITION
+			)
+		}
+	}
 
 	@Check(CheckType.NORMAL) 
 	def checkDetectDeadLeaves(Story story) {
@@ -115,104 +145,136 @@ class IfictiondslValidator extends AbstractIfictiondslValidator {
 		
 		// Analyse what condition needs to be met by system state from state fetched by the TraversalNode 
 		// containing node with transition to dead node candidate
-		for (transCand : transitionCandidates) {
-			val TraversalCondition travCond = new TraversalCondition(transCand.condition)
-			while(travCond.buildCondition()) {
-				
-				for (comp : travCond.currentTraversalComparison.comparisonList) {
-				// now the first Comparison of the first top level And Condition is isolated
-					// First check if comparison is already achieved
-					while(!checkIfComparisonIsAlreadyAchieved(comp, traverser)) {				
-						// Now check if any known state change node can move us in the right direction
-						val scnode = getFirstVisitedStateChangeNodeThatCanHelpAchieveComparison(comp, traverser)	
-						if(scnode !== null) {
-							// Find node with state that can get us to the state change node and try to go there
-							val nodeWithRightStateToGetToScnode = traverser.visitedNodes.values.findFirst[
-								ASTTraverser.checkCondition(
-									traverser.visitedTransitions.findFirst[
-										it.destination === scnode	
-									].condition, 
-									it.stateSnapshot
-								)
-							].node
-							traverser.findNodeFrom(
-								nodeWithRightStateToGetToScnode, // traverser.visitedNodes.get(scnode).prevNode.node,
-								scnode
-							)
-						}							
-					}
-				}
+		// start out by sorting by priority! some transitions might be shadowed by others by priority
+		val transCandidatedsSortedByPriority = transitionCandidates.sortBy[ -it.priority ] // '-' because decending order
+		for (transCand : transCandidatedsSortedByPriority) {
+			if (analyseConditionAndTryToFulfillItByTraversingAST(transCand.condition, traverser)) {
+				System.out.println("Condition was fulfilled")
 			}
 		}
 		
 	
-		System.out.println("Got here 2")
-		
-		
+		System.out.println("Got here final")
 	}
 	
-	@Check(CheckType.FAST)
-	def checkNotRefferencedByAnyTransitions(Story story) {
-		System.out.println("checkNotRefferencedByAnyTransitions called")
-		val allTransitions = EcoreUtil2.getAllContentsOfType(story, Transition)
-		for (node : getNodesNotRefferencedByAnyTransitions(story, allTransitions)) {
-			warning("Node with name '" + node.name + "' is not referenced by any transitions!",
-				node,
-				null,
-				"Node-is-Dead"
-			)
+	private def boolean analyseConditionAndTryToFulfillItByTraversingAST(Condition condition, ASTTraverser traverser) {
+		// First of all. is root condition already met?
+		if (!(condition.eContainer instanceof Condition)) {			
+			val travNodesWithRightState = traverser.visitedNodes.values.filter[
+				ASTTraverser.checkCondition(condition, it.stateSnapshot)
+			]
+			if (travNodesWithRightState.size > 0) {
+				System.out.println("Got here inside")
+				for (travNode : travNodesWithRightState) {
+					System.out.println(travNode + ", " + condition)
+				}
+			}
 		}
+		val TraversalCondition travCond = new TraversalCondition(condition)
+		var boolean isConditionFulfillable = true
+		while(isConditionFulfillable && travCond.buildNextComparisonChain()) {
+			// now the first Comparison of the first top level And Condition is isolated
+			val firstFailedComparison = travCond.comparisonChain.findFirst[ comp | // find the first that fails i.e. reason for And-chain fail -> returns true
+				switch(comp) {
+					Comparison: {
+						// First check if comparison is already achieved
+						if(!checkIfComparisonIsAlreadyAchieved(comp, traverser)) {				
+							// Now check if any known state change node can move us in the right direction
+							val scnodes = getVisitedStateChangeNodesThatCanHelpAchieveComparison(comp, traverser)
+							if (scnodes.size === 0) 
+								return false
+							for (scnode :  scnodes) {
+								// Find node with state that can get us to the state change node and try to go there
+								var nodeWithRightStateToGetToScnode = traverser.visitedNodes.values.findFirst[
+									ASTTraverser.checkCondition(
+										traverser.visitedTransitions.findFirst[
+											it.destination === scnode	
+										].condition, 
+										it.stateSnapshot 
+									) && it !== scnode
+								].node
+								var boolean keepSearching = true
+								while(keepSearching && traverser.findNodeFrom(
+														 nodeWithRightStateToGetToScnode, // traverser.visitedNodes.get(scnode).prevNode.node,
+														 scnode,
+														 true 
+													   ) 
+								){
+									keepSearching = !checkIfComparisonIsAlreadyAchieved(comp, traverser)
+									nodeWithRightStateToGetToScnode = scnode // the only node with right state now is the scnode
+								}
+								return !checkIfComparisonIsAlreadyAchieved(comp, traverser)
+							}							
+						}
+					}
+					Parentheses: {
+						return analyseConditionAndTryToFulfillItByTraversingAST(comp.inner, traverser)
+					}
+				}
+				return false
+			]
+			isConditionFulfillable = firstFailedComparison !== null
+		}
+		return isConditionFulfillable
 	}
 	
 	private def boolean checkIfComparisonIsAlreadyAchieved(Comparison comp, ASTTraverser traverser) {
 		// First check all visited nodes to see if comparison is already achieved somewhere
 		for (travNode : traverser.visitedNodes.values) {
 			if (travNode.stateSnapshot.containsKey(comp.variable) ) {
-				if (travNode.stateSnapshot.get(comp.variable) === comp.value) {
-					return true
+				switch (comp.operator) {
+					case "==": { return travNode.stateSnapshot.getOrDefault(comp.variable, 0) == comp.value }
+					case "!=": { return travNode.stateSnapshot.getOrDefault(comp.variable, 0) != comp.value }
+					case ">": { return travNode.stateSnapshot.getOrDefault(comp.variable, 0) > comp.value }
+					case "<": { return travNode.stateSnapshot.getOrDefault(comp.variable, 0) < comp.value }
+					case ">=": { return travNode.stateSnapshot.getOrDefault(comp.variable, 0) >= comp.value }
+					case "<=": { return travNode.stateSnapshot.getOrDefault(comp.variable, 0) <= comp.value }
 				}
 			}
 		}
 	}
-		
-	private def SystemStateChangeNode getFirstVisitedStateChangeNodeThatCanHelpAchieveComparison(Comparison comp, ASTTraverser traverser) {
-		for (scnode : traverser.visitedStateChangeNodes) {
+	
+	// This method is called after checkIfComparisonIsAlreadyAchieved() - prerequisite is that condition is not fulfilled
+	private def Iterable<SystemStateChangeNode> getVisitedStateChangeNodesThatCanHelpAchieveComparison(Comparison comp, ASTTraverser traverser) {
+		return traverser.visitedStateChangeNodes.filter[ scnode |  
 			for (stateUpdate : scnode.stateUpdates) {
 				if (stateUpdate.variable.equals(comp.variable)) {
 					if ("=".equals(stateUpdate.operator)) {
+						// if state update sets the variable to a constant we can only use it if we can match
 						if ("<= >= ==".contains(comp.operator)) {
-							return stateUpdate.value === comp.value ? scnode : null
+							return stateUpdate.value === comp.value
 						} else {
-							return null
+							return false
 						}
 					} else {
 						// system state does not satisfy cond 
 						if ("< <=".contains(comp.operator)) {
 							// - so state is higher than target - in case of "+=": direction to target is different than direction of state change
-							return "-=".equals(stateUpdate.operator) ? scnode : null
+							return "-=".equals(stateUpdate.operator)
 						}
 						if ("> >=".contains(comp.operator)) {
 							// - so state is lower than target - in case of "+=": direction to target is the same as direction of state change
-							return "+=".equals(stateUpdate.operator) ? scnode : null
+							return "+=".equals(stateUpdate.operator)
 						}
 						if ("==".equals(comp.operator)) {
-							if (stateUpdate.value < comp.value ) {
-								// state is higher than target - direction to target is different than direction of state change
-								return null
-							} else { // state is lower than target
-								// need to be able to hit target exactly - depends on system state
-								for (travNode : traverser.visitedNodes.values) {
-									if (travNode.stateSnapshot.get(comp.variable) + comp.value % stateUpdate.value == 0) {
-										return scnode
-									}
-								}	
-								return null
-							}
+							// State update does not set a contant but we need to hit a contant
+							// need to be able to hit target exactly - depends on system state
+							for (travNode : traverser.visitedNodes.values) {
+								val current = travNode.stateSnapshot.getOrDefault(comp.variable, 0)
+								if ((current - comp.value) % stateUpdate.value == 0) {
+								    if (stateUpdate.operator == "-=" && current - stateUpdate.value >= comp.value) 
+								    	return true
+								    if (stateUpdate.operator == "+=" && current + stateUpdate.value <= comp.value) 
+								    	return true
+								}
+							}	
+							return false
 						}
 					}
 				}
 			}
-		}
+			return false
+		]
 	}
 	
 	private def HashSet<Node> getNodesNotRefferencedByAnyTransitions(Story story, List<Transition> allTransitions) {

@@ -53,35 +53,39 @@ class ASTTraverser {
 		
 		traverseStoryHelper(story.nodes.findFirst[it instanceof StartNode], null)
 	}
-	
+
 	public def boolean findNodeFrom(Node fromNode, Node toNode) {
-		if (visitedNodes.containsKey(fromNode)) {
-			state = new HashMap<String, Integer>(visitedNodes.get(fromNode).stateSnapshot)
-			nodeVisitPath.clear
-		} else {
+		findNodeFrom(fromNode, toNode, false)
+	}
+	
+	public def boolean findNodeFrom(Node fromNode, Node toNode, boolean strictMatch) {
+		if (!visitedNodes.containsKey(fromNode)) {
 			return false
 		}
-		if (visitedNodes.containsKey(toNode) || fromNode === toNode) {
+
+		state = new HashMap<String, Integer>(visitedNodes.get(fromNode).stateSnapshot)
+		nodeVisitPath.clear
+		
+		if ((visitedNodes.containsKey(toNode) || fromNode === toNode) && !strictMatch) {
 			//System.out.println("WARNING: visitedNodes contains key or fromNode(" + fromNode.name + ") === toNode(" + toNode.name + ") in findNodeFrom()")
 			return false
 		}
 		
 		nodeVisitPath.add(new TraversalNode(fromNode, new HashMap<String, Integer>(state), visitedNodes.get(fromNode).prevNode))
-		return findNodeFromHelper(fromNode, toNode)
+		return findNodeFromHelper(fromNode, toNode, strictMatch)
 	}
 	
-	private def boolean findNodeFromHelper(Node currentNode, Node toNode) {
+	private def boolean findNodeFromHelper(Node currentNode, Node toNode, boolean strictMatch) {
 		// return false if we hit a loop i.e. visit before seen node in path without having changed state since last time
 		if (nodeVisitPath.length !== 1) {			
 			val nodePossiblySeenBeforInPath = nodeVisitPath.findFirst[
-				it.node === currentNode &&
-				it.stateSnapshot.equals(this.state)
+				it.node === currentNode 
+				//&& it.stateSnapshot.equals(this.state)
 			]
 			if(nodePossiblySeenBeforInPath !== null) {
 				return false
 			}
 		}
-		
 		
 		// If state of current traversal is not the same as state when last seeing this node -> update the state of that node
 		if (visitedNodes.containsKey(currentNode) && !visitedNodes.get(currentNode).stateSnapshot.equals(state)) {
@@ -93,20 +97,28 @@ class ASTTraverser {
 		if (!nodeVisitPath.last.node.equals(currentNode)) {
 			if (currentNode instanceof SystemStateChangeNode) {
 				updateState(currentNode)
+				if (!visitedStateChangeNodes.contains(currentNode)) {
+					visitedStateChangeNodes.add(currentNode)
+				}
 			}
 
 			val traversalNode = new TraversalNode(currentNode, new HashMap<String, Integer>(this.state), nodeVisitPath.lastOrNull)
 			nodeVisitPath.add(traversalNode)
 			
+			if (currentNode === toNode) {
+				System.out.println("Found the right node: \"" + currentNode.name + "\" state: " + state)
+				if (!visitedNodes.containsKey(currentNode)) {
+					visitedNodes.put(currentNode, traversalNode)	
+				}
+				return true
+			}
+			
 			if (!visitedNodes.containsKey(currentNode)) {
 				// We found one new node. Not necessarily the one we were looking for, but that is good enough
 				visitedNodes.put(currentNode, traversalNode)
 			
-				if (currentNode === toNode) {
-					System.out.println("Found the right node: \"" + currentNode.name + "\" state: " + state)
-					return true
-				} else {
-					System.out.println("Found a node \"" + currentNode.name + "\". Was looking for \"" + toNode.name + "\": " + state)
+				System.out.println("Found a node \"" + currentNode.name + "\". Was looking for \"" + toNode.name + "\": " + state)
+				if (!strictMatch) {
 					return false // we will return false because we did not find it, but can still use it
 				}
 			}
@@ -117,7 +129,10 @@ class ASTTraverser {
 				for (option : currentNode.options) {
 					val t = getBestTransition(option.transitions)
 					if (t !== null && checkCondition(t.condition)) {
-						if(findNodeFromHelper(t.destination, toNode)) {
+						if (!visitedTransitions.contains(t)) {
+							visitedTransitions.add(t)
+						}
+						if(findNodeFromHelper(t.destination, toNode, strictMatch)) {
 							return true
 						}
 					}
@@ -131,7 +146,10 @@ class ASTTraverser {
 				if (structuralFeature !== null) {
 					val t = currentNode.eGet(structuralFeature) as Transition
 					if (t !== null && checkCondition(t.condition)) {
-						return findNodeFromHelper(t.destination, toNode)
+						if (!visitedTransitions.contains(t)) {
+							visitedTransitions.add(t)
+						}
+						return findNodeFromHelper(t.destination, toNode, strictMatch)
 					}					
 				}
 			}

@@ -90,32 +90,36 @@ public class ASTTraverser {
   }
 
   public boolean findNodeFrom(final Node fromNode, final Node toNode) {
+    return this.findNodeFrom(fromNode, toNode, false);
+  }
+
+  public boolean findNodeFrom(final Node fromNode, final Node toNode, final boolean strictMatch) {
     boolean _containsKey = this.visitedNodes.containsKey(fromNode);
-    if (_containsKey) {
-      HashMap<String, Integer> _stateSnapshot = this.visitedNodes.get(fromNode).getStateSnapshot();
-      HashMap<String, Integer> _hashMap = new HashMap<String, Integer>(_stateSnapshot);
-      this.state = _hashMap;
-      this.nodeVisitPath.clear();
-    } else {
+    boolean _not = (!_containsKey);
+    if (_not) {
       return false;
     }
-    if ((this.visitedNodes.containsKey(toNode) || (fromNode == toNode))) {
+    HashMap<String, Integer> _stateSnapshot = this.visitedNodes.get(fromNode).getStateSnapshot();
+    HashMap<String, Integer> _hashMap = new HashMap<String, Integer>(_stateSnapshot);
+    this.state = _hashMap;
+    this.nodeVisitPath.clear();
+    if (((this.visitedNodes.containsKey(toNode) || (fromNode == toNode)) && (!strictMatch))) {
       return false;
     }
     HashMap<String, Integer> _hashMap_1 = new HashMap<String, Integer>(this.state);
     TraversalNode _prevNode = this.visitedNodes.get(fromNode).getPrevNode();
     TraversalNode _traversalNode = new TraversalNode(fromNode, _hashMap_1, _prevNode);
     this.nodeVisitPath.add(_traversalNode);
-    return this.findNodeFromHelper(fromNode, toNode);
+    return this.findNodeFromHelper(fromNode, toNode, strictMatch);
   }
 
-  private boolean findNodeFromHelper(final Node currentNode, final Node toNode) {
+  private boolean findNodeFromHelper(final Node currentNode, final Node toNode, final boolean strictMatch) {
     int _length = ((Object[])Conversions.unwrapArray(this.nodeVisitPath, Object.class)).length;
     boolean _tripleNotEquals = (_length != 1);
     if (_tripleNotEquals) {
       final Function1<TraversalNode, Boolean> _function = (TraversalNode it) -> {
-        return Boolean.valueOf(((it.getNode() == currentNode) && 
-          it.getStateSnapshot().equals(this.state)));
+        Node _node = it.getNode();
+        return Boolean.valueOf((_node == currentNode));
       };
       final TraversalNode nodePossiblySeenBeforInPath = IterableExtensions.<TraversalNode>findFirst(this.nodeVisitPath, _function);
       if ((nodePossiblySeenBeforInPath != null)) {
@@ -137,31 +141,42 @@ public class ASTTraverser {
     if (_not) {
       if ((currentNode instanceof SystemStateChangeNode)) {
         this.updateState(((SystemStateChangeNode)currentNode));
+        boolean _contains = this.visitedStateChangeNodes.contains(currentNode);
+        boolean _not_1 = (!_contains);
+        if (_not_1) {
+          this.visitedStateChangeNodes.add(((SystemStateChangeNode)currentNode));
+        }
       }
       HashMap<String, Integer> _hashMap_1 = new HashMap<String, Integer>(this.state);
       TraversalNode _lastOrNull = IterableExtensions.<TraversalNode>lastOrNull(this.nodeVisitPath);
       final TraversalNode traversalNode = new TraversalNode(currentNode, _hashMap_1, _lastOrNull);
       this.nodeVisitPath.add(traversalNode);
-      boolean _containsKey = this.visitedNodes.containsKey(currentNode);
-      boolean _not_1 = (!_containsKey);
-      if (_not_1) {
+      if ((currentNode == toNode)) {
+        String _name_1 = currentNode.getName();
+        String _plus_3 = ("Found the right node: \"" + _name_1);
+        String _plus_4 = (_plus_3 + "\" state: ");
+        String _plus_5 = (_plus_4 + this.state);
+        System.out.println(_plus_5);
+        boolean _containsKey = this.visitedNodes.containsKey(currentNode);
+        boolean _not_2 = (!_containsKey);
+        if (_not_2) {
+          this.visitedNodes.put(currentNode, traversalNode);
+        }
+        return true;
+      }
+      boolean _containsKey_1 = this.visitedNodes.containsKey(currentNode);
+      boolean _not_3 = (!_containsKey_1);
+      if (_not_3) {
         this.visitedNodes.put(currentNode, traversalNode);
-        if ((currentNode == toNode)) {
-          String _name_1 = currentNode.getName();
-          String _plus_3 = ("Found the right node: \"" + _name_1);
-          String _plus_4 = (_plus_3 + "\" state: ");
-          String _plus_5 = (_plus_4 + this.state);
-          System.out.println(_plus_5);
-          return true;
-        } else {
-          String _name_2 = currentNode.getName();
-          String _plus_6 = ("Found a node \"" + _name_2);
-          String _plus_7 = (_plus_6 + "\". Was looking for \"");
-          String _name_3 = toNode.getName();
-          String _plus_8 = (_plus_7 + _name_3);
-          String _plus_9 = (_plus_8 + "\": ");
-          String _plus_10 = (_plus_9 + this.state);
-          System.out.println(_plus_10);
+        String _name_2 = currentNode.getName();
+        String _plus_6 = ("Found a node \"" + _name_2);
+        String _plus_7 = (_plus_6 + "\". Was looking for \"");
+        String _name_3 = toNode.getName();
+        String _plus_8 = (_plus_7 + _name_3);
+        String _plus_9 = (_plus_8 + "\": ");
+        String _plus_10 = (_plus_9 + this.state);
+        System.out.println(_plus_10);
+        if ((!strictMatch)) {
           return false;
         }
       }
@@ -174,7 +189,12 @@ public class ASTTraverser {
         {
           final Transition t = this.getBestTransition(((Transition[])Conversions.unwrapArray(option.getTransitions(), Transition.class)));
           if (((t != null) && this.checkCondition(t.getCondition()))) {
-            boolean _findNodeFromHelper = this.findNodeFromHelper(t.getDestination(), toNode);
+            boolean _contains_1 = this.visitedTransitions.contains(t);
+            boolean _not_4 = (!_contains_1);
+            if (_not_4) {
+              this.visitedTransitions.add(t);
+            }
+            boolean _findNodeFromHelper = this.findNodeFromHelper(t.getDestination(), toNode, strictMatch);
             if (_findNodeFromHelper) {
               return true;
             }
@@ -195,7 +215,12 @@ public class ASTTraverser {
           Object _eGet = currentNode.eGet(structuralFeature);
           final Transition t = ((Transition) _eGet);
           if (((t != null) && this.checkCondition(t.getCondition()))) {
-            return this.findNodeFromHelper(t.getDestination(), toNode);
+            boolean _contains_1 = this.visitedTransitions.contains(t);
+            boolean _not_4 = (!_contains_1);
+            if (_not_4) {
+              this.visitedTransitions.add(t);
+            }
+            return this.findNodeFromHelper(t.getDestination(), toNode, strictMatch);
           }
         }
       }

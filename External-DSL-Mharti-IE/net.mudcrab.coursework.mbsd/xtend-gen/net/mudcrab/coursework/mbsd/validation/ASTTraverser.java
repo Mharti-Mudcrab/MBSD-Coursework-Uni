@@ -114,9 +114,7 @@ public class ASTTraverser {
   }
 
   private boolean findNodeFromHelper(final Node currentNode, final Node toNode, final boolean strictMatch) {
-    int _length = ((Object[])Conversions.unwrapArray(this.nodeVisitPath, Object.class)).length;
-    boolean _tripleNotEquals = (_length != 1);
-    if (_tripleNotEquals) {
+    if (((((Object[])Conversions.unwrapArray(this.nodeVisitPath, Object.class)).length != 1) && (currentNode != toNode))) {
       final Function1<TraversalNode, Boolean> _function = (TraversalNode it) -> {
         Node _node = it.getNode();
         return Boolean.valueOf((_node == currentNode));
@@ -125,16 +123,6 @@ public class ASTTraverser {
       if ((nodePossiblySeenBeforInPath != null)) {
         return false;
       }
-    }
-    if ((this.visitedNodes.containsKey(currentNode) && (!this.visitedNodes.get(currentNode).getStateSnapshot().equals(this.state)))) {
-      String _name = currentNode.getName();
-      String _plus = ("Got in here! node: \"" + _name);
-      String _plus_1 = (_plus + "\" state: ");
-      String _plus_2 = (_plus_1 + this.state);
-      System.out.println(_plus_2);
-      TraversalNode _get = this.visitedNodes.get(currentNode);
-      HashMap<String, Integer> _hashMap = new HashMap<String, Integer>(this.state);
-      _get.setStateSnapshot(_hashMap);
     }
     boolean _equals = this.nodeVisitPath.getLast().getNode().equals(currentNode);
     boolean _not = (!_equals);
@@ -147,16 +135,16 @@ public class ASTTraverser {
           this.visitedStateChangeNodes.add(((SystemStateChangeNode)currentNode));
         }
       }
+      if ((this.visitedNodes.containsKey(currentNode) && (!this.visitedNodes.get(currentNode).getStateSnapshot().equals(this.state)))) {
+        TraversalNode _get = this.visitedNodes.get(currentNode);
+        HashMap<String, Integer> _hashMap = new HashMap<String, Integer>(this.state);
+        _get.setStateSnapshot(_hashMap);
+      }
       HashMap<String, Integer> _hashMap_1 = new HashMap<String, Integer>(this.state);
       TraversalNode _lastOrNull = IterableExtensions.<TraversalNode>lastOrNull(this.nodeVisitPath);
       final TraversalNode traversalNode = new TraversalNode(currentNode, _hashMap_1, _lastOrNull);
       this.nodeVisitPath.add(traversalNode);
       if ((currentNode == toNode)) {
-        String _name_1 = currentNode.getName();
-        String _plus_3 = ("Found the right node: \"" + _name_1);
-        String _plus_4 = (_plus_3 + "\" state: ");
-        String _plus_5 = (_plus_4 + this.state);
-        System.out.println(_plus_5);
         boolean _containsKey = this.visitedNodes.containsKey(currentNode);
         boolean _not_2 = (!_containsKey);
         if (_not_2) {
@@ -168,14 +156,6 @@ public class ASTTraverser {
       boolean _not_3 = (!_containsKey_1);
       if (_not_3) {
         this.visitedNodes.put(currentNode, traversalNode);
-        String _name_2 = currentNode.getName();
-        String _plus_6 = ("Found a node \"" + _name_2);
-        String _plus_7 = (_plus_6 + "\". Was looking for \"");
-        String _name_3 = toNode.getName();
-        String _plus_8 = (_plus_7 + _name_3);
-        String _plus_9 = (_plus_8 + "\": ");
-        String _plus_10 = (_plus_9 + this.state);
-        System.out.println(_plus_10);
         if ((!strictMatch)) {
           return false;
         }

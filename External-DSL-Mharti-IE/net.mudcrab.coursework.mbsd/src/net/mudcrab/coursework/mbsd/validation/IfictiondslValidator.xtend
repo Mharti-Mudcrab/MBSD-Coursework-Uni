@@ -19,6 +19,7 @@ import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.validation.Check
 import org.eclipse.xtext.validation.CheckType
 import net.mudcrab.coursework.mbsd.ifictiondsl.IfictiondslPackage
+import net.mudcrab.coursework.mbsd.ifictiondsl.ChoiceNode
 
 /**
  * This class contains custom validation rules. 
@@ -28,6 +29,9 @@ import net.mudcrab.coursework.mbsd.ifictiondsl.IfictiondslPackage
 class IfictiondslValidator extends AbstractIfictiondslValidator {
 	
 	public static val NOT_REFERENCED_BY_TRANSITION = 'notReferencedByTransition'
+	public static val NODE_TRANSITIONS_TO_ITSELF = 'nodeTransitionsToItself'
+	public static val NODE_IS_UNREACHABLE = 'nodeIsUnreachable'
+	public static val TRANSITION_CONDITION_CANNOT_BE_SATISFIED = 'transitionConditionCannotBeSatisfied'
 
 //	public static val INVALID_NAME = 'invalidName'
 //
@@ -55,18 +59,52 @@ class IfictiondslValidator extends AbstractIfictiondslValidator {
 
 	@Check(CheckType.FAST)
 	def checkNotRefferencedByAnyTransitions(Node node) {
-		System.out.println("checkNotRefferencedByAnyTransitions called")
+		//System.out.println("checkNotRefferencedByAnyTransitions called")
 		if(EcoreUtil.UsageCrossReferencer.find(node, node.eContainer).size === 0) {
-			warning('''Node with name '«node.name»' is not referenced by any transitions!''',
+			warning('''Node with name '«node.name»' is not referenced by any transitions in story''',
 				IfictiondslPackage.Literals.NODE__NAME,
 				NOT_REFERENCED_BY_TRANSITION
 			)
 		}
 	}
 
+	@Check(CheckType.FAST)
+	def checkNotTransitioningToItself(Node node) {
+		//System.out.println("checkNotRefferencingYourself called")
+		switch (node) {
+			ChoiceNode: {
+				for (option : node.options) {
+					for (transition : option.transitions) {
+						if (transition.destination === node) {
+							error('''ChoiceOption is transitioning to own ChoiceNode''',
+								transition,
+								IfictiondslPackage.Literals.TRANSITION__DESTINATION,
+								NODE_TRANSITIONS_TO_ITSELF
+							)							
+						}
+					}
+				}
+			}
+			default: {
+				val structuralFeature = node.eClass.getEStructuralFeature("transition")
+				if (structuralFeature !== null) {
+					val transition = node.eGet(structuralFeature) as Transition
+					if (transition.destination === node) {
+						error('''Node is transitioning to itself''',
+							transition,
+							IfictiondslPackage.Literals.TRANSITION__DESTINATION,
+							NODE_TRANSITIONS_TO_ITSELF
+						)
+					}
+				}
+				
+			}
+		}
+	}
+
 	@Check(CheckType.NORMAL) 
 	def checkDetectDeadLeaves(Story story) {
-		System.out.println("checkDetectDeadLeaves called")
+		// System.out.println("checkDetectDeadLeaves called")
 		
 		val traverser = new ASTTraverser()
 		traverser.traverseStory(story)
@@ -86,9 +124,11 @@ class IfictiondslValidator extends AbstractIfictiondslValidator {
 		}
 		
 		// Find transition candidates that can get to the dead node candidate
-			// For each transition check if the corresponding node has been visited - if not skip
-			// If no transition exists that corresponds to a visited node, then the node must be further down the dead branch and node should be skipped i.e. removed 
+			// For each transition check if the corresponding node has been visited - if not skip it and the dead node
+			// If no transition candidate exists that is contained by a visited node, then the node containing the 
+			// transition must be further down the dead branch and should be skipped i.e. removed 
 		var HashSet<Transition> transitionCandidates = new HashSet<Transition>()
+		var HashSet<Node> furtherDownTheDeadBranchNodes = new HashSet<Node>()
 		
 		for(deadNodeCand : deadNodeCandidates.toArray) {		
 			var boolean keep = false
@@ -107,12 +147,14 @@ class IfictiondslValidator extends AbstractIfictiondslValidator {
 			if(!keep) {
 				keep = false				
 				deadNodeCandidates.remove(deadNodeCand)
+				furtherDownTheDeadBranchNodes.add(deadNodeCand as Node)
 			}
 		}
 		
 		// Maybe there exists a state in the collection of visited notes that satisfies any of the transition conditions of the dead node candidates
 		// if so, try to get to dead node from nodes that hold an acceptable state
-		// if node is reached now. remove from list
+		// if node is reached now. remove from list.
+		// Do until no new nodes are found since last iteration
 		var int deadNodeCandidateCount 
 		do {	
 			deadNodeCandidateCount = deadNodeCandidates.length		
@@ -124,52 +166,125 @@ class IfictiondslValidator extends AbstractIfictiondslValidator {
 					if (travNode !== null &&
 						traverser.findNodeFrom(travNode.node, transCand.destination)
 					) {
-						System.out.println("Found at least one new node")
+						//System.out.println("Found at least one new node")
 					}
 				}
 			}
 			for (deadNodeCand : deadNodeCandidates.toArray) {
 				if (traverser.visitedNodes.containsKey(deadNodeCand)) {
-					System.out.println("Removed a node from candidates: " + (deadNodeCand as Node).name)
+					// System.out.println("Removed a node from candidates: " + (deadNodeCand as Node).name)
 					deadNodeCandidates.remove(deadNodeCand)
-					transitionCandidates.remove(
-						transitionCandidates.findFirst[
-							it.destination.equals(deadNodeCand)
-						]
-					)
+					transitionCandidates.removeIf[
+						it.destination.equals(deadNodeCand)
+					]
 				}
 			}
 		} while (deadNodeCandidateCount > deadNodeCandidates.length)
 		
-		System.out.println("Got here 1")
+		// System.out.println("Got here 1")
 		
 		// Analyse what condition needs to be met by system state from state fetched by the TraversalNode 
 		// containing node with transition to dead node candidate
-		// start out by sorting by priority! some transitions might be shadowed by others by priority
+		// start out by sorting by priority! some transitions might be shadowed by others by priority - They will fail because others should have been visted first
 		val transCandidatedsSortedByPriority = transitionCandidates.sortBy[ -it.priority ] // '-' because decending order
 		for (transCand : transCandidatedsSortedByPriority) {
+			// System.out.println('''«'\t'»«transCand.destination.name»''') 
+		}
+		
+		for (transCand : transCandidatedsSortedByPriority) {
 			if (analyseConditionAndTryToFulfillItByTraversingAST(transCand.condition, traverser)) {
-				System.out.println("Condition was fulfilled")
+				// System.out.println('''Condition was fulfilled trying to get to "«transCand.destination.name»" «transCand.condition»''')
+				var nodeWithRightStateToGetToDeadNodeCandidate = traverser.visitedNodes.values.findFirst[ node |
+					ASTTraverser.checkCondition(
+						transCand.condition, 
+						node.stateSnapshot 
+					)
+				]
+				if (nodeWithRightStateToGetToDeadNodeCandidate !== null && 
+					traverser.findNodeFrom(nodeWithRightStateToGetToDeadNodeCandidate.node, transCand.destination, true)
+				) {
+					// System.out.println('''We did it! we got to "«transCand.destination.name»" condition: «transCand.condition» with state: «nodeWithRightStateToGetToDeadNodeCandidate.stateSnapshot»''')				
+				} else {
+					// System.out.println('''Did not succeed trying to get to "«transCand.destination.name»" condition: «transCand.condition» with state: «nodeWithRightStateToGetToDeadNodeCandidate !== null ? nodeWithRightStateToGetToDeadNodeCandidate.stateSnapshot : "No node with right state found"»''')									
+				}
+			} else {
+				// System.out.println('''Condition could not be fulfilled trying to get to "«transCand.destination.name»" «transCand.condition»''')				
 			}
 		}
 		
+		// update dead node candidates
+		for (deadNodeCand : deadNodeCandidates.toArray) {
+			if (traverser.visitedNodes.containsKey(deadNodeCand)) {
+				// System.out.println("Removed a node from candidates: " + (deadNodeCand as Node).name)
+				deadNodeCandidates.remove(deadNodeCand)
+				transCandidatedsSortedByPriority.removeIf[
+					it.destination.equals(deadNodeCand)
+				]
+			}
+		}
+		
+		// Remaining dead nodeCandidates are not visited after:
+		//	- first time traversal
+		// 	- Continuous consecutive traversal
+		//	- Condition analysis and attempt to fulfil condition by traversing AST to find stateChange nodes that can help fulfil transition condition
+		// They will get the deadNodeWarning
+		for (deadNode : deadNodeCandidates) {
+			warning("Node is unreachable. Condition cannot be satisfied",
+				deadNode, // Node to put warning on
+				null, // Want warning on entire node and not just i.e. the name with: IfictiondslPackage.Literals.NODE__NAME
+				NODE_IS_UNREACHABLE				
+			)
+			for (transCand : transCandidatedsSortedByPriority) {
+				if (transCand.destination === deadNode) {
+					warning("Transition condition cannot be satisfied from traversing the story and destination node is therefore unreachable",
+						transCand, // Node to put warning on
+						IfictiondslPackage.Literals.TRANSITION__CONDITION,
+						TRANSITION_CONDITION_CANNOT_BE_SATISFIED				
+					)					
+				}
+			}
+			putWarningsOnDeadNodesDownDeadBranch(deadNode, traverser)
+		}
 	
 		System.out.println("Got here final")
 	}
 	
-	private def boolean analyseConditionAndTryToFulfillItByTraversingAST(Condition condition, ASTTraverser traverser) {
-		// First of all. is root condition already met?
-		if (!(condition.eContainer instanceof Condition)) {			
-			val travNodesWithRightState = traverser.visitedNodes.values.filter[
-				ASTTraverser.checkCondition(condition, it.stateSnapshot)
-			]
-			if (travNodesWithRightState.size > 0) {
-				System.out.println("Got here inside")
-				for (travNode : travNodesWithRightState) {
-					System.out.println(travNode + ", " + condition)
+	private def void putWarningsOnDeadNodesDownDeadBranch(Node deadNode, ASTTraverser traverser) {
+		switch(deadNode) {
+			ChoiceNode: {
+				for (option : deadNode.options) {
+					for (transition : option.transitions) {
+						// If child node is not in system either. Mark it as dead and recurse
+						if (!traverser.visitedNodes.containsKey(transition.destination) ) {
+							warning('''Node is unreachable because parent node: «deadNode» is unreachable.''',
+								transition.destination, // Node to put warning on
+								null, // Want warning on entire node and not just i.e. the name with: IfictiondslPackage.Literals.NODE__NAME
+								NODE_IS_UNREACHABLE				
+							)
+							putWarningsOnDeadNodesDownDeadBranch(transition.destination, traverser)
+						}
+					}
+				}
+			}
+			default: {
+				val structuralFeature = deadNode.eClass.getEStructuralFeature("transition")
+				if (structuralFeature !== null) {				 		
+					val transition = deadNode.eGet(structuralFeature) as Transition
+					// If child node is not in system either. Mark it as dead and recurse
+					if (transition !== null && !traverser.visitedNodes.containsKey(transition.destination)) {
+						warning('''Node is unreachable because parent node: «deadNode» is unreachable.''',
+							transition.destination, // Node to put warning on
+							null, // Want warning on entire node and not just i.e. the name with: IfictiondslPackage.Literals.NODE__NAME
+							NODE_IS_UNREACHABLE				
+						)
+						putWarningsOnDeadNodesDownDeadBranch(transition.destination, traverser)
+					}
 				}
 			}
 		}
+	}
+	
+	private def boolean analyseConditionAndTryToFulfillItByTraversingAST(Condition condition, ASTTraverser traverser) {
 		val TraversalCondition travCond = new TraversalCondition(condition)
 		var boolean isConditionFulfillable = true
 		while(isConditionFulfillable && travCond.buildNextComparisonChain()) {
@@ -177,61 +292,63 @@ class IfictiondslValidator extends AbstractIfictiondslValidator {
 			val firstFailedComparison = travCond.comparisonChain.findFirst[ comp | // find the first that fails i.e. reason for And-chain fail -> returns true
 				switch(comp) {
 					Comparison: {
-						// First check if comparison is already achieved
-						if(!checkIfComparisonIsAlreadyAchieved(comp, traverser)) {				
-							// Now check if any known state change node can move us in the right direction
+						// First check if comparison is already achieved somewhere
+						if(!checkIfComparisonIsAchievedByAnyVisitedNode(comp, traverser)) {				
+							// Now check if any known state change node can move us in the right direction. get all. if first one can't help, maybe the next can
 							val scnodes = getVisitedStateChangeNodesThatCanHelpAchieveComparison(comp, traverser)
 							if (scnodes.size === 0) 
-								return false
+								return true
 							for (scnode :  scnodes) {
 								// Find node with state that can get us to the state change node and try to go there
-								var nodeWithRightStateToGetToScnode = traverser.visitedNodes.values.findFirst[
+								val transitionToScnode = traverser.visitedTransitions.findFirst[ trans |
+									trans.destination === scnode	
+								]
+								var nodeWithRightStateToGetToScnode = traverser.visitedNodes.values.findFirst[ node |
 									ASTTraverser.checkCondition(
-										traverser.visitedTransitions.findFirst[
-											it.destination === scnode	
-										].condition, 
-										it.stateSnapshot 
-									) && it !== scnode
+										transitionToScnode.condition, 
+										node.stateSnapshot 
+									) // && it !== scnode - this should not be impossible anyhow. (it.destination === scnode && it !== scnode) => should always be true
 								].node
-								var boolean keepSearching = true
-								while(keepSearching && traverser.findNodeFrom(
-														 nodeWithRightStateToGetToScnode, // traverser.visitedNodes.get(scnode).prevNode.node,
-														 scnode,
-														 true 
-													   ) 
+								while(!checkIfComparisonIsAchievedByAnyVisitedNode(comp, traverser) 
+									  && traverser.findNodeFrom(
+										  nodeWithRightStateToGetToScnode, // traverser.visitedNodes.get(scnode).prevNode.node,
+										  scnode,
+									  	  true 
+									  )		 
 								){
-									keepSearching = !checkIfComparisonIsAlreadyAchieved(comp, traverser)
-									nodeWithRightStateToGetToScnode = scnode // the only node with right state now is the scnode
+									nodeWithRightStateToGetToScnode = scnode // the only node with right/better state now is the scnode itself
 								}
-								return !checkIfComparisonIsAlreadyAchieved(comp, traverser)
-							}							
+								if(checkIfComparisonIsAchievedByAnyVisitedNode(comp, traverser)) {
+									return false
+								}
+							}
+							return true // No state change node could help us get the right state to satisfy Comparison							
+						} else {
+							return false // Comparison was already achieved. moving on...
 						}
 					}
 					Parentheses: {
 						return analyseConditionAndTryToFulfillItByTraversingAST(comp.inner, traverser)
 					}
 				}
-				return false
+				System.out.println("We should not be able to get here") // 
+				return false // We did not achieve any
 			]
-			isConditionFulfillable = firstFailedComparison !== null
+			isConditionFulfillable = firstFailedComparison === null
 		}
 		return isConditionFulfillable
 	}
 	
-	private def boolean checkIfComparisonIsAlreadyAchieved(Comparison comp, ASTTraverser traverser) {
+	private def boolean checkIfComparisonIsAchievedByAnyVisitedNode(Comparison comp, ASTTraverser traverser) {
 		// First check all visited nodes to see if comparison is already achieved somewhere
 		for (travNode : traverser.visitedNodes.values) {
 			if (travNode.stateSnapshot.containsKey(comp.variable) ) {
-				switch (comp.operator) {
-					case "==": { return travNode.stateSnapshot.getOrDefault(comp.variable, 0) == comp.value }
-					case "!=": { return travNode.stateSnapshot.getOrDefault(comp.variable, 0) != comp.value }
-					case ">": { return travNode.stateSnapshot.getOrDefault(comp.variable, 0) > comp.value }
-					case "<": { return travNode.stateSnapshot.getOrDefault(comp.variable, 0) < comp.value }
-					case ">=": { return travNode.stateSnapshot.getOrDefault(comp.variable, 0) >= comp.value }
-					case "<=": { return travNode.stateSnapshot.getOrDefault(comp.variable, 0) <= comp.value }
+				if( ASTTraverser.checkCondition(comp, travNode.stateSnapshot) ) {
+					return true
 				}
 			}
 		}
+		return false
 	}
 	
 	// This method is called after checkIfComparisonIsAlreadyAchieved() - prerequisite is that condition is not fulfilled

@@ -76,8 +76,8 @@ class ASTTraverser {
 	}
 	
 	private def boolean findNodeFromHelper(Node currentNode, Node toNode, boolean strictMatch) {
-		// return false if we hit a loop i.e. visit before seen node in path without having changed state since last time
-		if (nodeVisitPath.length !== 1) {			
+		// return false if we hit a loop i.e. visit before seen node in path // without having changed state since last time
+		if (nodeVisitPath.length !== 1 && currentNode !== toNode) {			
 			val nodePossiblySeenBeforInPath = nodeVisitPath.findFirst[
 				it.node === currentNode 
 				//&& it.stateSnapshot.equals(this.state)
@@ -87,13 +87,8 @@ class ASTTraverser {
 			}
 		}
 		
-		// If state of current traversal is not the same as state when last seeing this node -> update the state of that node
-		if (visitedNodes.containsKey(currentNode) && !visitedNodes.get(currentNode).stateSnapshot.equals(state)) {
-			System.out.println("Got in here! node: \"" + currentNode.name + "\" state: " + state)
-			visitedNodes.get(currentNode).stateSnapshot = new HashMap<String, Integer>(this.state)
-		}
 		
-		// If it is not the first time this function is called
+		// If it is not the first time this function is called. Nodes should not be able to refference themselves
 		if (!nodeVisitPath.last.node.equals(currentNode)) {
 			if (currentNode instanceof SystemStateChangeNode) {
 				updateState(currentNode)
@@ -102,12 +97,19 @@ class ASTTraverser {
 				}
 			}
 
+			// If state of current traversal is not the same as state when last seeing this node -> update the state of that node
+			if (visitedNodes.containsKey(currentNode) && !visitedNodes.get(currentNode).stateSnapshot.equals(state)) {
+				//System.out.println("Updating state of already seen node: \"" + currentNode.name + "\", with state: " + state)
+				visitedNodes.get(currentNode).stateSnapshot = new HashMap<String, Integer>(this.state)
+			}
+
 			val traversalNode = new TraversalNode(currentNode, new HashMap<String, Integer>(this.state), nodeVisitPath.lastOrNull)
 			nodeVisitPath.add(traversalNode)
 			
 			if (currentNode === toNode) {
-				System.out.println("Found the right node: \"" + currentNode.name + "\" state: " + state)
+				//System.out.println("Found the right node: \"" + currentNode.name + "\" state: " + state)
 				if (!visitedNodes.containsKey(currentNode)) {
+					// System.out.println('''«'\t'»Found a new node: «currentNode.name»: " «state»''')
 					visitedNodes.put(currentNode, traversalNode)	
 				}
 				return true
@@ -116,8 +118,7 @@ class ASTTraverser {
 			if (!visitedNodes.containsKey(currentNode)) {
 				// We found one new node. Not necessarily the one we were looking for, but that is good enough
 				visitedNodes.put(currentNode, traversalNode)
-			
-				System.out.println("Found a node \"" + currentNode.name + "\". Was looking for \"" + toNode.name + "\": " + state)
+				// System.out.println('''«'\t'»Found a new node: «currentNode.name». Was looking for "toNode.name": " «state»''')			
 				if (!strictMatch) {
 					return false // we will return false because we did not find it, but can still use it
 				}
@@ -132,7 +133,7 @@ class ASTTraverser {
 						if (!visitedTransitions.contains(t)) {
 							visitedTransitions.add(t)
 						}
-						if(findNodeFromHelper(t.destination, toNode, strictMatch)) {
+						if(findNodeFromHelper(t.destination, toNode, strictMatch)) { // If not the first one finds it, maybe the second one will
 							return true
 						}
 					}

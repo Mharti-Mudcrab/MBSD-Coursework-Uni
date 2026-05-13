@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import net.mudcrab.coursework.mbsd.ifictiondsl.ChoiceNode;
 import net.mudcrab.coursework.mbsd.ifictiondsl.ChoiceOption;
@@ -104,7 +105,7 @@ public class IfictiondslValidator extends AbstractIfictiondslValidator {
     }
   }
 
-  @Check(CheckType.NORMAL)
+  @Check(CheckType.FAST)
   public void checkDetectDeadLeaves(final Story story) {
     final ASTTraverser traverser = new ASTTraverser();
     traverser.traverseStory(story);
@@ -157,7 +158,7 @@ public class IfictiondslValidator extends AbstractIfictiondslValidator {
         deadNodeCandidateCount = ((Object[])Conversions.unwrapArray(_converted_deadNodeCandidates, Object.class)).length;
         for (final Transition transCand : transitionCandidates) {
           {
-            HashMap<Node, TraversalNode> _visitedNodes = traverser.getVisitedNodes();
+            ConcurrentHashMap<Node, TraversalNode> _visitedNodes = traverser.getVisitedNodes();
             final Function1<TraversalNode, Boolean> _function = (TraversalNode it) -> {
               return Boolean.valueOf(ASTTraverser.checkCondition(transCand.getCondition(), it.getStateSnapshot()));
             };
@@ -218,18 +219,82 @@ public class IfictiondslValidator extends AbstractIfictiondslValidator {
     }
     for (final Node deadNode : deadNodeCandidates) {
       {
-        this.warning("Node is unreachable. Condition cannot be satisfied", deadNode, 
-          null, 
-          IfictiondslValidator.NODE_IS_UNREACHABLE);
+        final HashSet<Transition> tCToDN = new HashSet<Transition>();
         for (final Transition transCand_2 : transCandidatedsSortedByPriority) {
           Node _destination = transCand_2.getDestination();
           boolean _tripleEquals = (_destination == deadNode);
           if (_tripleEquals) {
-            this.warning("Transition condition cannot be satisfied from traversing the story and destination node is therefore unreachable", transCand_2, 
+            tCToDN.add(transCand_2);
+            StringConcatenation _builder = new StringConcatenation();
+            _builder.append("Transition condition cannot be satisfied from traversing the story and destination node: \"");
+            String _name = transCand_2.getDestination().getName();
+            _builder.append(_name);
+            _builder.append("\" is therefore unreachable");
+            this.warning(_builder.toString(), transCand_2, 
               IfictiondslPackage.Literals.TRANSITION__CONDITION, 
               IfictiondslValidator.TRANSITION_CONDITION_CANNOT_BE_SATISFIED);
           }
         }
+        StringConcatenation _builder_1 = new StringConcatenation();
+        _builder_1.append("Node is unreachable. Transition condition");
+        String _xifexpression = null;
+        int _size = tCToDN.size();
+        boolean _greaterThan = (_size > 1);
+        if (_greaterThan) {
+          _xifexpression = "s";
+        } else {
+          _xifexpression = "";
+        }
+        _builder_1.append(_xifexpression);
+        _builder_1.append(" from node");
+        String _xifexpression_1 = null;
+        int _size_1 = tCToDN.size();
+        boolean _greaterThan_1 = (_size_1 > 1);
+        if (_greaterThan_1) {
+          _xifexpression_1 = "s";
+        } else {
+          _xifexpression_1 = "";
+        }
+        _builder_1.append(_xifexpression_1);
+        _builder_1.append(": ");
+        {
+          boolean _hasElements = false;
+          for(final Transition t : tCToDN) {
+            if (!_hasElements) {
+              _hasElements = true;
+            } else {
+              _builder_1.appendImmediate(", ", "");
+            }
+            _builder_1.newLineIfNotEmpty();
+            CharSequence _switchResult = null;
+            EObject _eContainer = t.eContainer();
+            boolean _matched = false;
+            if (_eContainer instanceof ChoiceOption) {
+              _matched=true;
+              StringConcatenation _builder_2 = new StringConcatenation();
+              _builder_2.append("\"");
+              EObject _eContainer_1 = t.eContainer().eContainer();
+              String _name_1 = ((ChoiceNode) _eContainer_1).getName();
+              _builder_2.append(_name_1);
+              _builder_2.append("\"");
+              _switchResult = _builder_2;
+            }
+            if (!_matched) {
+              StringConcatenation _builder_2 = new StringConcatenation();
+              _builder_2.append("\"");
+              EObject _eContainer_1 = t.eContainer();
+              String _name_1 = ((Node) _eContainer_1).getName();
+              _builder_2.append(_name_1);
+              _builder_2.append("\"");
+              _switchResult = _builder_2;
+            }
+            _builder_1.append(_switchResult);
+          }
+        }
+        _builder_1.append(" cannot be satisfied");
+        this.warning(_builder_1.toString(), deadNode, 
+          null, 
+          IfictiondslValidator.NODE_IS_UNREACHABLE);
         this.putWarningsOnDeadNodesDownDeadBranch(deadNode, traverser);
       }
     }
@@ -248,9 +313,10 @@ public class IfictiondslValidator extends AbstractIfictiondslValidator {
           boolean _not = (!_containsKey);
           if (_not) {
             StringConcatenation _builder = new StringConcatenation();
-            _builder.append("Node is unreachable because parent node: ");
-            _builder.append(((ChoiceNode)deadNode));
-            _builder.append(" is unreachable.");
+            _builder.append("Node is unreachable because parent node: \"");
+            String _name = ((ChoiceNode)deadNode).getName();
+            _builder.append(_name);
+            _builder.append("\" is unreachable.");
             this.warning(_builder.toString(), 
               transition.getDestination(), 
               null, 
@@ -268,9 +334,10 @@ public class IfictiondslValidator extends AbstractIfictiondslValidator {
           final Transition transition = ((Transition) _eGet);
           if (((transition != null) && (!traverser.getVisitedNodes().containsKey(transition.getDestination())))) {
             StringConcatenation _builder = new StringConcatenation();
-            _builder.append("Node is unreachable because parent node: ");
-            _builder.append(deadNode);
-            _builder.append(" is unreachable.");
+            _builder.append("Node is unreachable because parent node: \"");
+            String _name = deadNode.getName();
+            _builder.append(_name);
+            _builder.append("\" is unreachable.");
             this.warning(_builder.toString(), 
               transition.getDestination(), 
               null, 

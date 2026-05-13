@@ -102,7 +102,7 @@ class IfictiondslValidator extends AbstractIfictiondslValidator {
 		}
 	}
 
-	@Check(CheckType.NORMAL) 
+	@Check(CheckType.FAST) 
 	def checkDetectDeadLeaves(Story story) {
 		// System.out.println("checkDetectDeadLeaves called")
 		
@@ -229,20 +229,32 @@ class IfictiondslValidator extends AbstractIfictiondslValidator {
 		//	- Condition analysis and attempt to fulfil condition by traversing AST to find stateChange nodes that can help fulfil transition condition
 		// They will get the deadNodeWarning
 		for (deadNode : deadNodeCandidates) {
-			warning("Node is unreachable. Condition cannot be satisfied",
-				deadNode, // Node to put warning on
-				null, // Want warning on entire node and not just i.e. the name with: IfictiondslPackage.Literals.NODE__NAME
-				NODE_IS_UNREACHABLE				
-			)
+			val HashSet<Transition> tCToDN = new HashSet<Transition>()
 			for (transCand : transCandidatedsSortedByPriority) {
 				if (transCand.destination === deadNode) {
-					warning("Transition condition cannot be satisfied from traversing the story and destination node is therefore unreachable",
+					tCToDN.add(transCand)
+					warning('''Transition condition cannot be satisfied from traversing the story and destination node: "«transCand.destination.name»" is therefore unreachable''',
 						transCand, // Node to put warning on
 						IfictiondslPackage.Literals.TRANSITION__CONDITION,
 						TRANSITION_CONDITION_CANNOT_BE_SATISFIED				
 					)					
 				}
 			}
+			warning('''Node is unreachable. Transition condition«tCToDN.size > 1 ? "s" : ""
+					  » from node« tCToDN.size > 1 ? "s" : ""
+					  »: «FOR t : tCToDN SEPARATOR ", "»
+					  		«switch (t.eContainer) {
+					  			ChoiceOption: {
+					  				'''"«(t.eContainer.eContainer as ChoiceNode).name»"'''
+					  			}
+					  			default: {
+					  				'''"«(t.eContainer as Node).name»"'''
+					  			}
+					  		}»«ENDFOR» cannot be satisfied''',
+				deadNode, // Node to put warning on
+				null, // Want warning on entire node and not just i.e. the name with: IfictiondslPackage.Literals.NODE__NAME
+				NODE_IS_UNREACHABLE				
+			)
 			putWarningsOnDeadNodesDownDeadBranch(deadNode, traverser)
 		}
 	
@@ -256,7 +268,7 @@ class IfictiondslValidator extends AbstractIfictiondslValidator {
 					for (transition : option.transitions) {
 						// If child node is not in system either. Mark it as dead and recurse
 						if (!traverser.visitedNodes.containsKey(transition.destination) ) {
-							warning('''Node is unreachable because parent node: «deadNode» is unreachable.''',
+							warning('''Node is unreachable because parent node: "«deadNode.name»" is unreachable.''',
 								transition.destination, // Node to put warning on
 								null, // Want warning on entire node and not just i.e. the name with: IfictiondslPackage.Literals.NODE__NAME
 								NODE_IS_UNREACHABLE				
@@ -272,7 +284,7 @@ class IfictiondslValidator extends AbstractIfictiondslValidator {
 					val transition = deadNode.eGet(structuralFeature) as Transition
 					// If child node is not in system either. Mark it as dead and recurse
 					if (transition !== null && !traverser.visitedNodes.containsKey(transition.destination)) {
-						warning('''Node is unreachable because parent node: «deadNode» is unreachable.''',
+						warning('''Node is unreachable because parent node: "«deadNode.name»" is unreachable.''',
 							transition.destination, // Node to put warning on
 							null, // Want warning on entire node and not just i.e. the name with: IfictiondslPackage.Literals.NODE__NAME
 							NODE_IS_UNREACHABLE				

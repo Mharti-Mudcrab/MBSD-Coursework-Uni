@@ -16,12 +16,13 @@ import net.mudcrab.coursework.mbsd.ifictiondsl.StartNode
 import net.mudcrab.coursework.mbsd.ifictiondsl.Story
 import net.mudcrab.coursework.mbsd.ifictiondsl.SystemStateChangeNode
 import net.mudcrab.coursework.mbsd.ifictiondsl.Transition
+import java.util.concurrent.ConcurrentHashMap
 
 class ASTTraverser {
 
 	private HashMap<String, Integer> state
 	private ArrayList<TraversalNode> nodeVisitPath
-	private HashMap<Node, TraversalNode> visitedNodes
+	private ConcurrentHashMap<Node, TraversalNode> visitedNodes
 	private HashSet<Node> highlyConnectedToNodes
 	private HashSet<Transition> visitedTransitions
 	private HashSet<SystemStateChangeNode> visitedStateChangeNodes
@@ -30,14 +31,14 @@ class ASTTraverser {
 	new() {
 		this.state = new HashMap<String, Integer>()
 		this.nodeVisitPath = new ArrayList<TraversalNode>()
-		this.visitedNodes = new HashMap<Node, TraversalNode>()
+		this.visitedNodes = new ConcurrentHashMap<Node, TraversalNode>()
 		this.highlyConnectedToNodes = new HashSet<Node>()
 		this.visitedTransitions = new HashSet<Transition>()
 		this.visitedStateChangeNodes = new HashSet<SystemStateChangeNode>()
 	}
 	
 	public def ArrayList<TraversalNode> 		getNodeVisitPath() { nodeVisitPath }
-	public def HashMap<Node, TraversalNode> 	getVisitedNodes() { visitedNodes }
+	public def ConcurrentHashMap<Node, TraversalNode> 	getVisitedNodes() { visitedNodes }
 	public def HashSet<Node> 					getHighlyConnectedToNodes() { highlyConnectedToNodes }
 	public def HashSet<Transition> 				getVisitedTransitions() { visitedTransitions }
 	public def HashSet<SystemStateChangeNode> 	getVisitedStateChangeNodes() { visitedStateChangeNodes }

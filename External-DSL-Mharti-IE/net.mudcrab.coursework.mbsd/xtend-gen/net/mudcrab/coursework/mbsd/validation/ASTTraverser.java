@@ -3,6 +3,7 @@ package net.mudcrab.coursework.mbsd.validation;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.concurrent.ConcurrentHashMap;
 import net.mudcrab.coursework.mbsd.ifictiondsl.And;
 import net.mudcrab.coursework.mbsd.ifictiondsl.ChoiceNode;
 import net.mudcrab.coursework.mbsd.ifictiondsl.ChoiceOption;
@@ -30,7 +31,7 @@ public class ASTTraverser {
 
   private ArrayList<TraversalNode> nodeVisitPath;
 
-  private HashMap<Node, TraversalNode> visitedNodes;
+  private ConcurrentHashMap<Node, TraversalNode> visitedNodes;
 
   private HashSet<Node> highlyConnectedToNodes;
 
@@ -45,8 +46,8 @@ public class ASTTraverser {
     this.state = _hashMap;
     ArrayList<TraversalNode> _arrayList = new ArrayList<TraversalNode>();
     this.nodeVisitPath = _arrayList;
-    HashMap<Node, TraversalNode> _hashMap_1 = new HashMap<Node, TraversalNode>();
-    this.visitedNodes = _hashMap_1;
+    ConcurrentHashMap<Node, TraversalNode> _concurrentHashMap = new ConcurrentHashMap<Node, TraversalNode>();
+    this.visitedNodes = _concurrentHashMap;
     HashSet<Node> _hashSet = new HashSet<Node>();
     this.highlyConnectedToNodes = _hashSet;
     HashSet<Transition> _hashSet_1 = new HashSet<Transition>();
@@ -59,7 +60,7 @@ public class ASTTraverser {
     return this.nodeVisitPath;
   }
 
-  public HashMap<Node, TraversalNode> getVisitedNodes() {
+  public ConcurrentHashMap<Node, TraversalNode> getVisitedNodes() {
     return this.visitedNodes;
   }
 

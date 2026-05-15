@@ -7,6 +7,11 @@ interface baseNodeData {
 
 }
 
+export interface NodePosition{
+    x: number;
+    y: number;
+}
+
 export interface StoryData {
     name: string;
     nodes: Record<string, StoryNode>;
@@ -24,6 +29,7 @@ export interface ChoiceOption {
 export interface StoryNode {
     id: string;
     type: NodeType;
+    position: NodePosition;
     data: baseNodeData & {
         choices?: ChoiceOption[];
         stateChanges?: StateChange[];

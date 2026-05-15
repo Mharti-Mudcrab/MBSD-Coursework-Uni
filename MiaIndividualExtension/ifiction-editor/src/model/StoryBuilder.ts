@@ -15,9 +15,9 @@ export class StoryBuilder {
         return this;
     }
 
-    private addNode(id: string, type: NodeType, displayText: string, extra = {}): this {
+    private addNode(id: string, type: NodeType, displayText: string, extra = {}, x = 0, y = 0): this {
         this.nodes[id] = {
-            id, type, data: { label: id, displayText, ...extra }
+            id, type, position: { x, y }, data: { label: id, displayText, ...extra }
         }
         this.lastAddedNodeId = id;
         this.lastAddedOption = null;
@@ -29,17 +29,17 @@ export class StoryBuilder {
     }
 
 
-    public Start(id: string, displayText: string): this {
-        return this.addNode(id, 'start', displayText);
+    public Start(id: string, displayText: string, x = 0, y = 0): this {
+        return this.addNode(id, 'start', displayText, {}, x, y);
     }
-    public Dialogue(id: string, displayText: string): this {
-        return this.addNode(id, 'dialogue', displayText);
+    public Dialogue(id: string, displayText: string, x = 0, y = 0): this {
+        return this.addNode(id, 'dialogue', displayText, {}, x, y);
     }
-    public Choice(id: string, displayText: string): this {
-        return this.addNode(id, 'choice', displayText, { choices: [] });
+    public Choice(id: string, displayText: string, x = 0, y = 0): this {
+        return this.addNode(id, 'choice', displayText, { choices: [] }, x, y);
     }
-    public End(id: string, displayText: string): this {
-        return this.addNode(id, 'end', displayText);
+    public End(id: string, displayText: string, x = 0, y = 0): this {
+        return this.addNode(id, 'end', displayText, {}, x, y);
     }
 
     public ChoiceOption(displayText: string): this {
@@ -78,7 +78,7 @@ export class StoryBuilder {
     }
 
 
-    public StateChange(id: string, displayText: string, changeStr: string): this {
+    public StateChange(id: string, displayText: string, changeStr: string, x = 0, y = 0): this {
         const stateChanges = changeStr.split(',').map(change => {
             const str = change.trim();
             const match = str.match(/^(\w+)\s*(=|\+=|-=)\s*(-?\d+)$/); // thanks ai
@@ -94,7 +94,7 @@ export class StoryBuilder {
 
         });
 
-        return this.addNode(id, 'stateChange', displayText, { stateChanges });
+        return this.addNode(id, 'stateChange', displayText, { stateChanges }, x, y);
 
     }
 

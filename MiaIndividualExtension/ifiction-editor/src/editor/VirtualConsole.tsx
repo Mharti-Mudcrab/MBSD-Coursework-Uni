@@ -3,11 +3,31 @@ import { StoryRunner } from '../StoryRunner';
 import type { StoryData } from '../types';
 
 export const VirtualConsole: React.FC<{ story: StoryData }> = ({ story }) => {
-    // Init runner
-    const runner = useMemo(() => new StoryRunner(story), [story]);
+    
     const [history, setHistory] = useState<string[]>([]);
     const [inputValue, setInputValue] = useState('');
     const scrollRef = useRef<HTMLDivElement>(null);
+    const [executionId, setExecutionId] = useState(0);
+    const [error, setError] = useState<string | null>(null);
+
+
+    // Init runner
+    const runner = useMemo(() => {
+        try { 
+            setError(null);
+            return new StoryRunner(story);
+        } catch (e: any) {
+            setError(e.message || "Failed to initialize runner");
+            return null;
+        }
+    }, [story, executionId]);
+
+
+    const handleRestart = () => {
+        setHistory([]);
+        setExecutionId(prev => prev +1);
+    };
+
 
     useEffect(() => {
         // Init logs from start node
@@ -54,24 +74,28 @@ export const VirtualConsole: React.FC<{ story: StoryData }> = ({ story }) => {
 
     return (
         <div style= {{
-            backgroundColor: '#0c0c0c',
+            backgroundColor: '#0f0f0f',
             color: '#d1d1d1',
-            fontFamily: 'monospace',
-            padding: '20px',
+            fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial',
+            padding: '16px',
             height: '100%',
             width: '100%',
             boxSizing: "border-box",
             display: 'flex',
-            flexDirection: 'column',
-            border: '1px solid #333'
+            flexDirection: 'column'
         }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0 16px 0', color: '#ddd', borderBottom: "1px solid #222" }}>
+                <h2 style={{ margin: 0, fontSize: '1rem', color: '#ddd' }}>Output</h2>
+                <button onClick={handleRestart} style={{ background: '#111', color: '#ddd', border: '1px solid #333', padding: '6px 10px', cursor: 'pointer', borderRadius: 6 }}>Restart</button>
+            </div>
             {/* Output */}
-            <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', marginBottom: '10px', whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+            <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', marginTop: '10px', marginBottom: '10px', whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
                 {history.map((line, i) => (
                     <div key={i} style = {{
                         marginBottom: '8px',
                         lineHeight: '1.5',
-                        color: line.startsWith('>') ? '#4ec9b0' : line.startsWith("Error") ? '#f44747' : '#d1d1d1'
+                        color: line.startsWith('>') ? '#4ec9b0' : line.startsWith("Error") ? '#f44747' : '#d1d1d1',
+                        fontFamily: 'inherit'
                     }}>
                         {line}
                     </div>
@@ -93,6 +117,7 @@ export const VirtualConsole: React.FC<{ story: StoryData }> = ({ story }) => {
                         outline: 'none', 
                         flex: 1,
                         fontSize: '1rem',
+                        fontFamily: 'inherit'
                     }}
                     />
             </form>

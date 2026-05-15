@@ -35,8 +35,7 @@ export class StoryRunner {
 
         if (node && steps === 0) {
             this.logs.push(`${node.data.displayText}`);
-            console.log(this.TransitionsExist)
-            if (!this.TransitionsExist) return;
+            
         }
 
         
@@ -49,7 +48,6 @@ export class StoryRunner {
                 this.logs.push(node.data.displayText);
             }
 
-            if (!this.TransitionsExist) return;
 
             steps++;
             if (steps > MAX_STEPS) {

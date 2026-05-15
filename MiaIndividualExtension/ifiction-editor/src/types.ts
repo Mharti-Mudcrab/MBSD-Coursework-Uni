@@ -19,7 +19,12 @@ export interface StoryData {
 }
 
 
+export interface Transition {
+    targetNodeId: string;
+    condition?: Condition;
+    priority?: number;
 
+}
 
 export interface ChoiceOption {
     displayText: string;
@@ -37,12 +42,7 @@ export interface StoryNode {
     };
 }
 
-export interface Transition {
-    targetNodeId: string;
-    condition?: Condition;
-    priority?: number;
 
-}
 
 export interface ChoiceNodeData extends baseNodeData {
     options: ChoiceOption[];

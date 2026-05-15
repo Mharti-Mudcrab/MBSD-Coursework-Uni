@@ -1,4 +1,4 @@
-import { Condition, Comparison, Operator, LogicalGroup } from "../types";
+import type { Condition, Comparison, Operator, LogicalGroup } from "../types";
 
 export class ConditionParser {
     public static parse(str: string): Condition | undefined {

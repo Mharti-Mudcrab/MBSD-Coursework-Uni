@@ -1,4 +1,4 @@
-import { StoryData, SystemState, StoryNode, Condition, Transition, StateChange } from "../types";
+import type { StoryData, SystemState, StoryNode, Condition, Transition, StateChange } from "../types";
 
 export class StoryEngine {
     private story: StoryData;

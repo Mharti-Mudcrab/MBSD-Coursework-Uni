@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef,} from 'react';
 import { StoryNode } from '../types';
 import { StoryRunner } from '../StoryRunner';
-import { StoryData } from '../types';
+import type { StoryData } from '../types';
 
 interface Props {
     story: StoryData;

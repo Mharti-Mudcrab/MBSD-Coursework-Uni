@@ -14,7 +14,7 @@ export const EndNode = ({ data }: any) => {
             fontWeight: 'bold'
         }}>
             {/* Only a target (input) for End nodes */}
-            <Handle type="target" position={Position.Left} style={{ background: '#f44747' }} />
+            <Handle id="target" type="target" position={Position.Left} style={{ background: '#f44747' }} />
             <div>{data.label || 'END'}</div>
             <div>{ data.displayText || '' }</div>
         </div>

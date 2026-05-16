@@ -23,12 +23,14 @@ export interface Transition {
     targetNodeId: string;
     condition?: Condition;
     priority?: number;
-
+    position?: NodePosition; 
 }
 
 export interface ChoiceOption {
     displayText: string;
     transitions: Transition[];
+    // Optional visual position for the option block on the canvas
+    position?: NodePosition;
 }
 
 export interface StoryNode {

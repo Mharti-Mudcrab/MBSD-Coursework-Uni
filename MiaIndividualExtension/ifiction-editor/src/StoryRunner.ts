@@ -20,47 +20,44 @@ export class StoryRunner {
 
     }
 
-    private TransitionsExist(node: StoryNode): boolean {
-            if (!node.data.transitions || node.data.transitions?.length == 0) {
-                this.logs.push("Error: No valid nodes to transition to.");
-                return false;
-            }
-            return true;
-    }
-
     private processCurrentNode() {
         let steps = 0;
         const MAX_STEPS = 50;
         let node = this.getCurrentNode();
 
-        if (node && steps === 0) {
-            this.logs.push(`${node.data.displayText}`);
-            
+        if (!node) {
+            this.logs.push("Error: Start Node does not exist. Execution stopped.");
+            return;
         }
 
-        
-        
+        this.logs.push(`${node.data.displayText}`);
 
-        while ( node && node.type !== 'choice' && node.type !== 'end') {
-            this.state = this.engine.step(this.state);
+        while (node && node.type !== 'choice' && node.type !== 'end') {
+            this.state = this.engine.step(this.state);  
             node = this.getCurrentNode();
             if (node) {
                 this.logs.push(node.data.displayText);
+            } else {
+                this.logs.push("Error: Node being transitioned to does not exist. Execution stopped.");
+                return;
             }
-
 
             steps++;
             if (steps > MAX_STEPS) {
                 this.logs.push("Error: Infinite Loop Detected");
                 return;
             }
-            
         }
 
     }
 
     public getAvailableChoices(): string[] {
         const node = this.getCurrentNode();
+        if (!node) {
+            this.logs.push("Error: Current node does not exist. Execution stopped.");
+            return [];
+        }
+
         if (node.type !== 'choice') return [];
 
         return (node.data.choices || [])
@@ -74,11 +71,16 @@ export class StoryRunner {
         }
 
         public handleChoice(choiceText: string) {
+            if (!this.getCurrentNode()) {
+                this.logs.push("Error: Current node no longer exists.");
+                return;
+            }
+
             this.state = this.engine.step(this.state, choiceText);
             this.processCurrentNode();
         }
 
-        public getCurrentNode(): StoryNode {
+        public getCurrentNode(): StoryNode | undefined {
             return this.engine['story'].nodes[this.state.currentNodeId];
         }
 

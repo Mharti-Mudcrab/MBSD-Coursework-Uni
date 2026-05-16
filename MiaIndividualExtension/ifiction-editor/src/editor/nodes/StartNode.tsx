@@ -12,7 +12,8 @@ export const StartNode = ({ data }: any) => {
             minWidth: '100px'
         }}>
             <strong>{data?.label || 'DEBUG START'}</strong>
-            <Handle type="source" position={Position.Right} />
+            <Handle id="target" type="target" position={Position.Left} />
+            <Handle id="source" type="source" position={Position.Right} />
         </div>
     );
 };

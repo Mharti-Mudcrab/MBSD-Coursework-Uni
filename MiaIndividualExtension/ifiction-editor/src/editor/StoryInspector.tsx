@@ -48,6 +48,20 @@ export const StoryInspector: React.FC<Props> = ({
             </div>
 
             <div style={{ marginBottom: 12 }}>
+                <label style={{ display: 'block', color: '#aaa', fontSize: 12 }}>Node Id</label>
+                <input
+                    style={{ width: '100%', padding: '6px 8px', boxSizing: 'border-box' }}
+                    value={node.id}
+                    onChange={(e) =>
+                        onUpdateNode({
+                            ...node,
+                            id: e.target.value,
+                        })
+                    }
+                />
+            </div>
+
+            <div style={{ marginBottom: 12 }}>
                 <label style={{ display: 'block', color: '#aaa', fontSize: 12 }}>Display Text</label>
                 <textarea
                     style={{ width: '100%', padding: '6px 8px', boxSizing: 'border-box', minHeight: 120 }}
@@ -63,6 +77,24 @@ export const StoryInspector: React.FC<Props> = ({
                     }
                 />
             </div>
+
+            <button
+                onClick={() => onDeleteNode(node.id)}
+                disabled={node.id === story.startNodeId}
+                style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    cursor: node.id === story.startNodeId ? 'not-allowed' : 'pointer',
+                    background: node.id === story.startNodeId ? '#3a3a3a' : '#5b1d1d',
+                    color: node.id === story.startNodeId ? '#666' : '#fff',
+                    border: node.id === story.startNodeId ? '1px solid #555' : '1px solid #7a2a2a',
+                    borderRadius: 4,
+                    opacity: node.id === story.startNodeId ? 0.5 : 1,
+                }}
+                title={node.id === story.startNodeId ? 'Cannot delete the start node' : 'Delete this node'}
+            >
+                {node.id === story.startNodeId ? 'Cannot Delete (Start Node)' : 'Delete Node'}
+            </button>
         </aside>
     );
 };

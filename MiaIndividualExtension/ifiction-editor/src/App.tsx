@@ -1,48 +1,72 @@
 import { VirtualConsole } from "./editor/VirtualConsole";
 import { StoryEditor } from './editor/StoryEditor';
 import { StoryInspector } from "./editor/StoryInspector";
-import type { StoryData } from './types';
+import type { StoryData, StoryNode, Transition } from './types';
 import { enchantedForest } from "./testStory";
 import { useState } from 'react';
 import './App.css'
 
-const emptyStory: StoryData = {
-    name: "New Story", 
-    startNodeId: "node_1",
-    nodes: {
-        "node_1": {
-            id: "node_1",
-            type: "start",
-            position: { x: 100, y: 100 },
-            data: { 
-                    label: "Start", 
-                    displayText: "Welcome to your new story.",
-                    transitions: [{ targetNodeId: "node_2"}]
-            },
-        },
-        "node_2": {
-            id: "node_2",
-            type: "end",
-            position: { x: 500, y: 100 },
-            data: { 
-                    label: "End", 
-                    displayText: "Ending of the story.",
-            },
-        },
-
-        
-    }
-};
-
 function App() {
-    const [story, setStory] = useState<StoryData>(emptyStory);
+    const [story, setStory] = useState<StoryData>(enchantedForest);
     const [showPreview, setShowPreview] = useState(true);
-    const [sessionKey, setSessionKey] = useState(0);
     const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
     const [showInspector, setShowInspector] = useState(true);
-    
-    const handleRestart = () => {
-        setSessionKey(prev => prev + 1);
+
+    const updateNodeInStory = (updatedNode: StoryNode) => {
+        setStory(currentStory => {
+            const previousNodeId = selectedNodeId && currentStory.nodes[selectedNodeId]
+                ? selectedNodeId
+                : updatedNode.id;
+
+            if (!updatedNode.id.trim()) {
+                return currentStory;
+            }
+
+            if (updatedNode.id !== previousNodeId && currentStory.nodes[updatedNode.id]) {
+                return currentStory;
+            }
+
+            const nextNodes: StoryData["nodes"] = {};
+
+            for (const [nodeId, node] of Object.entries(currentStory.nodes)) {
+                if (nodeId === previousNodeId) {
+                    nextNodes[updatedNode.id] = {
+                        ...updatedNode,
+                        data: {
+                            ...updatedNode.data,
+                            transitions: (updatedNode.data.transitions ?? []).map((transition: Transition) => (
+                                transition.targetNodeId === previousNodeId
+                                    ? { ...transition, targetNodeId: updatedNode.id }
+                                    : transition
+                            )),
+                        },
+                    };
+                    continue;
+                }
+
+                nextNodes[nodeId] = {
+                    ...node,
+                    data: {
+                        ...node.data,
+                        transitions: node.data.transitions?.map((transition: Transition) => (
+                            transition.targetNodeId === previousNodeId
+                                ? { ...transition, targetNodeId: updatedNode.id }
+                                : transition
+                        )),
+                    },
+                };
+            }
+
+            return {
+                ...currentStory,
+                nodes: nextNodes,
+                startNodeId: currentStory.startNodeId === previousNodeId
+                    ? updatedNode.id
+                    : currentStory.startNodeId,
+            };
+        });
+
+        setSelectedNodeId(updatedNode.id);
     };
 
     return (
@@ -76,15 +100,11 @@ function App() {
 
                 <div id="inspector-panel" style={{ width: showInspector ? 340 : 40, height: '100%', boxSizing: 'border-box', borderLeft: '1px solid #222', background: '#0f0f0f', transition: 'width 180ms ease', position: 'relative' }}>
                     {showInspector ? (
-                        <StoryInspector story={story} selectedNode={selectedNodeId} onUpdateNode={(updatedNode) => {
-                        setStory(currentStory => ({
-                            ...currentStory,
-                            nodes: {
-                                ...currentStory.nodes,
-                                [updatedNode.id]: updatedNode
-                            }
-                        }));
-                        }} onDeleteNode={(nodeId) => {
+                        <StoryInspector story={story} selectedNode={selectedNodeId} onUpdateNode={updateNodeInStory} onDeleteNode={(nodeId) => {
+                        if (story.startNodeId === nodeId) {
+                            return;
+                        }
+
                         setStory(currentStory => {
                             const nextNodes = { ...currentStory.nodes };
                             delete nextNodes[nodeId];
@@ -108,7 +128,7 @@ function App() {
             {/* Console panel (collapsible) */}
             <div id="console-panel" style={{ width: showPreview ? 350 : 40, height: '100%', borderLeft: '1px solid #333', transition: 'width 180ms ease', boxSizing: 'border-box', background: '#0f0f0f', position: 'relative' }}>
                 {showPreview ? (
-                    <VirtualConsole key={sessionKey} story={story} />
+                    <VirtualConsole story={story} />
                 ) : (
                     <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888' }}>
                         <div style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', fontSize: 12 }}>Output</div>

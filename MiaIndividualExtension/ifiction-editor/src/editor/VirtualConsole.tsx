@@ -2,38 +2,111 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { StoryRunner } from '../StoryRunner';
 import type { StoryData } from '../types';
 
+const getExecutionSignature = (story: StoryData): string => {
+    const normalizedNodes = Object.entries(story.nodes)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([id, node]) => ({
+            id,
+            type: node.type,
+            data: {
+                ...node.data,
+                transitions: (node.data.transitions || []).map(({ position, ...transition }) => transition),
+                choices: (node.data.choices || []).map(({ position, transitions, ...choice }) => ({
+                    ...choice,
+                    transitions: (transitions || []).map(({ position: _optionTransitionPosition, ...transition }) => transition),
+                })),
+            },
+        }));
+
+    return JSON.stringify({
+        name: story.name,
+        startNodeId: story.startNodeId,
+        nodes: normalizedNodes,
+    });
+};
+
 export const VirtualConsole: React.FC<{ story: StoryData }> = ({ story }) => {
     
     const [history, setHistory] = useState<string[]>([]);
     const [inputValue, setInputValue] = useState('');
     const scrollRef = useRef<HTMLDivElement>(null);
     const [executionId, setExecutionId] = useState(0);
-    const [error, setError] = useState<string | null>(null);
+    const [choiceHistory, setChoiceHistory] = useState<string[]>([]);
+    const [resumeNotice, setResumeNotice] = useState<string | null>(null);
 
+    const executionSignature = useMemo(() => getExecutionSignature(story), [story]);
+    const executionStory = useMemo(() => story, [executionSignature]);
 
-    // Init runner
-    const runner = useMemo(() => {
-        try { 
-            setError(null);
-            return new StoryRunner(story);
+    const runnerBuild = useMemo(() => {
+        try {
+            const builtRunner = new StoryRunner(executionStory);
+
+            for (let i = 0; i < choiceHistory.length; i++) {
+                const chosenText = choiceHistory[i];
+                const availableChoices = builtRunner.getAvailableChoices();
+                const matchedChoice = availableChoices.find(
+                    c => c.toLowerCase() === chosenText.toLowerCase()
+                );
+
+                if (!matchedChoice) {
+                    return {
+                        runner: builtRunner,
+                        error: null as string | null,
+                        replayFailed: true,
+                        failedChoice: chosenText,
+                    };
+                }
+
+                builtRunner.handleChoice(matchedChoice);
+            }
+
+            return {
+                runner: builtRunner,
+                error: null as string | null,
+                replayFailed: false,
+                failedChoice: null as string | null,
+            };
         } catch (e: any) {
-            setError(e.message || "Failed to initialize runner");
-            return null;
+            return {
+                runner: null,
+                error: e?.message || 'Failed to initialize runner',
+                replayFailed: false,
+                failedChoice: null as string | null,
+            };
         }
-    }, [story, executionId]);
+    }, [executionStory, executionId, choiceHistory]);
+
+    const runner = runnerBuild.runner;
+
+    useEffect(() => {
+        if (!runnerBuild.replayFailed || choiceHistory.length === 0) {
+            return;
+        }
+
+        setResumeNotice(
+            `Story changed and invalidated choice '${runnerBuild.failedChoice}'. Restarted from start.`
+        );
+        setChoiceHistory([]);
+    }, [runnerBuild.replayFailed, runnerBuild.failedChoice, choiceHistory.length]);
 
 
     const handleRestart = () => {
         setHistory([]);
+        setChoiceHistory([]);
+        setResumeNotice(null);
         setExecutionId(prev => prev +1);
     };
 
 
     useEffect(() => {
+        if (!runner) {
+            setHistory(runnerBuild.error ? [`Error: ${runnerBuild.error}`] : []);
+            return;
+        }
         // Init logs from start node
         setHistory([...runner.logs]);
         printChoices(runner);
-    }, [runner]);
+    }, [runner, runnerBuild.error]);
 
     useEffect(() => {
         scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -43,13 +116,16 @@ export const VirtualConsole: React.FC<{ story: StoryData }> = ({ story }) => {
     const printChoices = (runner: StoryRunner) => {
         const choices = runner.getAvailableChoices();
             if (choices.length > 0) {
-                const choiceText = "\nAvailable Options:\n" + choices.map((c, i) => `- ${c}`).join('\n');
+                const choiceText = "\nAvailable Options:\n" + choices.map((c) => `- ${c}`).join('\n');
                 setHistory(prev => [...prev, choiceText]);
             }
     };
 
     const handleCommand = (e: React.FormEvent) => {
         e.preventDefault();
+        if (!runner) {
+            return;
+        }
         const input = inputValue.trim();
         if (!input) return;
 
@@ -62,9 +138,7 @@ export const VirtualConsole: React.FC<{ story: StoryData }> = ({ story }) => {
         );
 
         if (match) {
-            runner.handleChoice(match);
-            setHistory([...runner.logs]);
-            printChoices(runner);
+            setChoiceHistory(prev => [...prev, match]);
         } else {
             setHistory(prev => [...prev, `Error: Invalid input '${input}'.`])
         }
@@ -88,6 +162,11 @@ export const VirtualConsole: React.FC<{ story: StoryData }> = ({ story }) => {
                 <h2 style={{ margin: 0, fontSize: '1rem', color: '#ddd' }}>Output</h2>
                 <button onClick={handleRestart} style={{ background: '#111', color: '#ddd', border: '1px solid #333', padding: '6px 10px', cursor: 'pointer', borderRadius: 6 }}>Restart</button>
             </div>
+            {resumeNotice && (
+                <div style={{ marginTop: 10, marginBottom: 4, padding: '8px 10px', border: '1px solid #4f3a00', background: '#2a1e00', color: '#f8d37a', borderRadius: 6, fontSize: 12 }}>
+                    {resumeNotice}
+                </div>
+            )}
             {/* Output */}
             <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', marginTop: '10px', marginBottom: '10px', whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
                 {history.map((line, i) => (

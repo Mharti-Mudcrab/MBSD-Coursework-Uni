@@ -57,18 +57,21 @@ export interface Comparison {
     type: 'comparison';
     operator: Operator;
     variable: string;
-    value: number; 
+    value: number;
+    position?: NodePosition;
 }
 
 export interface LogicalGroup {
     type: 'and' | 'or';
     left: Condition;
     right: Condition;
+    position?: NodePosition;
 }
 
 export type ParenthesizedCondition = {
     type: 'parentheses';
     condition: Condition;
+    position?: NodePosition;
 }
 
 export type Condition = 

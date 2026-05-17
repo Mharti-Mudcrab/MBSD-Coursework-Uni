@@ -1,4 +1,4 @@
-import type { StoryNode, Transition, NodeType, Condition, StateChange, StoryData, ChoiceOption } from "../types";
+import type { StoryNode, Transition, NodeType, ChoiceOption } from "../types";
 import { ConditionParser } from "./conditionParser";
 
 export class StoryBuilder {

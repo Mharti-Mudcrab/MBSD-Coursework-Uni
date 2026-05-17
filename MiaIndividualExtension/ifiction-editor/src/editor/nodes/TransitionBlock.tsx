@@ -29,13 +29,19 @@ export const TransitionBlock: React.FC<TransitionBlockProps> = ({ data }) => {
                 color: '#ddd',
             }}
         >
-            <Handle id="target" type="target" position={Position.Left} />
+            <Handle id="target" type="target" position={Position.Left} style={{ top: '25%' }} />
             <div>→ {data.transition.targetNodeId}</div>
             {data.transition.priority !== undefined && (
                 <div style={{ fontSize: 10, color: '#888' }}>
                     Priority: {data.transition.priority}
                 </div>
             )}
+            {data.transition.condition && (
+                <div style={{ fontSize: 9, color: '#aaa', marginTop: 4 }}>
+                    ⊕ Condition
+                </div>
+            )}
+            <Handle id="condition" type="target" position={Position.Left} style={{ top: '75%', background: '#d4a574' }} />
             <Handle id="source" type="source" position={Position.Right} />
         </div>
     );

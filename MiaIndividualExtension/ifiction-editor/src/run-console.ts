@@ -24,7 +24,7 @@ function start() {
             return;
         }
 
-        choices.forEach((choice, index) => {
+        choices.forEach((choice) => {
             console.log(`${choice}`);
         });
 

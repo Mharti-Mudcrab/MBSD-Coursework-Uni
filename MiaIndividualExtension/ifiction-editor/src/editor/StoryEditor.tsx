@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { ReactFlow, Background, Controls, useNodesState, type Node } from '@xyflow/react'
 import type { StoryData } from '../types'
+import type { ConditionBlockData, TransitionBlockData, OptionBlockData, CanvasNodeData } from './types'
 import '@xyflow/react/dist/style.css'
 import { StartNode } from './nodes/StartNode';
 import { EndNode } from './nodes/EndNode';
@@ -9,6 +10,10 @@ import { ChoiceNode } from './nodes/ChoiceNode';
 import { StateChangeNode } from './nodes/StateChangeNode';
 import { OptionBlock } from './nodes/OptionBlock';
 import { TransitionBlock } from './nodes/TransitionBlock';
+import { ComparisonBlock } from './nodes/ComparisonBlock';
+import { AndNode } from './nodes/AndNode';
+import { OrNode } from './nodes/OrNode';
+import { conditionASTToBlocks } from '../model/conditionBlocksGenerator';
 
 
 const nodeTypes = {
@@ -18,7 +23,10 @@ const nodeTypes = {
     choice: ChoiceNode,
     stateChange: StateChangeNode,
     optionBlock: OptionBlock,
-    transitionBlock: TransitionBlock
+    transitionBlock: TransitionBlock,
+    comparisonBlock: ComparisonBlock,
+    andNode: AndNode,
+    orNode: OrNode,
 }
 
 interface Props {
@@ -30,7 +38,10 @@ interface Props {
 
 export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNodeId, onSelectNode}) => {
 
-    const initialNodes = useMemo<Node<Record<string, unknown>>[]>(() => {
+    const blockToConditionRef = React.useRef<Map<string, any>>(new Map());
+
+    const { initialNodes, conditionEdges } = useMemo<{ initialNodes: Node<CanvasNodeData>[]; conditionEdges: any[] }>(() => {
+        blockToConditionRef.current.clear();
         const regularNodes =  Object.values(story.nodes).map((node) => ({
             id: node.id,
             type: node.type,
@@ -39,20 +50,35 @@ export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNode
             selected: node.id === selectedNodeId
         }));
 
-        const optionBlocks: Node<Record<string, unknown>>[] = [];
-        const transitonBlocks: Node<Record<string, unknown>>[] = [];
+        const optionBlocks: Node<OptionBlockData>[] = [];
+        const transitonBlocks: Node<TransitionBlockData>[] = [];
+        const conditionNodes: Node<ConditionBlockData>[] = [];
+        const conditionEdgesList: any[] = [];
         
         Object.values(story.nodes).forEach(node => {
             // Add transition blocks for node-level transitions
                 if (node.data.transitions) {
                 node.data.transitions.forEach((transition, index) => {
+                    const transitionBlockId = `${node.id}-${index}`;
+                    const transitionPos = transition.position || { x: 0, y: 0 };
                     // Render transition blocks at their saved position, otherwise neutral origin
                     transitonBlocks.push({
-                        id: `${node.id}-${index}`,
+                        id: transitionBlockId,
                         type: 'transitionBlock',
-                        position: transition.position || { x: 0, y: 0 },
-                        data: { transitionId: `${node.id}-${index}`, transition, parentNodeId: node.id, isSelected: false, onSelect: () => {} }
+                        position: transitionPos,
+                        data: { transitionId: transitionBlockId, transition, parentNodeId: node.id, isSelected: false, onSelect: () => {} }
                     });
+
+                    // Generate condition blocks if this transition has a condition
+                    if (transition.condition) {
+                        const conditionBlocks = conditionASTToBlocks(transition.condition, transitionBlockId);
+                        conditionNodes.push(...conditionBlocks.nodes);
+                        conditionEdgesList.push(...conditionBlocks.edges);
+                        // Store block to condition mapping
+                        conditionBlocks.blockToCondition.forEach((cond, blockId) => {
+                            blockToConditionRef.current.set(blockId, { transition, condition: cond });
+                        });
+                    }
                 });
             }
             
@@ -78,15 +104,14 @@ export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNode
                  // Add transition blocks for option-level transitions
                     if (option.transitions) {
                         option.transitions.forEach((transition: any, transitionIndex: number) => {
-                            // Use the computed option block position as the base for option transitions
-                            const optionBase = option.position || computedPosition;
-                            const defaultOptionPos = transition.position || { x: 0, y: 0 };
+                            const optionTransitionId = `${optionBlockId}-${transitionIndex}`;
+                            const transitionPos = transition.position || { x: 0, y: 0 };
                             transitonBlocks.push({
-                                id: `${optionBlockId}-${transitionIndex}`,
+                                id: optionTransitionId,
                                 type: 'transitionBlock',
-                                position: defaultOptionPos,
+                                position: transitionPos,
                                 data: { 
-                                    transitionId: `${optionBlockId}-${transitionIndex}`, 
+                                    transitionId: optionTransitionId, 
                                     transition, 
                                     parentNodeId: optionBlockId,
                                     isOption: true,
@@ -94,14 +119,27 @@ export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNode
                                     onSelect: () => {} 
                                 }
                             });
+
+                            // Generate condition blocks if this option transition has a condition
+                            if (transition.condition) {
+                                const conditionBlocks = conditionASTToBlocks(transition.condition, optionTransitionId);
+                                conditionNodes.push(...conditionBlocks.nodes);
+                                conditionEdgesList.push(...conditionBlocks.edges);
+                                // Store block to condition mapping
+                                conditionBlocks.blockToCondition.forEach((cond, blockId) => {
+                                    blockToConditionRef.current.set(blockId, { transition, condition: cond });
+                                });
+                            }
                         });
                     }
                 });
             }
         });
 
-        return [...regularNodes, ...optionBlocks, ...transitonBlocks];
-        
+        return { 
+            initialNodes: [...regularNodes, ...optionBlocks, ...transitonBlocks, ...conditionNodes],
+            conditionEdges: conditionEdgesList
+        };
 
     }, [story.nodes, selectedNodeId]);
 
@@ -113,8 +151,66 @@ export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNode
     }, [initialNodes, setNodes]);
 
     const onNodeDragStop = useCallback(
-        (_event: React.MouseEvent, node: Node<Record<string, unknown>>) => {
-            // Check if it's a story node first
+        (_event: React.MouseEvent, node: Node<CanvasNodeData>) => {
+            // Check if it's a condition block first
+            if (node.id.startsWith('condition-')) {
+                const conditionRef = blockToConditionRef.current.get(node.id);
+                if (conditionRef) {
+                    const { transition, condition: conditionNode } = conditionRef;
+                    // Update the condition's position
+                    (conditionNode as any).position = node.position;
+                    
+                    // Find and update the transition in story to trigger a re-render
+                    // We need to find which node and transition index this is
+                    let found = false;
+                    const updatedStory = { ...story, nodes: { ...story.nodes } };
+                    
+                    Object.values(story.nodes).forEach((storyNode) => {
+                        if (!found && storyNode.data.transitions) {
+                            storyNode.data.transitions.forEach((t) => {
+                                if (t === transition) {
+                                    // Found it - update the node
+                                    updatedStory.nodes[storyNode.id] = {
+                                        ...storyNode,
+                                        data: {
+                                            ...storyNode.data,
+                                            transitions: storyNode.data.transitions ? [...storyNode.data.transitions] : undefined,
+                                        },
+                                    };
+                                    found = true;
+                                }
+                            });
+                        }
+                        
+                        if (!found && storyNode.type === 'choice' && (storyNode.data as any).choices) {
+                            (storyNode.data as any).choices.forEach((option: any) => {
+                                if (option.transitions) {
+                                    option.transitions.forEach((t: any) => {
+                                        if (t === transition) {
+                                            // Found it - update the choice
+                                            updatedStory.nodes[storyNode.id] = {
+                                                ...storyNode,
+                                                data: {
+                                                    ...storyNode.data,
+                                                    choices: [...(storyNode.data as any).choices],
+                                                },
+                                            };
+                                            found = true;
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    });
+                    
+                    if (found) {
+                        onStoryChange(updatedStory);
+                    }
+                }
+                return;
+            }
+            
+            // Check if it's a story node
             if (story.nodes[node.id]) {
                 // Regular story node: persist the moved node's position only.
                 const currentStoryNode = story.nodes[node.id];
@@ -228,7 +324,7 @@ export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNode
 
 
     const handleNodeClick = useCallback(
-        (_event: React.MouseEvent, node: Node<Record<string, unknown>>) => {
+        (_event: React.MouseEvent, node: Node<CanvasNodeData>) => {
             onSelectNode(node.id);
         },
         [onSelectNode]
@@ -309,8 +405,11 @@ export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNode
             }
         });
         
+        // Add condition block edges computed during node initialization
+        derivedEdges.push(...conditionEdges);
+        
         return derivedEdges;
-    }, [story.nodes]);
+    }, [story.nodes, conditionEdges]);
 
     return (
         <div style={{ width: '100%', height: '100%', minHeight: '500px' }}>

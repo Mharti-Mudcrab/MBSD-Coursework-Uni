@@ -183,11 +183,7 @@ public class TraversalCondition {
     if (!_matched) {
       if (cond instanceof Comparison) {
         _matched=true;
-        if ((this.comparisonChain == null)) {
-          new TraversalComparison(((Comparison)cond));
-        } else {
-          this.comparisonChain.add(cond);
-        }
+        this.comparisonChain.add(cond);
         return true;
       }
     }

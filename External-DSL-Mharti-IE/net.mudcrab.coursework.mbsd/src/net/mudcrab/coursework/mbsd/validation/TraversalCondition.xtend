@@ -131,12 +131,7 @@ class TraversalCondition {
 				return true
 			}
 			Comparison: {
-				if (comparisonChain === null) {
-					new TraversalComparison(cond)
-				} else {
-					comparisonChain.add(cond)
-				}
-				
+				comparisonChain.add(cond)
 				return true
 			}
 		}

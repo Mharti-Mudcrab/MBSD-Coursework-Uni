@@ -53,6 +53,7 @@ export class StoryEngine {
     private evaluateTransitions(transitions: Transition[], variables: Record<string, number>): string | null {
         const validTransitions = transitions
             .filter(t => this.checkCondition(t.condition as any, variables))
+            // Type-unsafe. Keep an eye on this.
             .sort((a,b) => (b.priority || 0) - (a.priority || 0)); // Higher priority first
 
             return validTransitions.length > 0 ? validTransitions[0].targetNodeId : null;
@@ -85,6 +86,8 @@ export class StoryEngine {
                 default: return false;
             }
         }
+
+        // Type-unsafe codesmell. Keep an eye on this.
             else if (condition.type === 'and') {
                 if (!(condition as any).left || !(condition as any).right) return false;
                 return this.checkCondition((condition as any).left, variables) && this.checkCondition((condition as any).right, variables);

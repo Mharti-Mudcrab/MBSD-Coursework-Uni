@@ -65,6 +65,7 @@ Transitions support optional conditions that control flow. Building condition ed
 - **Conversion**: Condition AST ↔ visual block trees; block topology reconstructs AST; AST persists to JSON without string conversion
 - **Parentheses**: Implicit in block wiring topology; AST structure preserves nesting without explicit parentheses nodes
 - **Architecture**: Condition blocks don't persist in story data; they're rendered on-demand from AST and updated atomically when edited
+- **Orphaned Nodes**: When a condition node is deleted, any child subtrees become orphaned and are stored in `transition.orphanedConditions[]`. These render on the canvas as disconnected floating subtrees (preserving all internal structure and edges). **Future: When edge dragging support is added, reconnecting an orphaned node to the main tree should automatically remove it from the orphan store and reattach it to the main condition AST.**
 
 ### 5. State Change & Dialogue Editing ⧗ TODO
 

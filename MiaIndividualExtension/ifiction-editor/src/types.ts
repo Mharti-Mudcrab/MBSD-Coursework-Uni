@@ -16,6 +16,7 @@ export interface StoryData {
     name: string;
     nodes: Record<string, StoryNode>;
     startNodeId: string;
+    orphanedConditions?: Condition[];
 }
 
 
@@ -23,7 +24,7 @@ export interface Transition {
     targetNodeId: string;
     condition?: Condition;
     priority?: number;
-    position?: NodePosition; 
+    position?: NodePosition;
 }
 
 export interface ChoiceOption {
@@ -86,6 +87,8 @@ export interface StateChange {
     variable: string;
     operator: stateChangeOperator;
     value: number;
+    // Optional visual position for the variable-change block on the canvas
+    position?: NodePosition;
 }
 
 export interface StateChangeNodeData extends baseNodeData {

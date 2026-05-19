@@ -8,6 +8,7 @@ import { EndNode } from './nodes/EndNode';
 import { DialogueNode } from './nodes/DialogueNode';
 import { ChoiceNode } from './nodes/ChoiceNode';
 import { StateChangeNode } from './nodes/StateChangeNode';
+import { VariableBlock } from './nodes/VariableBlock';
 import { OptionBlock } from './nodes/OptionBlock';
 import { TransitionBlock } from './nodes/TransitionBlock';
 import { ComparisonBlock } from './nodes/ComparisonBlock';
@@ -22,6 +23,7 @@ const nodeTypes = {
     dialogue: DialogueNode,
     choice: ChoiceNode,
     stateChange: StateChangeNode,
+    variableBlock: VariableBlock,
     optionBlock: OptionBlock,
     transitionBlock: TransitionBlock,
     comparisonBlock: ComparisonBlock,
@@ -34,11 +36,10 @@ interface Props {
     onStoryChange: (story: StoryData) => void;
     selectedNodeId: string | null;
     onSelectNode: (nodeId: string | null) => void;
+    blockToConditionRef: React.MutableRefObject<Map<string, any>>;
 }
 
-export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNodeId, onSelectNode}) => {
-
-    const blockToConditionRef = React.useRef<Map<string, any>>(new Map());
+export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNodeId, onSelectNode, blockToConditionRef}) => {
 
     const { initialNodes, conditionEdges } = useMemo<{ initialNodes: Node<CanvasNodeData>[]; conditionEdges: any[] }>(() => {
         blockToConditionRef.current.clear();
@@ -47,11 +48,12 @@ export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNode
             type: node.type,
             position: node.position,
             data: node.data as unknown as Record<string, unknown>,
-            selected: node.id === selectedNodeId
+            // selected state is managed separately by effect to keep position persistence independent of UI selection
         }));
 
         const optionBlocks: Node<OptionBlockData>[] = [];
         const transitonBlocks: Node<TransitionBlockData>[] = [];
+        const variableBlocks: Node<any>[] = [];
         const conditionNodes: Node<ConditionBlockData>[] = [];
         const conditionEdgesList: any[] = [];
         
@@ -66,7 +68,7 @@ export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNode
                         id: transitionBlockId,
                         type: 'transitionBlock',
                         position: transitionPos,
-                        data: { transitionId: transitionBlockId, transition, parentNodeId: node.id, isSelected: false, onSelect: () => {} }
+                        data: { transitionId: transitionBlockId, transition, parentNodeId: node.id, isSelected: transitionBlockId === selectedNodeId, onSelect: () => onSelectNode(transitionBlockId) }
                     });
 
                     // Generate condition blocks if this transition has a condition
@@ -74,9 +76,9 @@ export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNode
                         const conditionBlocks = conditionASTToBlocks(transition.condition, transitionBlockId);
                         conditionNodes.push(...conditionBlocks.nodes);
                         conditionEdgesList.push(...conditionBlocks.edges);
-                        // Store block to condition mapping
+                        // Store block to condition mapping with parent transition ID for reliable lookup
                         conditionBlocks.blockToCondition.forEach((cond, blockId) => {
-                            blockToConditionRef.current.set(blockId, { transition, condition: cond });
+                            blockToConditionRef.current.set(blockId, { parentTransitionId: transitionBlockId, condition: cond });
                         });
                     }
                 });
@@ -115,8 +117,8 @@ export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNode
                                     transition, 
                                     parentNodeId: optionBlockId,
                                     isOption: true,
-                                    isSelected: false, 
-                                    onSelect: () => {} 
+                                    isSelected: optionTransitionId === selectedNodeId, 
+                                    onSelect: () => onSelectNode(optionTransitionId) 
                                 }
                             });
 
@@ -125,9 +127,9 @@ export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNode
                                 const conditionBlocks = conditionASTToBlocks(transition.condition, optionTransitionId);
                                 conditionNodes.push(...conditionBlocks.nodes);
                                 conditionEdgesList.push(...conditionBlocks.edges);
-                                // Store block to condition mapping
+                                // Store block to condition mapping with parent transition ID for reliable lookup
                                 conditionBlocks.blockToCondition.forEach((cond, blockId) => {
-                                    blockToConditionRef.current.set(blockId, { transition, condition: cond });
+                                    blockToConditionRef.current.set(blockId, { parentTransitionId: optionTransitionId, condition: cond });
                                 });
                             }
                         });
@@ -136,19 +138,71 @@ export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNode
             }
         });
 
+        // Add variable blocks for stateChange nodes (one per state change)
+        Object.values(story.nodes).forEach(node => {
+            if (node.type === 'stateChange' && (node.data as any).stateChanges) {
+                (node.data as any).stateChanges.forEach((change: any, idx: number) => {
+                    const varBlockId = `${node.id}-var-${idx}`;
+                    const pos = change.position || { x: 0, y: 0 };
+                    variableBlocks.push({
+                        id: varBlockId,
+                        type: 'variableBlock',
+                        position: pos,
+                        data: {
+                            changeId: varBlockId,
+                            change,
+                            parentNodeId: node.id,
+                            index: idx,
+                            isSelected: varBlockId === selectedNodeId,
+                            onSelect: () => onSelectNode(varBlockId)
+                        }
+                    });
+                });
+            }
+        });
+
+        // Render orphaned conditions separately, once globally, to avoid duplicate rendering
+        if (story.orphanedConditions && story.orphanedConditions.length > 0) {
+            story.orphanedConditions.forEach((orphaned: any, orphanIndex: number) => {
+                const orphanId = orphaned._orphanId ?? `idx-${orphanIndex}`;
+                const orphanTransitionId = `orphan-${orphanId}`;
+                const conditionBlocks = conditionASTToBlocks(orphaned, orphanTransitionId);
+                conditionNodes.push(...conditionBlocks.nodes);
+                conditionEdgesList.push(...conditionBlocks.edges);
+                conditionBlocks.blockToCondition.forEach((cond, blockId) => {
+                    blockToConditionRef.current.set(blockId, { parentTransitionId: orphanTransitionId, condition: cond, orphanId });
+                });
+            });
+        }
+
         return { 
-            initialNodes: [...regularNodes, ...optionBlocks, ...transitonBlocks, ...conditionNodes],
+            initialNodes: [...regularNodes, ...optionBlocks, ...transitonBlocks, ...variableBlocks, ...conditionNodes],
             conditionEdges: conditionEdgesList
         };
 
-    }, [story.nodes, selectedNodeId]);
+    }, [story.nodes, story.orphanedConditions, selectedNodeId, onSelectNode]);
 
 
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
 
     useEffect(() => {
-        setNodes(initialNodes);
+        setNodes(prev => {
+            // Merge previous node positions for nodes that existed, to avoid resetting derived block positions
+            const prevById = new Map(prev.map(n => [n.id, n]));
+            return initialNodes.map(n => {
+                const old = prevById.get(n.id);
+                if (old && old.position) {
+                    return { ...n, position: old.position };
+                }
+                return n;
+            });
+        });
     }, [initialNodes, setNodes]);
+
+    // Update selected flag without replacing node positions when selection changes
+    useEffect(() => {
+        setNodes(current => current.map(n => ({ ...n, selected: n.id === selectedNodeId })));
+    }, [selectedNodeId, setNodes]);
 
     const onNodeDragStop = useCallback(
         (_event: React.MouseEvent, node: Node<CanvasNodeData>) => {
@@ -260,6 +314,33 @@ export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNode
                     return;
                 }
 
+                // Variable block (parentId-var-index)
+                if (node.id.includes('-var-')) {
+                    const parts = node.id.split('-var-');
+                    const parentNodeId = parts[0];
+                    const idx = parseInt(parts[1], 10);
+                    const parentNode = story.nodes[parentNodeId];
+                    if (!parentNode || parentNode.type !== 'stateChange') return;
+
+                    const updates = [...(parentNode.data.stateChanges || [])];
+                    updates[idx] = { ...updates[idx], position: node.position };
+
+                    onStoryChange({
+                        ...story,
+                        nodes: {
+                            ...story.nodes,
+                            [parentNodeId]: {
+                                ...parentNode,
+                                data: {
+                                    ...parentNode.data,
+                                    stateChanges: updates,
+                                },
+                            },
+                        },
+                    });
+                    return;
+                }
+
                 // Otherwise it's an option transition block: restParts[1] is transitionIndex
                 const transitionIndex = parseInt(restParts[1], 10);
                 const choices = (parentNode.data as any).choices || [];
@@ -322,7 +403,6 @@ export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNode
         [story, onStoryChange]
     );
 
-
     const handleNodeClick = useCallback(
         (_event: React.MouseEvent, node: Node<CanvasNodeData>) => {
             onSelectNode(node.id);
@@ -359,6 +439,21 @@ export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNode
                         target: transition.targetNodeId,
                         sourceHandle: 'source',
                         targetHandle: 'target',
+                    });
+                });
+            }
+            // Add variable-to-stateChange edges will be added later when building edges
+
+            // Add edges from variable blocks -> stateChange nodes
+            if (node.type === 'stateChange' && (node.data as any).stateChanges) {
+                (node.data as any).stateChanges.forEach((_change: any, idx: number) => {
+                    const varBlockId = `${node.id}-var-${idx}`;
+                    derivedEdges.push({
+                        id: `${varBlockId}-to-${node.id}`,
+                        source: varBlockId,
+                        target: node.id,
+                        sourceHandle: 'source',
+                        targetHandle: 'var',
                     });
                 });
             }

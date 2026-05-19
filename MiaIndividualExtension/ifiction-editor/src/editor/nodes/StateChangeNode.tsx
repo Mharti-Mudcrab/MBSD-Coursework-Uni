@@ -13,7 +13,8 @@ export const StateChangeNode = ({ data }: any) => {
                 fontSize: 12,
             }}
         >
-            <Handle id="target" type="target" position={Position.Left} />
+            <Handle id="target" type="target" position={Position.Left} style={{ top: '25%' }} />
+            <Handle id="var" type="target" position={Position.Left} style={{ top: '75%', background: '#6ac06a' }} />
             <div style={{ fontWeight: 'bold', marginBottom: 4 }}>
                 {data?.label || 'State Change'}
             </div>

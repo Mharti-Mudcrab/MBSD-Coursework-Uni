@@ -3,7 +3,7 @@ import { StoryEditor } from './editor/StoryEditor';
 import { StoryInspector } from "./editor/StoryInspector";
 import type { StoryData, StoryNode, Transition } from './types';
 import { enchantedForest } from "./testStory";
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import './App.css'
 
 function App() {
@@ -11,6 +11,7 @@ function App() {
     const [showPreview, setShowPreview] = useState(true);
     const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
     const [showInspector, setShowInspector] = useState(true);
+    const blockToConditionRef = useRef<Map<string, any>>(new Map());
 
     const updateNodeInStory = (updatedNode: StoryNode) => {
         setStory(currentStory => {
@@ -88,7 +89,7 @@ function App() {
                 borderRight: "1px solid #333"
             }}>
                 <div style={{ flex: 1, position: 'relative' }}>
-                    <StoryEditor story={story} onStoryChange={setStory} selectedNodeId={selectedNodeId} onSelectNode={setSelectedNodeId} />
+                    <StoryEditor story={story} onStoryChange={setStory} selectedNodeId={selectedNodeId} onSelectNode={setSelectedNodeId} blockToConditionRef={blockToConditionRef} />
                     {/* Reset Button */}
                     <button 
                         onClick={() => setShowPreview(!showPreview)}
@@ -100,7 +101,7 @@ function App() {
 
                 <div id="inspector-panel" style={{ width: showInspector ? 340 : 40, height: '100%', boxSizing: 'border-box', borderLeft: '1px solid #222', background: '#0f0f0f', transition: 'width 180ms ease', position: 'relative' }}>
                     {showInspector ? (
-                        <StoryInspector story={story} selectedNode={selectedNodeId} onUpdateNode={updateNodeInStory} onDeleteNode={(nodeId) => {
+                        <StoryInspector story={story} selectedNode={selectedNodeId} onUpdateNode={updateNodeInStory} blockToConditionRef={blockToConditionRef} onUpdateStory={setStory} onDeleteNode={(nodeId) => {
                         if (story.startNodeId === nodeId) {
                             return;
                         }

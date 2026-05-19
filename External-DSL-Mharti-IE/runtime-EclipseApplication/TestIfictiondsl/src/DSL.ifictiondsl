@@ -4,29 +4,29 @@ StartNode start {
     -> roadChoice
 }
 
-//ChoiceNode choiceNodeTransitioningToItself { 
-//    choices: [
-//    	ChoiceOption {displayText: "",
-//    		-> choiceNodeTransitioningToItself
-//    	}
-//    ]
-//}
-//
-//DialogueNode nodeTranitioningToItself { 
-//	displayText: "",
-//	-> nodeTranitioningToItself           
-//}
+ChoiceNode choiceNodeTransitioningToItself { 
+    choices: [
+    	ChoiceOption {displayText: "",
+    		-> choiceNodeTransitioningToItself
+    	}
+    ]
+}
+
+DialogueNode nodeTranitioningToItself { 
+	displayText: "",
+	-> nodeTranitioningToItself           
+}
 
 ChoiceNode roadChoice {                      
     choices: [
         ChoiceOption {displayText: "Go down road number 1", 
             -> road1DialogueTalisman with priority 2 with condition: Talisman==1 and Coin==5 or ((Cucumber<10 and Favor>=15) or ((CancanDancers==1))) or Grit==100,
             -> road1DialogueNoTalisman },
-        ChoiceOption {displayText: "Go down road number 2 ", 
+        ChoiceOption {displayText: "Go down road number 2 ",
             -> road2Dialogue },     
         ChoiceOption {displayText: "Look in bushes",
-            -> addTalismanSystemStateChange with priority 3 with condition: Talisman==0 ,
-            -> addCoinSystemStateChange with priority 3 with condition: Talisman==1 and BushLookup<3,
+            -> addTalismanSystemStateChange with priority 3 with condition: Talisman==0 , 
+            -> addCoinSystemStateChange with priority 3 with condition: Talisman==1 and BushLookup<3, 
             -> addPictureSystemStateChange with priority 2 with condition: Talisman==1 and BushLookup<4,
             -> foundNothingSystemStateChange with priority 1 with condition: BushLookup<5 },
         ChoiceOption {displayText: "Impossible choice",
@@ -38,11 +38,11 @@ ChoiceNode roadChoice {
 }
 
 DialogueNode hardToGetToNode {  
-	displayText: "How did we get here!?",   
+	displayText: "How did we get here!?",
 	-> furtherDownTheDeadBranch 
 }
 
-DialogueNode furtherDownTheDeadBranch  {
+DialogueNode furtherDownTheDeadBranch {
     displayText: "", 
     -> shieldChoice 
 }  

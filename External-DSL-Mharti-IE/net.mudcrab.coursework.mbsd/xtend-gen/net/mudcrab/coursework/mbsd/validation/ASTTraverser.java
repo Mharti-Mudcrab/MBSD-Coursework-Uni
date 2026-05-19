@@ -35,6 +35,8 @@ public class ASTTraverser {
 
   private HashSet<Node> highlyConnectedToNodes;
 
+  private HashSet<Node> conditionlessSearchVisitedNotes;
+
   private HashSet<Transition> visitedTransitions;
 
   private HashSet<SystemStateChangeNode> visitedStateChangeNodes;
@@ -50,10 +52,12 @@ public class ASTTraverser {
     this.visitedNodes = _concurrentHashMap;
     HashSet<Node> _hashSet = new HashSet<Node>();
     this.highlyConnectedToNodes = _hashSet;
-    HashSet<Transition> _hashSet_1 = new HashSet<Transition>();
-    this.visitedTransitions = _hashSet_1;
-    HashSet<SystemStateChangeNode> _hashSet_2 = new HashSet<SystemStateChangeNode>();
-    this.visitedStateChangeNodes = _hashSet_2;
+    HashSet<Node> _hashSet_1 = new HashSet<Node>();
+    this.conditionlessSearchVisitedNotes = _hashSet_1;
+    HashSet<Transition> _hashSet_2 = new HashSet<Transition>();
+    this.visitedTransitions = _hashSet_2;
+    HashSet<SystemStateChangeNode> _hashSet_3 = new HashSet<SystemStateChangeNode>();
+    this.visitedStateChangeNodes = _hashSet_3;
   }
 
   public ArrayList<TraversalNode> getNodeVisitPath() {
@@ -66,6 +70,10 @@ public class ASTTraverser {
 
   public HashSet<Node> getHighlyConnectedToNodes() {
     return this.highlyConnectedToNodes;
+  }
+
+  public HashSet<Node> getConditionlessSearchVisitedNotes() {
+    return this.conditionlessSearchVisitedNotes;
   }
 
   public HashSet<Transition> getVisitedTransitions() {
@@ -87,7 +95,55 @@ public class ASTTraverser {
     final Function1<Node, Boolean> _function = (Node it) -> {
       return Boolean.valueOf((it instanceof StartNode));
     };
-    this.traverseStoryHelper(IterableExtensions.<Node>findFirst(story.getNodes(), _function), null);
+    final Node startNode = IterableExtensions.<Node>findFirst(story.getNodes(), _function);
+    this.traverseStoryHelper(startNode, null);
+  }
+
+  public void traverseStoryConditionlessly(final Story story) {
+    this.conditionlessSearchVisitedNotes.clear();
+    final Function1<Node, Boolean> _function = (Node it) -> {
+      return Boolean.valueOf((it instanceof StartNode));
+    };
+    final Node startNode = IterableExtensions.<Node>findFirst(story.getNodes(), _function);
+    this.traverseStoryConditionlesslyHelper(startNode);
+  }
+
+  private void traverseStoryConditionlesslyHelper(final Node currentNode) {
+    boolean _contains = this.conditionlessSearchVisitedNotes.contains(currentNode);
+    if (_contains) {
+      return;
+    } else {
+      this.conditionlessSearchVisitedNotes.add(currentNode);
+    }
+    boolean _matched = false;
+    if (currentNode instanceof ChoiceNode) {
+      _matched=true;
+      EList<ChoiceOption> _options = ((ChoiceNode)currentNode).getOptions();
+      for (final ChoiceOption option : _options) {
+        EList<Transition> _transitions = option.getTransitions();
+        for (final Transition t : _transitions) {
+          this.traverseStoryConditionlesslyHelper(t.getDestination());
+        }
+      }
+    }
+    if (!_matched) {
+      if (currentNode instanceof EndNode) {
+        _matched=true;
+        return;
+      }
+    }
+    if (!_matched) {
+      {
+        final EStructuralFeature structuralFeature = currentNode.eClass().getEStructuralFeature("transition");
+        if ((structuralFeature != null)) {
+          Object _eGet = currentNode.eGet(structuralFeature);
+          final Transition t = ((Transition) _eGet);
+          if ((t != null)) {
+            this.traverseStoryConditionlesslyHelper(t.getDestination());
+          }
+        }
+      }
+    }
   }
 
   public boolean findNodeFrom(final Node fromNode, final Node toNode) {

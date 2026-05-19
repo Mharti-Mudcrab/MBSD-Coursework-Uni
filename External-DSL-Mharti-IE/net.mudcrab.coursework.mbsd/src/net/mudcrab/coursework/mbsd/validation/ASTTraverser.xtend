@@ -24,6 +24,7 @@ class ASTTraverser {
 	private ArrayList<TraversalNode> nodeVisitPath
 	private ConcurrentHashMap<Node, TraversalNode> visitedNodes
 	private HashSet<Node> highlyConnectedToNodes
+	private HashSet<Node> conditionlessSearchVisitedNotes
 	private HashSet<Transition> visitedTransitions
 	private HashSet<SystemStateChangeNode> visitedStateChangeNodes
 	private Story story
@@ -33,6 +34,7 @@ class ASTTraverser {
 		this.nodeVisitPath = new ArrayList<TraversalNode>()
 		this.visitedNodes = new ConcurrentHashMap<Node, TraversalNode>()
 		this.highlyConnectedToNodes = new HashSet<Node>()
+		this.conditionlessSearchVisitedNotes = new HashSet<Node>()
 		this.visitedTransitions = new HashSet<Transition>()
 		this.visitedStateChangeNodes = new HashSet<SystemStateChangeNode>()
 	}
@@ -40,6 +42,7 @@ class ASTTraverser {
 	public def ArrayList<TraversalNode> 		getNodeVisitPath() { nodeVisitPath }
 	public def ConcurrentHashMap<Node, TraversalNode> 	getVisitedNodes() { visitedNodes }
 	public def HashSet<Node> 					getHighlyConnectedToNodes() { highlyConnectedToNodes }
+	public def HashSet<Node> 					getConditionlessSearchVisitedNotes() { conditionlessSearchVisitedNotes }
 	public def HashSet<Transition> 				getVisitedTransitions() { visitedTransitions }
 	public def HashSet<SystemStateChangeNode> 	getVisitedStateChangeNodes() { visitedStateChangeNodes }
 
@@ -52,7 +55,44 @@ class ASTTraverser {
 		visitedStateChangeNodes.clear
 		this.story = story
 		
-		traverseStoryHelper(story.nodes.findFirst[it instanceof StartNode], null)
+		val startNode = story.nodes.findFirst[it instanceof StartNode]
+		traverseStoryHelper(startNode, null)
+	}
+	
+	public def void traverseStoryConditionlessly(Story story) {
+		conditionlessSearchVisitedNotes.clear
+		
+		val startNode = story.nodes.findFirst[it instanceof StartNode]
+		traverseStoryConditionlesslyHelper(startNode)
+	}
+	
+	private def void traverseStoryConditionlesslyHelper(Node currentNode) {
+		if (conditionlessSearchVisitedNotes.contains(currentNode)) {
+			return
+		} else {
+			conditionlessSearchVisitedNotes.add(currentNode)
+		}
+		switch (currentNode) {
+			ChoiceNode: {
+				for (option : currentNode.options) {
+					for (t : option.transitions) {						
+						traverseStoryConditionlesslyHelper(t.destination)
+					}
+				}
+			}
+			EndNode: {
+				return
+			}
+			default: {
+				val structuralFeature = currentNode.eClass.getEStructuralFeature("transition")
+				if (structuralFeature !== null) {
+					val t = currentNode.eGet(structuralFeature) as Transition
+					if (t !== null) {
+						traverseStoryConditionlesslyHelper(t.destination)
+					}					
+				}
+			}
+		}
 	}
 
 	public def boolean findNodeFrom(Node fromNode, Node toNode) {

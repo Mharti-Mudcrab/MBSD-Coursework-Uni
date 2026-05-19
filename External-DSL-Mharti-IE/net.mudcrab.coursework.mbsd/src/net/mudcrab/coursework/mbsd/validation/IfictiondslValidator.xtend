@@ -3,12 +3,15 @@
  */
 package net.mudcrab.coursework.mbsd.validation
 
+import com.google.inject.Inject
 import java.util.HashMap
 import java.util.HashSet
 import java.util.List
+import net.mudcrab.coursework.mbsd.ifictiondsl.ChoiceNode
 import net.mudcrab.coursework.mbsd.ifictiondsl.ChoiceOption
 import net.mudcrab.coursework.mbsd.ifictiondsl.Comparison
 import net.mudcrab.coursework.mbsd.ifictiondsl.Condition
+import net.mudcrab.coursework.mbsd.ifictiondsl.IfictiondslPackage
 import net.mudcrab.coursework.mbsd.ifictiondsl.Node
 import net.mudcrab.coursework.mbsd.ifictiondsl.Parentheses
 import net.mudcrab.coursework.mbsd.ifictiondsl.Story
@@ -16,10 +19,9 @@ import net.mudcrab.coursework.mbsd.ifictiondsl.SystemStateChangeNode
 import net.mudcrab.coursework.mbsd.ifictiondsl.Transition
 import org.eclipse.emf.ecore.util.EcoreUtil
 import org.eclipse.xtext.EcoreUtil2
+import org.eclipse.xtext.util.IResourceScopeCache
 import org.eclipse.xtext.validation.Check
 import org.eclipse.xtext.validation.CheckType
-import net.mudcrab.coursework.mbsd.ifictiondsl.IfictiondslPackage
-import net.mudcrab.coursework.mbsd.ifictiondsl.ChoiceNode
 
 /**
  * This class contains custom validation rules. 
@@ -27,41 +29,18 @@ import net.mudcrab.coursework.mbsd.ifictiondsl.ChoiceNode
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#validation
  */
 class IfictiondslValidator extends AbstractIfictiondslValidator {
+
+	@Inject IResourceScopeCache cache
 	
 	public static val NOT_REFERENCED_BY_TRANSITION = 'notReferencedByTransition'
 	public static val NODE_TRANSITIONS_TO_ITSELF = 'nodeTransitionsToItself'
 	public static val NODE_IS_UNREACHABLE = 'nodeIsUnreachable'
 	public static val TRANSITION_CONDITION_CANNOT_BE_SATISFIED = 'transitionConditionCannotBeSatisfied'
 
-//	public static val INVALID_NAME = 'invalidName'
-//
-//	@Check
-//	def checkGreetingStartsWithCapital(Greeting greeting) {
-//		if (!Character.isUpperCase(greeting.name.charAt(0))) {
-//			warning('Name should start with a capital', 
-//					IfictiondslPackage.Literals.GREETING__NAME,
-//					INVALID_NAME)
-//		}
-//	}
-
-//	@Check(CheckType.FAST)
-//	def checkNotRefferencedByAnyTransitions(Node node) {
-//		System.out.println("checkNotRefferencedByAnyTransitions called")
-//		val allTransitions = EcoreUtil2.getAllContentsOfType(node.eContainer, Transition)
-//		if(allTransitions.findFirst[it.destination === node] === null) {
-//			warning("Node with name '" + node.name + "' is not referenced by any transitions!",
-//				node,
-//				null,
-//				NOT_REFERENCED_BY_TRANSITION
-//			)
-//		}
-//	}
-
 	@Check(CheckType.FAST)
 	def checkNotRefferencedByAnyTransitions(Node node) {
-		//System.out.println("checkNotRefferencedByAnyTransitions called")
 		if(EcoreUtil.UsageCrossReferencer.find(node, node.eContainer).size === 0) {
-			warning('''Node with name '«node.name»' is not referenced by any transitions in story''',
+			warning('''Node is not referenced by any transitions in story''',
 				IfictiondslPackage.Literals.NODE__NAME,
 				NOT_REFERENCED_BY_TRANSITION
 			)
@@ -70,17 +49,29 @@ class IfictiondslValidator extends AbstractIfictiondslValidator {
 
 	@Check(CheckType.FAST)
 	def checkNotTransitioningToItself(Node node) {
-		//System.out.println("checkNotRefferencingYourself called")
+		val cachedNodesNotVisitedFromConditionlessSearch = cache.get("cachedNodesNotVisitedFromConditionlessSearch", node.eResource, [new HashSet<Node>()])
+		val cacheDeadNodes = cache.get("cachedDeadNodes", node.eResource, [new HashSet<Node>()])
+		
 		switch (node) {
 			ChoiceNode: {
 				for (option : node.options) {
 					for (transition : option.transitions) {
 						if (transition.destination === node) {
-							error('''ChoiceOption is transitioning to own ChoiceNode''',
-								transition,
-								IfictiondslPackage.Literals.TRANSITION__DESTINATION,
-								NODE_TRANSITIONS_TO_ITSELF
-							)							
+							if (cachedNodesNotVisitedFromConditionlessSearch.contains(node) ||
+								cacheDeadNodes.contains(node)
+							) {
+								warning('''ChoiceOption is transitioning to own ChoiceNode''',
+									transition,
+									IfictiondslPackage.Literals.TRANSITION__DESTINATION,
+									NODE_TRANSITIONS_TO_ITSELF
+								)
+							} else {								
+								error('''ChoiceOption is transitioning to own ChoiceNode''',
+									transition,
+									IfictiondslPackage.Literals.TRANSITION__DESTINATION,
+									NODE_TRANSITIONS_TO_ITSELF
+								)							
+							}
 						}
 					}
 				}
@@ -90,21 +81,30 @@ class IfictiondslValidator extends AbstractIfictiondslValidator {
 				if (structuralFeature !== null) {
 					val transition = node.eGet(structuralFeature) as Transition
 					if (transition.destination === node) {
-						error('''Node is transitioning to itself''',
-							transition,
-							IfictiondslPackage.Literals.TRANSITION__DESTINATION,
-							NODE_TRANSITIONS_TO_ITSELF
-						)
+						if (cachedNodesNotVisitedFromConditionlessSearch.contains(node) ||
+							cacheDeadNodes.contains(node)
+						) {
+							warning('''Node is transitioning to itself''',
+								transition,
+								IfictiondslPackage.Literals.TRANSITION__DESTINATION,
+								NODE_TRANSITIONS_TO_ITSELF
+							)
+						} else {							
+							error('''Node is transitioning to itself''',
+								transition,
+								IfictiondslPackage.Literals.TRANSITION__DESTINATION,
+								NODE_TRANSITIONS_TO_ITSELF
+							)
+						}
 					}
 				}
-				
 			}
 		}
 	}
 
+	
 	@Check(CheckType.FAST) 
-	def checkDetectDeadLeaves(Story story) {
-		// System.out.println("checkDetectDeadLeaves called")
+	def checkDetectDeadNodes(Story story) {
 		
 		val traverser = new ASTTraverser()
 		traverser.traverseStory(story)
@@ -122,6 +122,22 @@ class IfictiondslValidator extends AbstractIfictiondslValidator {
 		for (notRefedNode : getNodesNotRefferencedByAnyTransitions(story, allTransitions)) {
 			deadNodeCandidates.remove(notRefedNode)
 		}
+		
+		// Check if any nodes cannot be visited from starting from start. They might transition to each other in a clossed loop
+		traverser.traverseStoryConditionlessly(story)
+		val notVisitedNodesFromConditionlessSearch = story.nodes.filter[
+			!traverser.conditionlessSearchVisitedNotes.contains(it)
+		]
+		for (nodeNVFCS : notVisitedNodesFromConditionlessSearch) {
+			warning('''Node is unreachable. As no node visitable from starting at the StartNode transitions to it.''',
+				nodeNVFCS, // Node to put warning on
+				IfictiondslPackage.Literals.NODE__NAME, // null, // If want warning on entire node and not just i.e. the name with: IfictiondslPackage.Literals.NODE__NAME
+				NODE_IS_UNREACHABLE				
+			)
+			// Dealt with here. Should not be deald with later
+			deadNodeCandidates.remove(nodeNVFCS)
+		}
+		
 		
 		// Find transition candidates that can get to the dead node candidate
 			// For each transition check if the corresponding node has been visited - if not skip it and the dead node
@@ -252,13 +268,18 @@ class IfictiondslValidator extends AbstractIfictiondslValidator {
 					  			}
 					  		}»«ENDFOR» cannot be satisfied''',
 				deadNode, // Node to put warning on
-				null, // Want warning on entire node and not just i.e. the name with: IfictiondslPackage.Literals.NODE__NAME
+				IfictiondslPackage.Literals.NODE__NAME, // null, // If want warning on entire node and not just i.e. the name with: IfictiondslPackage.Literals.NODE__NAME
 				NODE_IS_UNREACHABLE				
 			)
 			putWarningsOnDeadNodesDownDeadBranch(deadNode, traverser)
 		}
-	
-		System.out.println("Got here final")
+		
+		// Finally. Put found deadNodes and not possible to visit nodes in eRessource of Story 
+		// element to be used in validation on child elements
+		val cachedDeadNodes = cache.get("cachedDeadNodes", story.eResource, [new HashSet<Node>()])
+		cachedDeadNodes.addAll(deadNodeCandidates)
+		val cachedNodesNotVisitedFromConditionlessSearch = cache.get("cachedNodesNotVisitedFromConditionlessSearch", story.eResource, [new HashSet<Node>()])
+		cachedNodesNotVisitedFromConditionlessSearch.addAll(notVisitedNodesFromConditionlessSearch)
 	}
 	
 	private def void putWarningsOnDeadNodesDownDeadBranch(Node deadNode, ASTTraverser traverser) {
@@ -270,7 +291,7 @@ class IfictiondslValidator extends AbstractIfictiondslValidator {
 						if (!traverser.visitedNodes.containsKey(transition.destination) ) {
 							warning('''Node is unreachable because parent node: "«deadNode.name»" is unreachable.''',
 								transition.destination, // Node to put warning on
-								null, // Want warning on entire node and not just i.e. the name with: IfictiondslPackage.Literals.NODE__NAME
+								IfictiondslPackage.Literals.NODE__NAME, // null, // If want warning on entire node and not just i.e. the name with: IfictiondslPackage.Literals.NODE__NAME
 								NODE_IS_UNREACHABLE				
 							)
 							putWarningsOnDeadNodesDownDeadBranch(transition.destination, traverser)
@@ -286,7 +307,7 @@ class IfictiondslValidator extends AbstractIfictiondslValidator {
 					if (transition !== null && !traverser.visitedNodes.containsKey(transition.destination)) {
 						warning('''Node is unreachable because parent node: "«deadNode.name»" is unreachable.''',
 							transition.destination, // Node to put warning on
-							null, // Want warning on entire node and not just i.e. the name with: IfictiondslPackage.Literals.NODE__NAME
+							IfictiondslPackage.Literals.NODE__NAME, // null, // If want warning on entire node and not just i.e. the name with: IfictiondslPackage.Literals.NODE__NAME
 							NODE_IS_UNREACHABLE				
 						)
 						putWarningsOnDeadNodesDownDeadBranch(transition.destination, traverser)

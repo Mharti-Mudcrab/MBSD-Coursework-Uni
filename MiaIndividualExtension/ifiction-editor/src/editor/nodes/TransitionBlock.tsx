@@ -5,7 +5,7 @@ interface TransitionBlockProps {
     data: {
         transitionId: string;
         transition: Transition;
-        parentNodeId: string;
+        parentNodeId: string | null;
         isSelected: boolean;
         onSelect: () => void;
     };

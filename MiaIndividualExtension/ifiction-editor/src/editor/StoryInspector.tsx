@@ -1,5 +1,5 @@
 import React from 'react';
-import type { Condition, StoryData, StoryNode } from '../types';
+import type { Condition, ChoiceOption, StateChange, StoryData, StoryNode, Transition } from '../types';
 
 interface Props {
     story: StoryData;
@@ -167,7 +167,11 @@ const formatCondition = (condition: any): string => {
         | { kind: 'condition'; parentNode: StoryNode; parentId: string; index: number; transition: any; isOption: boolean; condition: any }
         | { kind: 'comparisonBlock'; parentNode: StoryNode; parentId: string; transitionIndex: number; isOption: boolean; blockId: string; condition: any }
         | { kind: 'orphanedCondition'; condition: any }
-        | { kind: 'orphanedComparison'; orphanId: string; blockId: string; condition: any };
+        | { kind: 'orphanedComparison'; orphanId: string; blockId: string; condition: any }
+        | { kind: 'orphanedTransition'; orphanId: string; blockId: string; transition: Transition }
+        | { kind: 'orphanedVariable'; orphanId: string; blockId: string; change: StateChange }
+        | { kind: 'option'; parentNode: StoryNode; optionIndex: number; option: ChoiceOption }
+        | { kind: 'orphanedOption'; orphanId: string; blockId: string; option: ChoiceOption };
 
     const resolveInspectorSelection = (story: StoryData, selectedNode: string | null, blockToConditionRef?: React.MutableRefObject<Map<string, any>>): InspectorSelection => {
         if (!selectedNode) return { kind: 'none' };
@@ -175,6 +179,19 @@ const formatCondition = (condition: any): string => {
         // Check blockToConditionRef first for condition blocks (includes orphaned)
         if (blockToConditionRef?.current.has(selectedNode)) {
             const entry = blockToConditionRef.current.get(selectedNode);
+
+            if (entry?.kind === 'orphanedTransition') {
+                return { kind: 'orphanedTransition', orphanId: entry.orphanId, blockId: selectedNode, transition: entry.transition };
+            }
+
+            if (entry?.kind === 'orphanedVariable') {
+                return { kind: 'orphanedVariable', orphanId: entry.orphanId, blockId: selectedNode, change: entry.change };
+            }
+
+            if (entry?.kind === 'orphanedOption') {
+                return { kind: 'orphanedOption', orphanId: entry.orphanId, blockId: selectedNode, option: entry.option };
+            }
+
             if (entry && 'parentTransitionId' in entry && 'condition' in entry) {
                 const { parentTransitionId, condition, orphanId } = entry;
                 const condition_obj = condition;
@@ -343,6 +360,16 @@ const formatCondition = (condition: any): string => {
                 if (Array.isArray(choices)) {
                     for (let optionIndex = 0; optionIndex < choices.length; optionIndex += 1) {
                         const option = choices[optionIndex];
+
+                        if (`${storyNode.id}-option-${optionIndex}` === selectedNode) {
+                            return {
+                                kind: 'option',
+                                parentNode: storyNode,
+                                optionIndex,
+                                option,
+                            };
+                        }
+
                         if (!Array.isArray(option?.transitions)) continue;
 
                         for (let transitionIndex = 0; transitionIndex < option.transitions.length; transitionIndex += 1) {
@@ -650,6 +677,217 @@ export const StoryInspector: React.FC<Props> = ({
                     style={{ width: '100%', padding: '8px 12px', background: '#aa4444', border: 'none', color: '#fff', borderRadius: 4, cursor: 'pointer' }}
                 >
                     Delete Comparison
+                </button>
+            </aside>
+        );
+    }
+
+    if (selection.kind === 'option') {
+        const { parentNode, optionIndex, option } = selection;
+        const choices = (parentNode.data as any).choices as ChoiceOption[];
+
+        return (
+            <aside style={{ padding: 16, color: '#ddd', height: '100%', boxSizing: 'border-box', overflowY: 'auto', fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial' }}>
+                <h2 style={{ marginTop: 0 }}>Edit Option</h2>
+                <p style={{ fontSize: 12, color: '#aaa' }}>In node: {parentNode.id}</p>
+
+                <div style={{ marginBottom: 12 }}>
+                    <label style={{ display: 'block', color: '#aaa', fontSize: 12 }}>Display Text</label>
+                    <input
+                        style={{ width: '100%', padding: '6px 8px', boxSizing: 'border-box' }}
+                        value={option.displayText || ''}
+                        onChange={(e) => {
+                            const updated = [...choices];
+                            updated[optionIndex] = { ...updated[optionIndex], displayText: e.target.value };
+                            onUpdateStory({ ...story, nodes: { ...story.nodes, [parentNode.id]: { ...parentNode, data: { ...parentNode.data, choices: updated } } } });
+                        }}
+                    />
+                </div>
+
+                <div style={{ marginBottom: 12, padding: 8, background: '#1a1a2a', borderRadius: 4, borderLeft: '3px solid #6a8ac0' }}>
+                    <p style={{ margin: 0, fontSize: 12, color: '#aaa' }}>Transitions: {option.transitions?.length ?? 0}</p>
+                </div>
+
+                <button
+                    onClick={() => {
+                        const updated = [...choices];
+                        const [removed] = updated.splice(optionIndex, 1);
+                        const stampedTransitions = (removed.transitions || []).map((t: any) => ({ ...t, _orphanId: crypto.randomUUID() }));
+                        onUpdateStory({
+                            ...story,
+                            nodes: { ...story.nodes, [parentNode.id]: { ...parentNode, data: { ...parentNode.data, choices: updated } } },
+                            orphanedTransitions: [...(story.orphanedTransitions || []), ...stampedTransitions],
+                        });
+                    }}
+                    style={{ width: '100%', padding: '8px 12px', background: '#aa4444', border: 'none', color: '#fff', borderRadius: 4, cursor: 'pointer' }}
+                >
+                    Delete Option
+                </button>
+            </aside>
+        );
+    }
+
+    if (selection.kind === 'orphanedOption') {
+        const { orphanId, option } = selection;
+        const matchOrphan = (o: any, i: number) => (o._orphanId ?? `opt-idx-${i}`) === orphanId;
+
+        return (
+            <aside style={{ padding: 16, color: '#ddd', height: '100%', boxSizing: 'border-box', overflowY: 'auto', fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial' }}>
+                <h2 style={{ marginTop: 0 }}>Edit Orphaned Option</h2>
+                <p style={{ fontSize: 12, color: '#aaa' }}>Detached — wire to a choice node to reconnect.</p>
+
+                <div style={{ marginBottom: 12 }}>
+                    <label style={{ display: 'block', color: '#aaa', fontSize: 12 }}>Display Text</label>
+                    <input
+                        style={{ width: '100%', padding: '6px 8px', boxSizing: 'border-box' }}
+                        value={option.displayText || ''}
+                        onChange={(e) => onUpdateStory({
+                            ...story,
+                            orphanedOptions: (story.orphanedOptions || []).map((o: any, i: number) =>
+                                matchOrphan(o, i) ? { ...o, displayText: e.target.value } : o
+                            )
+                        })}
+                    />
+                </div>
+
+                <div style={{ marginBottom: 12, padding: 8, background: '#1a1a2a', borderRadius: 4, borderLeft: '3px solid #6a8ac0' }}>
+                    <p style={{ margin: 0, fontSize: 12, color: '#aaa' }}>Transitions: {option.transitions?.length ?? 0}</p>
+                </div>
+
+                <button
+                    onClick={() => onUpdateStory({
+                        ...story,
+                        orphanedOptions: (story.orphanedOptions || []).filter((o: any, i: number) => !matchOrphan(o, i))
+                    })}
+                    style={{ width: '100%', padding: '8px 12px', background: '#aa4444', border: 'none', color: '#fff', borderRadius: 4, cursor: 'pointer' }}
+                >
+                    Delete Option
+                </button>
+            </aside>
+        );
+    }
+
+    if (selection.kind === 'orphanedTransition') {
+        const { orphanId, transition } = selection;
+        const matchOrphan = (o: any, i: number) => (o._orphanId ?? `trans-idx-${i}`) === orphanId;
+
+        return (
+            <aside style={{ padding: 16, color: '#ddd', height: '100%', boxSizing: 'border-box', overflowY: 'auto', fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial' }}>
+                <h2 style={{ marginTop: 0 }}>Edit Orphaned Transition</h2>
+                <p style={{ fontSize: 12, color: '#aaa' }}>Detached — wire to a node to reconnect.</p>
+
+                <div style={{ marginBottom: 12 }}>
+                    <label style={{ display: 'block', color: '#aaa', fontSize: 12 }}>Target Node</label>
+                    <input
+                        style={{ width: '100%', padding: '6px 8px', boxSizing: 'border-box' }}
+                        value={transition.targetNodeId || ''}
+                        onChange={(e) => onUpdateStory({
+                            ...story,
+                            orphanedTransitions: (story.orphanedTransitions || []).map((o: any, i: number) =>
+                                matchOrphan(o, i) ? { ...o, targetNodeId: e.target.value } : o
+                            )
+                        })}
+                    />
+                </div>
+
+                <div style={{ marginBottom: 12 }}>
+                    <label style={{ display: 'block', color: '#aaa', fontSize: 12 }}>Priority</label>
+                    <input
+                        type="number"
+                        style={{ width: '100%', padding: '6px 8px', boxSizing: 'border-box' }}
+                        value={transition.priority ?? 0}
+                        onChange={(e) => onUpdateStory({
+                            ...story,
+                            orphanedTransitions: (story.orphanedTransitions || []).map((o: any, i: number) =>
+                                matchOrphan(o, i) ? { ...o, priority: parseInt(e.target.value || '0', 10) } : o
+                            )
+                        })}
+                    />
+                </div>
+
+                {transition.condition && (
+                    <div style={{ marginBottom: 12, padding: 8, background: '#1a3a1a', borderRadius: 4, borderLeft: '3px solid #6ac06a' }}>
+                        <p style={{ margin: 0, fontSize: 12, color: '#cfe8cf' }}>Condition: {formatCondition(transition.condition)}</p>
+                    </div>
+                )}
+
+                <button
+                    onClick={() => onUpdateStory({
+                        ...story,
+                        orphanedTransitions: (story.orphanedTransitions || []).filter((o: any, i: number) => !matchOrphan(o, i))
+                    })}
+                    style={{ width: '100%', padding: '8px 12px', background: '#aa4444', border: 'none', color: '#fff', borderRadius: 4, cursor: 'pointer' }}
+                >
+                    Delete Transition
+                </button>
+            </aside>
+        );
+    }
+
+    if (selection.kind === 'orphanedVariable') {
+        const { orphanId, change } = selection;
+        const matchOrphan = (o: any, i: number) => (o._orphanId ?? `var-idx-${i}`) === orphanId;
+
+        return (
+            <aside style={{ padding: 16, color: '#ddd', height: '100%', boxSizing: 'border-box', overflowY: 'auto', fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial' }}>
+                <h2 style={{ marginTop: 0 }}>Edit Orphaned Variable Change</h2>
+                <p style={{ fontSize: 12, color: '#aaa' }}>Detached — wire to a state change node to reconnect.</p>
+
+                <div style={{ marginBottom: 12 }}>
+                    <label style={{ display: 'block', color: '#aaa', fontSize: 12 }}>Variable</label>
+                    <input
+                        style={{ width: '100%', padding: '6px 8px', boxSizing: 'border-box' }}
+                        value={change.variable || ''}
+                        onChange={(e) => onUpdateStory({
+                            ...story,
+                            orphanedVariables: (story.orphanedVariables || []).map((o: any, i: number) =>
+                                matchOrphan(o, i) ? { ...o, variable: e.target.value } : o
+                            )
+                        })}
+                    />
+                </div>
+
+                <div style={{ marginBottom: 12 }}>
+                    <label style={{ display: 'block', color: '#aaa', fontSize: 12 }}>Operator</label>
+                    <select
+                        value={change.operator || '='}
+                        onChange={(e) => onUpdateStory({
+                            ...story,
+                            orphanedVariables: (story.orphanedVariables || []).map((o: any, i: number) =>
+                                matchOrphan(o, i) ? { ...o, operator: e.target.value } : o
+                            )
+                        })}
+                        style={{ width: '100%', padding: '6px 8px', boxSizing: 'border-box' }}
+                    >
+                        <option value="=">=</option>
+                        <option value="+=">+=</option>
+                        <option value="-=">-=</option>
+                    </select>
+                </div>
+
+                <div style={{ marginBottom: 12 }}>
+                    <label style={{ display: 'block', color: '#aaa', fontSize: 12 }}>Value</label>
+                    <input
+                        type="number"
+                        style={{ width: '100%', padding: '6px 8px', boxSizing: 'border-box' }}
+                        value={change.value ?? 0}
+                        onChange={(e) => onUpdateStory({
+                            ...story,
+                            orphanedVariables: (story.orphanedVariables || []).map((o: any, i: number) =>
+                                matchOrphan(o, i) ? { ...o, value: parseInt(e.target.value || '0', 10) } : o
+                            )
+                        })}
+                    />
+                </div>
+
+                <button
+                    onClick={() => onUpdateStory({
+                        ...story,
+                        orphanedVariables: (story.orphanedVariables || []).filter((o: any, i: number) => !matchOrphan(o, i))
+                    })}
+                    style={{ width: '100%', padding: '8px 12px', background: '#aa4444', border: 'none', color: '#fff', borderRadius: 4, cursor: 'pointer' }}
+                >
+                    Delete Variable Change
                 </button>
             </aside>
         );

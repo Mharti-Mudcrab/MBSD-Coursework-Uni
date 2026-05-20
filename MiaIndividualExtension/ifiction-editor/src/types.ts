@@ -17,6 +17,9 @@ export interface StoryData {
     nodes: Record<string, StoryNode>;
     startNodeId: string;
     orphanedConditions?: Condition[];
+    orphanedTransitions?: Transition[];
+    orphanedVariables?: StateChange[];
+    orphanedOptions?: ChoiceOption[];
 }
 
 

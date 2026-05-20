@@ -175,12 +175,66 @@ export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNode
             });
         }
 
-        return { 
+        if (story.orphanedTransitions && story.orphanedTransitions.length > 0) {
+            story.orphanedTransitions.forEach((orphaned: any, orphanIndex: number) => {
+                const orphanId = orphaned._orphanId ?? `trans-idx-${orphanIndex}`;
+                const blockId = `orphan-transition-${orphanId}`;
+                const pos = orphaned.position || { x: 0, y: 0 };
+                transitonBlocks.push({
+                    id: blockId,
+                    type: 'transitionBlock',
+                    position: pos,
+                    data: { transitionId: blockId, transition: orphaned, parentNodeId: null, isSelected: blockId === selectedNodeId, onSelect: () => onSelectNode(blockId) }
+                });
+                blockToConditionRef.current.set(blockId, { kind: 'orphanedTransition', orphanId, transition: orphaned });
+
+                if (orphaned.condition) {
+                    const conditionBlocks = conditionASTToBlocks(orphaned.condition, blockId);
+                    conditionNodes.push(...conditionBlocks.nodes);
+                    conditionEdgesList.push(...conditionBlocks.edges);
+                    conditionBlocks.blockToCondition.forEach((cond, cBlockId) => {
+                        blockToConditionRef.current.set(cBlockId, { parentTransitionId: blockId, condition: cond });
+                    });
+                }
+            });
+        }
+
+        if (story.orphanedVariables && story.orphanedVariables.length > 0) {
+            story.orphanedVariables.forEach((orphaned: any, orphanIndex: number) => {
+                const orphanId = orphaned._orphanId ?? `var-idx-${orphanIndex}`;
+                const blockId = `orphan-variable-${orphanId}`;
+                const pos = orphaned.position || { x: 0, y: 0 };
+                variableBlocks.push({
+                    id: blockId,
+                    type: 'variableBlock',
+                    position: pos,
+                    data: { changeId: blockId, change: orphaned, parentNodeId: null, index: -1, isSelected: blockId === selectedNodeId, onSelect: () => onSelectNode(blockId) }
+                });
+                blockToConditionRef.current.set(blockId, { kind: 'orphanedVariable', orphanId, change: orphaned });
+            });
+        }
+
+        if (story.orphanedOptions && story.orphanedOptions.length > 0) {
+            story.orphanedOptions.forEach((orphaned: any, orphanIndex: number) => {
+                const orphanId = orphaned._orphanId ?? `opt-idx-${orphanIndex}`;
+                const blockId = `orphan-option-${orphanId}`;
+                const pos = orphaned.position || { x: 0, y: 0 };
+                optionBlocks.push({
+                    id: blockId,
+                    type: 'optionBlock',
+                    position: pos,
+                    data: { optionId: blockId, option: orphaned, parentNodeId: null, optionIndex: -1, optionText: orphaned.displayText || 'Option', transitionCount: orphaned.transitions?.length || 0 }
+                });
+                blockToConditionRef.current.set(blockId, { kind: 'orphanedOption', orphanId, option: orphaned });
+            });
+        }
+
+        return {
             initialNodes: [...regularNodes, ...optionBlocks, ...transitonBlocks, ...variableBlocks, ...conditionNodes],
             conditionEdges: conditionEdgesList
         };
 
-    }, [story.nodes, story.orphanedConditions, selectedNodeId, onSelectNode]);
+    }, [story.nodes, story.orphanedConditions, story.orphanedTransitions, story.orphanedVariables, story.orphanedOptions, selectedNodeId, onSelectNode]);
 
 
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
@@ -206,6 +260,39 @@ export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNode
 
     const onNodeDragStop = useCallback(
         (_event: React.MouseEvent, node: Node<CanvasNodeData>) => {
+            if (node.id.startsWith('orphan-option-')) {
+                const orphanId = node.id.slice('orphan-option-'.length);
+                onStoryChange({
+                    ...story,
+                    orphanedOptions: (story.orphanedOptions || []).map((o: any, i: number) =>
+                        (o._orphanId ?? `opt-idx-${i}`) === orphanId ? { ...o, position: node.position } : o
+                    )
+                });
+                return;
+            }
+
+            if (node.id.startsWith('orphan-transition-')) {
+                const orphanId = node.id.slice('orphan-transition-'.length);
+                onStoryChange({
+                    ...story,
+                    orphanedTransitions: (story.orphanedTransitions || []).map((o: any, i: number) =>
+                        (o._orphanId ?? `trans-idx-${i}`) === orphanId ? { ...o, position: node.position } : o
+                    )
+                });
+                return;
+            }
+
+            if (node.id.startsWith('orphan-variable-')) {
+                const orphanId = node.id.slice('orphan-variable-'.length);
+                onStoryChange({
+                    ...story,
+                    orphanedVariables: (story.orphanedVariables || []).map((o: any, i: number) =>
+                        (o._orphanId ?? `var-idx-${i}`) === orphanId ? { ...o, position: node.position } : o
+                    )
+                });
+                return;
+            }
+
             // Check if it's a condition block first
             if (node.id.startsWith('condition-')) {
                 const conditionRef = blockToConditionRef.current.get(node.id);
@@ -277,6 +364,29 @@ export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNode
                         [node.id]: updatedNode,
                     },
                 });
+            } else if (node.id.includes('-var-')) {
+                const parts = node.id.split('-var-');
+                const parentNodeId = parts[0];
+                const idx = parseInt(parts[1], 10);
+                const parentNode = story.nodes[parentNodeId];
+                if (!parentNode || parentNode.type !== 'stateChange') return;
+
+                const updates = [...(parentNode.data.stateChanges || [])];
+                updates[idx] = { ...updates[idx], position: node.position };
+
+                onStoryChange({
+                    ...story,
+                    nodes: {
+                        ...story.nodes,
+                        [parentNodeId]: {
+                            ...parentNode,
+                            data: {
+                                ...parentNode.data,
+                                stateChanges: updates,
+                            },
+                        },
+                    },
+                });
             } else if (node.id.includes('-option-')) {
                 // Could be either an option block itself (parentId-option-index)
                 // or a transition block from an option (parentId-option-index-transitionIndex)
@@ -307,33 +417,6 @@ export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNode
                                 data: {
                                     ...parentNode.data,
                                     choices: updatedChoices,
-                                },
-                            },
-                        },
-                    });
-                    return;
-                }
-
-                // Variable block (parentId-var-index)
-                if (node.id.includes('-var-')) {
-                    const parts = node.id.split('-var-');
-                    const parentNodeId = parts[0];
-                    const idx = parseInt(parts[1], 10);
-                    const parentNode = story.nodes[parentNodeId];
-                    if (!parentNode || parentNode.type !== 'stateChange') return;
-
-                    const updates = [...(parentNode.data.stateChanges || [])];
-                    updates[idx] = { ...updates[idx], position: node.position };
-
-                    onStoryChange({
-                        ...story,
-                        nodes: {
-                            ...story.nodes,
-                            [parentNodeId]: {
-                                ...parentNode,
-                                data: {
-                                    ...parentNode.data,
-                                    stateChanges: updates,
                                 },
                             },
                         },

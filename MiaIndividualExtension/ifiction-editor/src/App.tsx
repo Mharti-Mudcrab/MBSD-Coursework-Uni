@@ -107,11 +107,23 @@ function App() {
                         }
 
                         setStory(currentStory => {
+                            const nodeToDelete = currentStory.nodes[nodeId];
                             const nextNodes = { ...currentStory.nodes };
                             delete nextNodes[nodeId];
+
+                            const stampedVariables = nodeToDelete?.type === 'stateChange'
+                                ? ((nodeToDelete.data as any).stateChanges || []).map((sc: any) => ({ ...sc, _orphanId: crypto.randomUUID() }))
+                                : [];
+
+                            const stampedOptions = nodeToDelete?.type === 'choice'
+                                ? ((nodeToDelete.data as any).choices || []).map((opt: any) => ({ ...opt, _orphanId: crypto.randomUUID() }))
+                                : [];
+
                             return {
                                 ...currentStory,
-                                nodes: nextNodes
+                                nodes: nextNodes,
+                                orphanedVariables: [...(currentStory.orphanedVariables || []), ...stampedVariables],
+                                orphanedOptions: [...(currentStory.orphanedOptions || []), ...stampedOptions],
                             };
                         });
                         setSelectedNodeId(null);

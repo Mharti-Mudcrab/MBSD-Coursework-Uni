@@ -31,7 +31,7 @@ export type ConditionBlockData = ComparisonBlockData | AndBlockData | OrBlockDat
 export type TransitionBlockData = {
     transitionId: string;
     transition: Transition;
-    parentNodeId: string;
+    parentNodeId: string | null;
     isOption?: boolean;
     isSelected: boolean;
     onSelect: () => void;
@@ -40,7 +40,7 @@ export type TransitionBlockData = {
 export type OptionBlockData = {
     optionId: string;
     option: ChoiceOption;
-    parentNodeId: string;
+    parentNodeId: string | null;
     optionIndex: number;
     optionText: string;
     transitionCount: number;

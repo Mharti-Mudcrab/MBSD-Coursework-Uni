@@ -171,34 +171,9 @@ public class IfictiondslValidator extends AbstractIfictiondslValidator {
           deadNodeCandidates.remove(nodeNVFCS);
         }
       }
-      HashSet<Transition> transitionCandidates = new HashSet<Transition>();
-      HashSet<Node> furtherDownTheDeadBranchNodes = new HashSet<Node>();
-      Object[] _array = deadNodeCandidates.toArray();
-      for (final Object deadNodeCand : _array) {
-        {
-          boolean keep = false;
-          for (final Transition transition : allTransitions) {
-            Node _destination = transition.getDestination();
-            boolean _tripleEquals = (_destination == deadNodeCand);
-            if (_tripleEquals) {
-              EObject container = transition.eContainer();
-              if ((container instanceof ChoiceOption)) {
-                container = ((ChoiceOption)container).eContainer();
-              }
-              boolean _containsKey_1 = traverser.getVisitedNodes().containsKey(container);
-              if (_containsKey_1) {
-                transitionCandidates.add(transition);
-                keep = true;
-              }
-            }
-          }
-          if ((!keep)) {
-            keep = false;
-            deadNodeCandidates.remove(deadNodeCand);
-            furtherDownTheDeadBranchNodes.add(((Node) deadNodeCand));
-          }
-        }
-      }
+      final HashSet<Transition> transitionCandidates = new HashSet<Transition>();
+      final HashSet<Node> furtherDownTheDeadBranchNodes = new HashSet<Node>();
+      this.splitDeadNodeCandidatesAndFurtherDownDeadBranchCandidates(deadNodeCandidates, transitionCandidates, furtherDownTheDeadBranchNodes, allTransitions, traverser);
       int deadNodeCandidateCount = 0;
       do {
         {
@@ -218,67 +193,68 @@ public class IfictiondslValidator extends AbstractIfictiondslValidator {
               }
             }
           }
-          Object[] _array_1 = deadNodeCandidates.toArray();
-          for (final Object deadNodeCand_1 : _array_1) {
-            boolean _containsKey_1 = traverser.getVisitedNodes().containsKey(deadNodeCand_1);
+          Object[] _array = deadNodeCandidates.toArray();
+          for (final Object deadNodeCand : _array) {
+            boolean _containsKey_1 = traverser.getVisitedNodes().containsKey(deadNodeCand);
             if (_containsKey_1) {
-              deadNodeCandidates.remove(deadNodeCand_1);
+              deadNodeCandidates.remove(deadNodeCand);
               final Predicate<Transition> _function_1 = (Transition it) -> {
-                return it.getDestination().equals(deadNodeCand_1);
+                return it.getDestination().equals(deadNodeCand);
               };
               transitionCandidates.removeIf(_function_1);
             }
           }
         }
       } while((deadNodeCandidateCount > ((Object[])Conversions.unwrapArray(deadNodeCandidates, Object.class)).length));
-      final Function1<Transition, Integer> _function_1 = (Transition it) -> {
-        int _priority = it.getPriority();
-        return Integer.valueOf((-_priority));
-      };
-      final List<Transition> transCandidatedsSortedByPriority = IterableExtensions.<Transition, Integer>sortBy(transitionCandidates, _function_1);
-      for (final Transition transCand : transCandidatedsSortedByPriority) {
-      }
-      for (final Transition transCand_1 : transCandidatedsSortedByPriority) {
-        boolean _analyseConditionAndTryToFulfillItByTraversingAST = this.analyseConditionAndTryToFulfillItByTraversingAST(transCand_1.getCondition(), traverser);
-        if (_analyseConditionAndTryToFulfillItByTraversingAST) {
-          final Function1<TraversalNode, Boolean> _function_2 = (TraversalNode node_1) -> {
-            return Boolean.valueOf(ASTTraverser.checkCondition(
-              transCand_1.getCondition(), 
-              node_1.getStateSnapshot()));
+      boolean keepGoing = true;
+      while (keepGoing) {
+        {
+          final Function1<Transition, Integer> _function_1 = (Transition it) -> {
+            int _priority = it.getPriority();
+            return Integer.valueOf((-_priority));
           };
-          TraversalNode nodeWithRightStateToGetToDeadNodeCandidate = IterableExtensions.<TraversalNode>findFirst(traverser.getVisitedNodes().values(), _function_2);
-          if (((nodeWithRightStateToGetToDeadNodeCandidate != null) && 
-            traverser.findNodeFrom(nodeWithRightStateToGetToDeadNodeCandidate.getNode(), transCand_1.getDestination(), true))) {
+          final List<Transition> transCandidatedsSortedByPriority = IterableExtensions.<Transition, Integer>sortBy(transitionCandidates, _function_1);
+          boolean _analyseConditionAndTryToFulfillItByTraversingASTForEach = this.analyseConditionAndTryToFulfillItByTraversingASTForEach(transCandidatedsSortedByPriority, traverser);
+          if (_analyseConditionAndTryToFulfillItByTraversingASTForEach) {
+            final Predicate<Node> _function_2 = (Node deadNodeCand) -> {
+              boolean _containsKey_1 = traverser.getVisitedNodes().containsKey(deadNodeCand);
+              if (_containsKey_1) {
+                final Predicate<Transition> _function_3 = (Transition it) -> {
+                  return it.getDestination().equals(deadNodeCand);
+                };
+                transitionCandidates.removeIf(_function_3);
+                return true;
+              } else {
+                return false;
+              }
+            };
+            deadNodeCandidates.removeIf(_function_2);
+            deadNodeCandidates.addAll(furtherDownTheDeadBranchNodes);
+            final Function1<Transition, Boolean> _function_3 = (Transition transCand) -> {
+              return Boolean.valueOf(furtherDownTheDeadBranchNodes.contains(transCand.getDestination()));
+            };
+            Iterables.<Transition>addAll(transitionCandidates, IterableExtensions.<Transition>filter(allTransitions, _function_3));
+            furtherDownTheDeadBranchNodes.clear();
+            this.splitDeadNodeCandidatesAndFurtherDownDeadBranchCandidates(furtherDownTheDeadBranchNodes, transitionCandidates, furtherDownTheDeadBranchNodes, allTransitions, traverser);
           } else {
+            keepGoing = false;
           }
-        } else {
-        }
-      }
-      Object[] _array_1 = deadNodeCandidates.toArray();
-      for (final Object deadNodeCand_1 : _array_1) {
-        boolean _containsKey_1 = traverser.getVisitedNodes().containsKey(deadNodeCand_1);
-        if (_containsKey_1) {
-          deadNodeCandidates.remove(deadNodeCand_1);
-          final Predicate<Transition> _function_3 = (Transition it) -> {
-            return it.getDestination().equals(deadNodeCand_1);
-          };
-          transCandidatedsSortedByPriority.removeIf(_function_3);
         }
       }
       for (final Node deadNode : deadNodeCandidates) {
         {
           final HashSet<Transition> tCToDN = new HashSet<Transition>();
-          for (final Transition transCand_2 : transCandidatedsSortedByPriority) {
-            Node _destination = transCand_2.getDestination();
+          for (final Transition transCand : transitionCandidates) {
+            Node _destination = transCand.getDestination();
             boolean _tripleEquals = (_destination == deadNode);
             if (_tripleEquals) {
-              tCToDN.add(transCand_2);
+              tCToDN.add(transCand);
               StringConcatenation _builder = new StringConcatenation();
               _builder.append("Transition condition cannot be satisfied from traversing the story and destination node: \"");
-              String _name = transCand_2.getDestination().getName();
+              String _name = transCand.getDestination().getName();
               _builder.append(_name);
               _builder.append("\" is therefore unreachable");
-              this.warning(_builder.toString(), transCand_2, 
+              this.warning(_builder.toString(), transCand, 
                 IfictiondslPackage.Literals.TRANSITION__CONDITION, 
                 IfictiondslValidator.TRANSITION_CONDITION_CANNOT_BE_SATISFIED);
             }
@@ -346,18 +322,47 @@ public class IfictiondslValidator extends AbstractIfictiondslValidator {
           this.putWarningsOnDeadNodesDownDeadBranch(deadNode, traverser);
         }
       }
-      final Provider<HashSet<Node>> _function_4 = () -> {
+      final Provider<HashSet<Node>> _function_1 = () -> {
         return new HashSet<Node>();
       };
-      final HashSet<Node> cachedDeadNodes = this.cache.<HashSet<Node>>get("cachedDeadNodes", story.eResource(), _function_4);
+      final HashSet<Node> cachedDeadNodes = this.cache.<HashSet<Node>>get("cachedDeadNodes", story.eResource(), _function_1);
       cachedDeadNodes.addAll(deadNodeCandidates);
-      final Provider<HashSet<Node>> _function_5 = () -> {
+      final Provider<HashSet<Node>> _function_2 = () -> {
         return new HashSet<Node>();
       };
-      final HashSet<Node> cachedNodesNotVisitedFromConditionlessSearch = this.cache.<HashSet<Node>>get("cachedNodesNotVisitedFromConditionlessSearch", story.eResource(), _function_5);
+      final HashSet<Node> cachedNodesNotVisitedFromConditionlessSearch = this.cache.<HashSet<Node>>get("cachedNodesNotVisitedFromConditionlessSearch", story.eResource(), _function_2);
       _xblockexpression = Iterables.<Node>addAll(cachedNodesNotVisitedFromConditionlessSearch, notVisitedNodesFromConditionlessSearch);
     }
     return _xblockexpression;
+  }
+
+  private void splitDeadNodeCandidatesAndFurtherDownDeadBranchCandidates(final HashSet<Node> deadNodeCandidates, final HashSet<Transition> transitionCandidates, final HashSet<Node> furtherDownTheDeadBranchNodes, final List<Transition> allTransitions, final ASTTraverser traverser) {
+    Object[] _array = deadNodeCandidates.toArray();
+    for (final Object deadNodeCand : _array) {
+      {
+        boolean keep = false;
+        for (final Transition transition : allTransitions) {
+          Node _destination = transition.getDestination();
+          boolean _tripleEquals = (_destination == deadNodeCand);
+          if (_tripleEquals) {
+            EObject container = transition.eContainer();
+            if ((container instanceof ChoiceOption)) {
+              container = ((ChoiceOption)container).eContainer();
+            }
+            boolean _containsKey = traverser.getVisitedNodes().containsKey(container);
+            if (_containsKey) {
+              transitionCandidates.add(transition);
+              keep = true;
+            }
+          }
+        }
+        if ((!keep)) {
+          keep = false;
+          deadNodeCandidates.remove(deadNodeCand);
+          furtherDownTheDeadBranchNodes.add(((Node) deadNodeCand));
+        }
+      }
+    }
   }
 
   private void putWarningsOnDeadNodesDownDeadBranch(final Node deadNode, final ASTTraverser traverser) {
@@ -408,6 +413,36 @@ public class IfictiondslValidator extends AbstractIfictiondslValidator {
     }
   }
 
+  private boolean analyseConditionAndTryToFulfillItByTraversingASTForEach(final List<Transition> transCandidatedsSortedByPriority, final ASTTraverser traverser) {
+    boolean succeeded = false;
+    for (final Transition transCand : transCandidatedsSortedByPriority) {
+      boolean _analyseConditionAndTryToFulfillItByTraversingAST = this.analyseConditionAndTryToFulfillItByTraversingAST(transCand.getCondition(), traverser);
+      if (_analyseConditionAndTryToFulfillItByTraversingAST) {
+        final Function1<TraversalNode, Boolean> _function = (TraversalNode node) -> {
+          return Boolean.valueOf(ASTTraverser.checkCondition(
+            transCand.getCondition(), 
+            node.getStateSnapshot()));
+        };
+        Iterable<TraversalNode> nodesWithRightStateToGetToDeadNodeCandidate = IterableExtensions.<TraversalNode>filter(traverser.getVisitedNodes().values(), _function);
+        boolean _isEmpty = IterableExtensions.isEmpty(nodesWithRightStateToGetToDeadNodeCandidate);
+        boolean _not = (!_isEmpty);
+        if (_not) {
+          final Function1<TraversalNode, Boolean> _function_1 = (TraversalNode travNode) -> {
+            return Boolean.valueOf(traverser.findNodeFrom(travNode.getNode(), transCand.getDestination(), true));
+          };
+          TraversalNode _findFirst = IterableExtensions.<TraversalNode>findFirst(nodesWithRightStateToGetToDeadNodeCandidate, _function_1);
+          boolean _tripleNotEquals = (_findFirst != null);
+          if (_tripleNotEquals) {
+            succeeded = true;
+          }
+        } else {
+        }
+      } else {
+      }
+    }
+    return succeeded;
+  }
+
   private boolean analyseConditionAndTryToFulfillItByTraversingAST(final Condition condition, final ASTTraverser traverser) {
     final TraversalCondition travCond = new TraversalCondition(condition);
     boolean isConditionFulfillable = true;
@@ -426,7 +461,8 @@ public class IfictiondslValidator extends AbstractIfictiondslValidator {
               if (_tripleEquals) {
                 return Boolean.valueOf(true);
               }
-              for (final SystemStateChangeNode scnode : scnodes) {
+              List<SystemStateChangeNode> _list = IterableExtensions.<SystemStateChangeNode>toList(scnodes);
+              for (final SystemStateChangeNode scnode : _list) {
                 {
                   final Function1<Transition, Boolean> _function_1 = (Transition trans) -> {
                     Node _destination = trans.getDestination();

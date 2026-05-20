@@ -101,7 +101,6 @@ class IfictiondslValidator extends AbstractIfictiondslValidator {
 			}
 		}
 	}
-
 	
 	@Check(CheckType.FAST) 
 	def checkDetectDeadNodes(Story story) {
@@ -134,7 +133,7 @@ class IfictiondslValidator extends AbstractIfictiondslValidator {
 				IfictiondslPackage.Literals.NODE__NAME, // null, // If want warning on entire node and not just i.e. the name with: IfictiondslPackage.Literals.NODE__NAME
 				NODE_IS_UNREACHABLE				
 			)
-			// Dealt with here. Should not be deald with later
+			// Dealt with here. Should not be dealt with later
 			deadNodeCandidates.remove(nodeNVFCS)
 		}
 		
@@ -143,29 +142,11 @@ class IfictiondslValidator extends AbstractIfictiondslValidator {
 			// For each transition check if the corresponding node has been visited - if not skip it and the dead node
 			// If no transition candidate exists that is contained by a visited node, then the node containing the 
 			// transition must be further down the dead branch and should be skipped i.e. removed 
-		var HashSet<Transition> transitionCandidates = new HashSet<Transition>()
-		var HashSet<Node> furtherDownTheDeadBranchNodes = new HashSet<Node>()
+		val HashSet<Transition> transitionCandidates = new HashSet<Transition>()
+		val HashSet<Node> furtherDownTheDeadBranchNodes = new HashSet<Node>()
 		
-		for(deadNodeCand : deadNodeCandidates.toArray) {		
-			var boolean keep = false
-			for (transition : allTransitions) {
-				if (transition.destination === deadNodeCand) {
-					var container = transition.eContainer
-					if (container instanceof ChoiceOption) {
-						container = container.eContainer
-					}
-					if (traverser.visitedNodes.containsKey(container)) {
-						transitionCandidates.add(transition)
-						keep = true
-					}
-				}
-			}
-			if(!keep) {
-				keep = false				
-				deadNodeCandidates.remove(deadNodeCand)
-				furtherDownTheDeadBranchNodes.add(deadNodeCand as Node)
-			}
-		}
+		splitDeadNodeCandidatesAndFurtherDownDeadBranchCandidates(deadNodeCandidates, transitionCandidates, furtherDownTheDeadBranchNodes, allTransitions, traverser)
+		
 		
 		// Maybe there exists a state in the collection of visited notes that satisfies any of the transition conditions of the dead node candidates
 		// if so, try to get to dead node from nodes that hold an acceptable state
@@ -201,41 +182,33 @@ class IfictiondslValidator extends AbstractIfictiondslValidator {
 		
 		// Analyse what condition needs to be met by system state from state fetched by the TraversalNode 
 		// containing node with transition to dead node candidate
-		// start out by sorting by priority! some transitions might be shadowed by others by priority - They will fail because others should have been visted first
-		val transCandidatedsSortedByPriority = transitionCandidates.sortBy[ -it.priority ] // '-' because decending order
-		for (transCand : transCandidatedsSortedByPriority) {
-			// System.out.println('''«'\t'»«transCand.destination.name»''') 
-		}
-		
-		for (transCand : transCandidatedsSortedByPriority) {
-			if (analyseConditionAndTryToFulfillItByTraversingAST(transCand.condition, traverser)) {
-				// System.out.println('''Condition was fulfilled trying to get to "«transCand.destination.name»" «transCand.condition»''')
-				var nodeWithRightStateToGetToDeadNodeCandidate = traverser.visitedNodes.values.findFirst[ node |
-					ASTTraverser.checkCondition(
-						transCand.condition, 
-						node.stateSnapshot 
-					)
+		// start out by sorting by priority! some transitions might be shadowed by others by priority - They will fail because others must be visted first
+		var boolean keepGoing = true
+		while(keepGoing) {
+			val transCandidatedsSortedByPriority = transitionCandidates.sortBy[ -it.priority ] // '-' because decending order
+			if (analyseConditionAndTryToFulfillItByTraversingASTForEach(transCandidatedsSortedByPriority, traverser)) {
+				// update dead node candidates
+				deadNodeCandidates.removeIf[ deadNodeCand |
+					if (traverser.visitedNodes.containsKey(deadNodeCand)) {
+						// System.out.println("Removed a node from candidates: " + (deadNodeCand as Node).name)
+						transitionCandidates.removeIf[
+							it.destination.equals(deadNodeCand)
+						]
+						return true
+					} else {			
+						return false
+					}
 				]
-				if (nodeWithRightStateToGetToDeadNodeCandidate !== null && 
-					traverser.findNodeFrom(nodeWithRightStateToGetToDeadNodeCandidate.node, transCand.destination, true)
-				) {
-					// System.out.println('''We did it! we got to "«transCand.destination.name»" condition: «transCand.condition» with state: «nodeWithRightStateToGetToDeadNodeCandidate.stateSnapshot»''')				
-				} else {
-					// System.out.println('''Did not succeed trying to get to "«transCand.destination.name»" condition: «transCand.condition» with state: «nodeWithRightStateToGetToDeadNodeCandidate !== null ? nodeWithRightStateToGetToDeadNodeCandidate.stateSnapshot : "No node with right state found"»''')									
-				}
+				
+				// Maybe some of the previously furtherDownDeadBranchNodes are now reachable!
+				deadNodeCandidates.addAll(furtherDownTheDeadBranchNodes)
+				transitionCandidates.addAll(allTransitions.filter[ transCand |
+					furtherDownTheDeadBranchNodes.contains(transCand.destination)
+				])
+				furtherDownTheDeadBranchNodes.clear
+				splitDeadNodeCandidatesAndFurtherDownDeadBranchCandidates(furtherDownTheDeadBranchNodes, transitionCandidates, furtherDownTheDeadBranchNodes, allTransitions, traverser)
 			} else {
-				// System.out.println('''Condition could not be fulfilled trying to get to "«transCand.destination.name»" «transCand.condition»''')				
-			}
-		}
-		
-		// update dead node candidates
-		for (deadNodeCand : deadNodeCandidates.toArray) {
-			if (traverser.visitedNodes.containsKey(deadNodeCand)) {
-				// System.out.println("Removed a node from candidates: " + (deadNodeCand as Node).name)
-				deadNodeCandidates.remove(deadNodeCand)
-				transCandidatedsSortedByPriority.removeIf[
-					it.destination.equals(deadNodeCand)
-				]
+				keepGoing = false
 			}
 		}
 		
@@ -246,7 +219,7 @@ class IfictiondslValidator extends AbstractIfictiondslValidator {
 		// They will get the deadNodeWarning
 		for (deadNode : deadNodeCandidates) {
 			val HashSet<Transition> tCToDN = new HashSet<Transition>()
-			for (transCand : transCandidatedsSortedByPriority) {
+			for (transCand : transitionCandidates) {
 				if (transCand.destination === deadNode) {
 					tCToDN.add(transCand)
 					warning('''Transition condition cannot be satisfied from traversing the story and destination node: "«transCand.destination.name»" is therefore unreachable''',
@@ -280,6 +253,29 @@ class IfictiondslValidator extends AbstractIfictiondslValidator {
 		cachedDeadNodes.addAll(deadNodeCandidates)
 		val cachedNodesNotVisitedFromConditionlessSearch = cache.get("cachedNodesNotVisitedFromConditionlessSearch", story.eResource, [new HashSet<Node>()])
 		cachedNodesNotVisitedFromConditionlessSearch.addAll(notVisitedNodesFromConditionlessSearch)
+	}
+	
+	private def void splitDeadNodeCandidatesAndFurtherDownDeadBranchCandidates(HashSet<Node> deadNodeCandidates, HashSet<Transition> transitionCandidates, HashSet<Node> furtherDownTheDeadBranchNodes, List<Transition> allTransitions, ASTTraverser traverser) {
+		for(deadNodeCand : deadNodeCandidates.toArray) {		
+			var boolean keep = false
+			for (transition : allTransitions) {
+				if (transition.destination === deadNodeCand) {
+					var container = transition.eContainer
+					if (container instanceof ChoiceOption) {
+						container = container.eContainer
+					}
+					if (traverser.visitedNodes.containsKey(container)) {
+						transitionCandidates.add(transition)
+						keep = true
+					}
+				}
+			}
+			if(!keep) {
+				keep = false				
+				deadNodeCandidates.remove(deadNodeCand)
+				furtherDownTheDeadBranchNodes.add(deadNodeCand as Node)
+			}
+		}
 	}
 	
 	private def void putWarningsOnDeadNodesDownDeadBranch(Node deadNode, ASTTraverser traverser) {
@@ -317,6 +313,34 @@ class IfictiondslValidator extends AbstractIfictiondslValidator {
 		}
 	}
 	
+	private def boolean analyseConditionAndTryToFulfillItByTraversingASTForEach(List<Transition> transCandidatedsSortedByPriority, ASTTraverser traverser) {
+		var boolean succeeded = false
+		for (transCand : transCandidatedsSortedByPriority) { 
+			if (analyseConditionAndTryToFulfillItByTraversingAST(transCand.condition, traverser)) {
+				// System.out.println('''Condition was fulfilled trying to get to "«transCand.destination.name»" «transCand.condition»''')
+				var nodesWithRightStateToGetToDeadNodeCandidate = traverser.visitedNodes.values.filter[ node |
+					ASTTraverser.checkCondition(
+						transCand.condition, 
+						node.stateSnapshot 
+					)
+				]
+				if (!nodesWithRightStateToGetToDeadNodeCandidate.empty) {
+					if (nodesWithRightStateToGetToDeadNodeCandidate.findFirst[ travNode |
+						traverser.findNodeFrom(travNode.node, transCand.destination, true)
+					] !== null) {
+						succeeded = true
+					}
+					// System.out.println('''We did it! we got to "«transCand.destination.name»" condition: «transCand.condition» with state: «nodeWithRightStateToGetToDeadNodeCandidate.stateSnapshot»''')				
+				} else {
+					// System.out.println('''Did not succeed trying to get to "«transCand.destination.name»" condition: «transCand.condition» with state: «nodeWithRightStateToGetToDeadNodeCandidate !== null ? nodeWithRightStateToGetToDeadNodeCandidate.stateSnapshot : "No node with right state found"»''')									
+				}
+			} else {
+				// System.out.println('''Condition could not be fulfilled trying to get to "«transCand.destination.name»" «transCand.condition»''')				
+			}
+		}
+		return succeeded
+	}
+	
 	private def boolean analyseConditionAndTryToFulfillItByTraversingAST(Condition condition, ASTTraverser traverser) {
 		val TraversalCondition travCond = new TraversalCondition(condition)
 		var boolean isConditionFulfillable = true
@@ -331,7 +355,7 @@ class IfictiondslValidator extends AbstractIfictiondslValidator {
 							val scnodes = getVisitedStateChangeNodesThatCanHelpAchieveComparison(comp, traverser)
 							if (scnodes.size === 0) 
 								return true
-							for (scnode :  scnodes) {
+							for (scnode :  scnodes.toList) { // Fixed ConcurrentManipulation error for some reason
 								// Find node with state that can get us to the state change node and try to go there
 								val transitionToScnode = traverser.visitedTransitions.findFirst[ trans |
 									trans.destination === scnode	
@@ -435,6 +459,5 @@ class IfictiondslValidator extends AbstractIfictiondslValidator {
 			}
 		}
 		return notRefferencedByTransitions
-	}
-	
+	}	
 }

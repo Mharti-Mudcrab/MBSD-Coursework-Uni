@@ -4,10 +4,10 @@ export const DialogueNode = ({ data }: any) => {
     return (
         <div
             style={{
-                background: '#2a2a5a',
+                background: data?.isSelected ? '#3a3a7a' : '#2a2a5a',
                 color: '#ddd',
                 padding: '12px 16px',
-                border: '2px solid #6a6ac0',
+                border: `2px solid ${data?.isSelected ? '#9090f0' : '#6a6ac0'}`,
                 borderRadius: 6,
                 minWidth: '120px',
                 fontSize: 12,

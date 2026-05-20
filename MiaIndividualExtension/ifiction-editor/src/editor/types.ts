@@ -44,6 +44,8 @@ export type OptionBlockData = {
     optionIndex: number;
     optionText: string;
     transitionCount: number;
+    isSelected: boolean;
+    onSelect: () => void;
 };
 
 /**

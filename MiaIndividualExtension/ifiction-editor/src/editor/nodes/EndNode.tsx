@@ -2,21 +2,24 @@ import { Handle, Position } from '@xyflow/react';
 
 export const EndNode = ({ data }: any) => {
     return (
-        <div style={{ 
-            visibility: 'visible',
-            background: '#1e1e1e', 
-            color: '#f44747', 
-            padding: '10px 20px', 
-            borderRadius: '20px', // Rounded to distinguish as terminal node
-            border: '2px solid #f44747',
-            minWidth: '100px',
-            textAlign: 'center',
-            fontWeight: 'bold'
+        <div style={{
+            background: data?.isSelected ? '#4a1a1a' : '#3a1a1a',
+            color: '#ddd',
+            padding: '12px 16px',
+            border: `2px solid ${data?.isSelected ? '#ff6767' : '#f44747'}`,
+            borderRadius: 6,
+            minWidth: '120px',
+            fontSize: 12,
         }}>
-            {/* Only a target (input) for End nodes */}
-            <Handle id="target" type="target" position={Position.Left} style={{ background: '#f44747' }} />
-            <div>{data.label || 'END'}</div>
-            <div>{ data.displayText || '' }</div>
+            <Handle id="target" type="target" position={Position.Left} />
+            <div style={{ fontWeight: 'bold', marginBottom: 4 }}>
+                {data?.label || 'End'}
+            </div>
+            {data?.displayText && (
+                <div style={{ fontSize: 11, color: '#aaa', maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {data.displayText}
+                </div>
+            )}
         </div>
     );
 };

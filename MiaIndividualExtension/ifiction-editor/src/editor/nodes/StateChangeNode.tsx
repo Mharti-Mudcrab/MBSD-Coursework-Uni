@@ -4,10 +4,10 @@ export const StateChangeNode = ({ data }: any) => {
     return (
         <div
             style={{
-                background: '#3a4a2a',
+                background: data?.isSelected ? '#4a6a3a' : '#3a4a2a',
                 color: '#ddd',
                 padding: '12px 16px',
-                border: '2px solid #6ac06a',
+                border: `2px solid ${data?.isSelected ? '#8ae08a' : '#6ac06a'}`,
                 borderRadius: 6,
                 minWidth: '130px',
                 fontSize: 12,

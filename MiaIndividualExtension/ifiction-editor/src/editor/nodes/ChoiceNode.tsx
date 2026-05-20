@@ -4,10 +4,10 @@ export const ChoiceNode = ({ data }: any) => {
     return (
         <div
             style={{
-                background: '#4a3a2a',
+                background: data?.isSelected ? '#6a4a2a' : '#4a3a2a',
                 color: '#ddd',
                 padding: '12px 16px',
-                border: '2px dashed #d4a574',
+                border: `2px dashed ${data?.isSelected ? '#f4c594' : '#d4a574'}`,
                 borderRadius: 6,
                 minWidth: '140px',
                 fontSize: 12,

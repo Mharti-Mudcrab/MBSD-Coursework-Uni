@@ -5,7 +5,7 @@ interface OptionBlockProps {
     data: {
         optionId: string;
         option: ChoiceOption;
-        parentNodeId: string;
+        parentNodeId: string | null;
         optionIndex: number;
         isSelected: boolean;
         onSelect: () => void;

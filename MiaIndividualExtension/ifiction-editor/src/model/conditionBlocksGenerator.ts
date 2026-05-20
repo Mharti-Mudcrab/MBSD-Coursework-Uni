@@ -17,7 +17,8 @@ interface ConditionBlocksResult {
  */
 export function conditionASTToBlocks(
     condition: Condition | undefined,
-    parentTransitionId: string
+    parentTransitionId: string,
+    selectedNodeId: string | null = null
 ): ConditionBlocksResult {
     if (!condition) {
         return { nodes: [], edges: [], rootBlockId: null, blockToCondition: new Map() };
@@ -30,7 +31,7 @@ export function conditionASTToBlocks(
     // Build reachable nodes from root
     let rootId: string | null = null;
     if (condition) {
-        rootId = buildConditionBlocks(condition, nodes, edges, parentTransitionId, blockToCondition);
+        rootId = buildConditionBlocks(condition, nodes, edges, parentTransitionId, blockToCondition, 'root', selectedNodeId);
         
         // Create edge from root condition block output to transition's condition input handle
         if (rootId) {
@@ -53,7 +54,8 @@ function buildConditionBlocks(
     edges: any[],
     parentTransitionId: string,
     blockToCondition: Map<string, Condition>,
-    path: string = 'root'
+    path: string = 'root',
+    selectedNodeId: string | null = null
 ): string | null {
     if (!condition || typeof condition !== 'object' || !('type' in condition)) {
         return null;
@@ -78,7 +80,7 @@ function buildConditionBlocks(
                 operator: comp.operator,
                 variable: comp.variable,
                 value: comp.value,
-                isSelected: false,
+                isSelected: blockId === selectedNodeId,
             },
         });
         return blockId;
@@ -86,14 +88,14 @@ function buildConditionBlocks(
 
     if (condition.type === 'and') {
         const group = condition as LogicalGroup;
-        const leftId = buildConditionBlocks(group.left, nodes, edges, parentTransitionId, blockToCondition, `${path}-left`);
-        const rightId = buildConditionBlocks(group.right, nodes, edges, parentTransitionId, blockToCondition, `${path}-right`);
+        const leftId = buildConditionBlocks(group.left, nodes, edges, parentTransitionId, blockToCondition, `${path}-left`, selectedNodeId);
+        const rightId = buildConditionBlocks(group.right, nodes, edges, parentTransitionId, blockToCondition, `${path}-right`, selectedNodeId);
 
         nodes.push({
             id: blockId,
             type: 'andNode',
             position,
-            data: { type: 'and', isSelected: false },
+            data: { type: 'and', isSelected: blockId === selectedNodeId },
         });
 
         if (leftId) {
@@ -121,14 +123,14 @@ function buildConditionBlocks(
 
     if (condition.type === 'or') {
         const group = condition as LogicalGroup;
-        const leftId = buildConditionBlocks(group.left, nodes, edges, parentTransitionId, blockToCondition, `${path}-left`);
-        const rightId = buildConditionBlocks(group.right, nodes, edges, parentTransitionId, blockToCondition, `${path}-right`);
+        const leftId = buildConditionBlocks(group.left, nodes, edges, parentTransitionId, blockToCondition, `${path}-left`, selectedNodeId);
+        const rightId = buildConditionBlocks(group.right, nodes, edges, parentTransitionId, blockToCondition, `${path}-right`, selectedNodeId);
 
         nodes.push({
             id: blockId,
             type: 'orNode',
             position,
-            data: { type: 'or', isSelected: false },
+            data: { type: 'or', isSelected: blockId === selectedNodeId },
         });
 
         if (leftId) {

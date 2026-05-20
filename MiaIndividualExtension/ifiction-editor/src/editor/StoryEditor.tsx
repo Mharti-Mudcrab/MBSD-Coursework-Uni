@@ -47,8 +47,7 @@ export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNode
             id: node.id,
             type: node.type,
             position: node.position,
-            data: node.data as unknown as Record<string, unknown>,
-            // selected state is managed separately by effect to keep position persistence independent of UI selection
+            data: { ...(node.data as unknown as Record<string, unknown>), isSelected: node.id === selectedNodeId },
         }));
 
         const optionBlocks: Node<OptionBlockData>[] = [];
@@ -73,7 +72,7 @@ export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNode
 
                     // Generate condition blocks if this transition has a condition
                     if (transition.condition) {
-                        const conditionBlocks = conditionASTToBlocks(transition.condition, transitionBlockId);
+                        const conditionBlocks = conditionASTToBlocks(transition.condition, transitionBlockId, selectedNodeId);
                         conditionNodes.push(...conditionBlocks.nodes);
                         conditionEdgesList.push(...conditionBlocks.edges);
                         // Store block to condition mapping with parent transition ID for reliable lookup
@@ -93,13 +92,15 @@ export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNode
                         id: optionBlockId,
                         type: 'optionBlock',
                         position: computedPosition,
-                        data: { 
-                            optionId: optionBlockId, 
+                        data: {
+                            optionId: optionBlockId,
                             option,
-                            parentNodeId: node.id, 
+                            parentNodeId: node.id,
                             optionIndex,
                             optionText: option.displayText || 'Option',
-                            transitionCount: option.transitions?.length || 0
+                            transitionCount: option.transitions?.length || 0,
+                            isSelected: optionBlockId === selectedNodeId,
+                            onSelect: () => onSelectNode(optionBlockId),
                         }
                     });
                     
@@ -124,7 +125,7 @@ export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNode
 
                             // Generate condition blocks if this option transition has a condition
                             if (transition.condition) {
-                                const conditionBlocks = conditionASTToBlocks(transition.condition, optionTransitionId);
+                                const conditionBlocks = conditionASTToBlocks(transition.condition, optionTransitionId, selectedNodeId);
                                 conditionNodes.push(...conditionBlocks.nodes);
                                 conditionEdgesList.push(...conditionBlocks.edges);
                                 // Store block to condition mapping with parent transition ID for reliable lookup
@@ -166,7 +167,7 @@ export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNode
             story.orphanedConditions.forEach((orphaned: any, orphanIndex: number) => {
                 const orphanId = orphaned._orphanId ?? `idx-${orphanIndex}`;
                 const orphanTransitionId = `orphan-${orphanId}`;
-                const conditionBlocks = conditionASTToBlocks(orphaned, orphanTransitionId);
+                const conditionBlocks = conditionASTToBlocks(orphaned, orphanTransitionId, selectedNodeId);
                 conditionNodes.push(...conditionBlocks.nodes);
                 conditionEdgesList.push(...conditionBlocks.edges);
                 conditionBlocks.blockToCondition.forEach((cond, blockId) => {
@@ -189,7 +190,7 @@ export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNode
                 blockToConditionRef.current.set(blockId, { kind: 'orphanedTransition', orphanId, transition: orphaned });
 
                 if (orphaned.condition) {
-                    const conditionBlocks = conditionASTToBlocks(orphaned.condition, blockId);
+                    const conditionBlocks = conditionASTToBlocks(orphaned.condition, blockId, selectedNodeId);
                     conditionNodes.push(...conditionBlocks.nodes);
                     conditionEdgesList.push(...conditionBlocks.edges);
                     conditionBlocks.blockToCondition.forEach((cond, cBlockId) => {
@@ -223,7 +224,7 @@ export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNode
                     id: blockId,
                     type: 'optionBlock',
                     position: pos,
-                    data: { optionId: blockId, option: orphaned, parentNodeId: null, optionIndex: -1, optionText: orphaned.displayText || 'Option', transitionCount: orphaned.transitions?.length || 0 }
+                    data: { optionId: blockId, option: orphaned, parentNodeId: null, optionIndex: -1, optionText: orphaned.displayText || 'Option', transitionCount: orphaned.transitions?.length || 0, isSelected: blockId === selectedNodeId, onSelect: () => onSelectNode(blockId) }
                 });
                 blockToConditionRef.current.set(blockId, { kind: 'orphanedOption', orphanId, option: orphaned });
             });

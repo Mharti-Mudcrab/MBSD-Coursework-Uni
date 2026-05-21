@@ -39,16 +39,16 @@ Node selection on canvas, inspector allows editing:
 - display text
 - delete button (disabled for start node)
 
-### 3. Node and Block Creation ⧗ REMAINING — IMMEDIATE PRIORITY
+### 3. Node and Block Creation ✓ DONE
 
-Deletion is fully implemented. Creation is entirely missing:
-- `NodeToolbar.tsx` currently exists as a stub with no code
-- No way to add any node type to the canvas
-- No way to add transitions, options, state changes, or condition blocks to existing nodes
-- Provide toolbar buttons or a context menu to add nodes of each type
-- Ensure start-node rules remain enforced when creating or promoting nodes
+Toolbar implemented in `NodeToolbar.tsx`, rendered above the canvas:
+- **Node group**: Dialogue, Choice, State Change, End — each creates a story node with a unique auto-ID, drops it on the canvas, and auto-selects it
+- **Block group**: Transition, Option, Variable — each creates an orphaned block ready to be wired
+- **Condition group**: Comparison, AND, OR — each creates an orphaned condition block; AND/OR render as standalone gates with no children until wired
+- Start node intentionally has no creation button (only one allowed per story)
+- Adding options and variable blocks via wiring is the intended flow (create orphan, then wire to parent)
 
-### 4. Wiring ⧗ REMAINING — IMMEDIATE PRIORITY
+### 4. Wiring ⧗ REMAINING
 
 Canvas edge dragging is not implemented. This is the other major missing feature and affects every canvas-level connection. All existing connections from story data display correctly; none can be created or changed interactively.
 
@@ -100,7 +100,7 @@ Validation (missing targets, orphans, cycles, etc.) is explicitly out of scope f
 
 - `StoryEditor.tsx`: top-level editor composition ✓ exists
 - `StoryInspector.tsx`: editing panel for selected node ✓ exists (partial — option and block creation pending)
-- `NodeToolbar.tsx`: create/delete/save controls ⧗ stubbed (empty file)
+- `NodeToolbar.tsx`: create/delete/save controls ✓ exists
 - `ChoiceNode.tsx`: visual display ✓ exists (option add/remove pending)
 - `TransitionBlock.tsx`: first-class transition card ✓ exists (canvas wiring pending)
 - `StateChangeNode.tsx`: visual display ✓ exists (variable block wiring and add/remove pending)
@@ -122,13 +122,11 @@ Validation (missing targets, orphans, cycles, etc.) is explicitly out of scope f
 - Condition block inspector editing (comparison fields, orphan editing and deletion)
 - Variable block (state change) field editing in inspector
 - Story runner updates in real-time; path validity preserved when story changes
+- Node and block creation via toolbar (all story node types, all block types, all condition block types)
 
 **What's missing (priority order):**
-1. **Node and block creation** — `NodeToolbar.tsx` is empty; no way to add any node or block type to the canvas
-2. **Wiring** — no canvas edge dragging anywhere in the system; cannot create or change any connection between nodes, transitions, condition blocks, or variable blocks
-3. **Option management** — no add/remove options on ChoiceNode via inspector
-4. **StateChangeNode block management** — can edit existing VariableBlock fields but can't add new ones
-5. **Persistence** — no save/load anywhere in the codebase
+1. **Wiring** — no canvas edge dragging anywhere in the system; cannot create or change any connection between nodes, transitions, condition blocks, or variable blocks
+2. **Persistence** — no save/load anywhere in the codebase
 
 **Architecture notes:**
 - Story graph is flat: `Record<string, StoryNode>`

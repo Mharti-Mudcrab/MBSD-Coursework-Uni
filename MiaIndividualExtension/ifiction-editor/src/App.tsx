@@ -1,6 +1,7 @@
 import { VirtualConsole } from "./editor/VirtualConsole";
 import { StoryEditor } from './editor/StoryEditor';
 import { StoryInspector } from "./editor/StoryInspector";
+import { NodeToolbar } from "./editor/NodeToolbar";
 import type { StoryData, StoryNode, Transition } from './types';
 import { enchantedForest } from "./testStory";
 import { useState, useRef } from 'react';
@@ -88,15 +89,17 @@ function App() {
                 flexDirection: 'row',
                 borderRight: "1px solid #333"
             }}>
-                <div style={{ flex: 1, position: 'relative' }}>
-                    <StoryEditor story={story} onStoryChange={setStory} selectedNodeId={selectedNodeId} onSelectNode={setSelectedNodeId} blockToConditionRef={blockToConditionRef} />
-                    {/* Reset Button */}
-                    <button 
-                        onClick={() => setShowPreview(!showPreview)}
-                        style = {{position: 'absolute', bottom: '20px', right: '20px', zIndex: 10, padding: '8px 12px', cursor: 'pointer'}}
-                    >
-                        {showPreview ? "Hide Output" : "Show Output"}
-                    </button>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                    <NodeToolbar story={story} onStoryChange={setStory} onSelectNode={setSelectedNodeId} />
+                    <div style={{ flex: 1, position: 'relative' }}>
+                        <StoryEditor story={story} onStoryChange={setStory} selectedNodeId={selectedNodeId} onSelectNode={setSelectedNodeId} blockToConditionRef={blockToConditionRef} />
+                        <button
+                            onClick={() => setShowPreview(!showPreview)}
+                            style={{ position: 'absolute', bottom: '20px', right: '20px', zIndex: 10, padding: '8px 12px', cursor: 'pointer' }}
+                        >
+                            {showPreview ? "Hide Output" : "Show Output"}
+                        </button>
+                    </div>
                 </div>
 
                 <div id="inspector-panel" style={{ width: showInspector ? 340 : 40, height: '100%', boxSizing: 'border-box', borderLeft: '1px solid #222', background: '#0f0f0f', transition: 'width 180ms ease', position: 'relative' }}>

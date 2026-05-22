@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useMemo } from 'react';
-import { ReactFlow, Background, Controls, useNodesState, type Node, type Connection } from '@xyflow/react'
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import { ReactFlow, Background, Controls, useNodesState, useReactFlow, type Node, type Connection } from '@xyflow/react'
 import type { StoryData, Condition } from '../types'
 import type { ConditionBlockData, TransitionBlockData, OptionBlockData, CanvasNodeData } from './types'
 import '@xyflow/react/dist/style.css'
@@ -31,15 +31,30 @@ const nodeTypes = {
     orNode: OrNode,
 }
 
+const ViewportTracker: React.FC<{
+    spawnPositionRef: React.MutableRefObject<() => { x: number; y: number }>;
+    containerRef: React.RefObject<HTMLDivElement | null>;
+}> = ({ spawnPositionRef, containerRef }) => {
+    const { screenToFlowPosition } = useReactFlow();
+    spawnPositionRef.current = () => {
+        const rect = containerRef.current?.getBoundingClientRect();
+        if (!rect) return { x: 300, y: 300 };
+        return screenToFlowPosition({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+    };
+    return null;
+};
+
 interface Props {
     story: StoryData,
     onStoryChange: (story: StoryData) => void;
     selectedNodeId: string | null;
     onSelectNode: (nodeId: string | null) => void;
     blockToConditionRef: React.MutableRefObject<Map<string, any>>;
+    spawnPositionRef: React.MutableRefObject<() => { x: number; y: number }>;
 }
 
-export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNodeId, onSelectNode, blockToConditionRef}) => {
+export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNodeId, onSelectNode, blockToConditionRef, spawnPositionRef}) => {
+    const flowContainerRef = useRef<HTMLDivElement>(null);
 
     const { initialNodes, conditionEdges } = useMemo<{ initialNodes: Node<CanvasNodeData>[]; conditionEdges: any[] }>(() => {
         blockToConditionRef.current.clear();
@@ -839,7 +854,7 @@ export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNode
     }, [story.nodes, story.orphanedTransitions, conditionEdges]);
 
     return (
-        <div style={{ width: '100%', height: '100%', minHeight: '500px' }}>
+        <div ref={flowContainerRef} style={{ width: '100%', height: '100%', minHeight: '500px' }}>
             <ReactFlow
                 nodes={nodes}
                 edges={edges}
@@ -856,6 +871,7 @@ export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNode
             >
                 <Background color="#333" gap={20} />
                 <Controls />
+                <ViewportTracker spawnPositionRef={spawnPositionRef} containerRef={flowContainerRef} />
             </ReactFlow>
         </div>
     )

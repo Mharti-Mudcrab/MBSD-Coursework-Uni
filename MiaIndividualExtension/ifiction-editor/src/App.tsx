@@ -26,6 +26,7 @@ function App() {
     const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
     const [showInspector, setShowInspector] = useState(true);
     const blockToConditionRef = useRef<Map<string, any>>(new Map());
+    const spawnPositionRef = useRef<() => { x: number; y: number }>(() => ({ x: 300, y: 300 }));
 
     const loadStory = (loaded: StoryData) => {
         setStory(loaded);
@@ -114,9 +115,9 @@ function App() {
                 borderRight: "1px solid #333"
             }}>
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                    <NodeToolbar story={story} onStoryChange={setStory} onLoadStory={loadStory} onSelectNode={setSelectedNodeId} />
+                    <NodeToolbar story={story} onStoryChange={setStory} onLoadStory={loadStory} onSelectNode={setSelectedNodeId} getSpawnPosition={() => spawnPositionRef.current()} />
                     <div style={{ flex: 1, position: 'relative' }}>
-                        <StoryEditor key={canvasKey} story={story} onStoryChange={setStory} selectedNodeId={selectedNodeId} onSelectNode={setSelectedNodeId} blockToConditionRef={blockToConditionRef} />
+                        <StoryEditor key={canvasKey} story={story} onStoryChange={setStory} selectedNodeId={selectedNodeId} onSelectNode={setSelectedNodeId} blockToConditionRef={blockToConditionRef} spawnPositionRef={spawnPositionRef} />
                     </div>
                 </div>
 

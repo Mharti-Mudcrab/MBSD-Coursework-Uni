@@ -6,6 +6,7 @@ interface Props {
     onStoryChange: (story: StoryData) => void;
     onLoadStory: (story: StoryData) => void;
     onSelectNode: (nodeId: string | null) => void;
+    getSpawnPosition?: () => { x: number; y: number };
 }
 
 function uniqueId(base: string, existing: Set<string>): string {
@@ -42,9 +43,14 @@ const labelStyle: React.CSSProperties = {
     flexShrink: 0,
 };
 
-export const NodeToolbar: React.FC<Props> = ({ story, onStoryChange, onLoadStory, onSelectNode }) => {
+export const NodeToolbar: React.FC<Props> = ({ story, onStoryChange, onLoadStory, onSelectNode, getSpawnPosition }) => {
     const existingIds = new Set(Object.keys(story.nodes));
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const spawnPos = () => {
+        const base = getSpawnPosition ? getSpawnPosition() : { x: 300, y: 300 };
+        return { x: base.x + (Math.random() - 0.5) * 120, y: base.y + (Math.random() - 0.5) * 120 };
+    };
 
     const saveStory = () => {
         const blob = new Blob([JSON.stringify(story, null, 2)], { type: 'application/json' });
@@ -75,7 +81,7 @@ export const NodeToolbar: React.FC<Props> = ({ story, onStoryChange, onLoadStory
 
     const addStoryNode = (type: NodeType) => {
         const id = uniqueId(type, existingIds);
-        const pos = { x: 150 + Math.random() * 250, y: 150 + Math.random() * 250 };
+        const pos = spawnPos();
 
         const dataMap: Record<string, object> = {
             dialogue: { label: 'New Dialogue', displayText: 'Enter text here.', transitions: [] },
@@ -93,7 +99,7 @@ export const NodeToolbar: React.FC<Props> = ({ story, onStoryChange, onLoadStory
         const orphan = {
             targetNodeId: '',
             priority: 0,
-            position: { x: 200 + Math.random() * 200, y: 200 + Math.random() * 200 },
+            position: spawnPos(),
             _orphanId: crypto.randomUUID(),
         };
         onStoryChange({ ...story, orphanedTransitions: [...(story.orphanedTransitions ?? []), orphan as any] });
@@ -103,7 +109,7 @@ export const NodeToolbar: React.FC<Props> = ({ story, onStoryChange, onLoadStory
         const orphan = {
             displayText: 'New Option',
             transitions: [],
-            position: { x: 200 + Math.random() * 200, y: 200 + Math.random() * 200 },
+            position: spawnPos(),
             _orphanId: crypto.randomUUID(),
         };
         onStoryChange({ ...story, orphanedOptions: [...(story.orphanedOptions ?? []), orphan as any] });
@@ -114,7 +120,7 @@ export const NodeToolbar: React.FC<Props> = ({ story, onStoryChange, onLoadStory
             variable: 'newVar',
             operator: '=' as const,
             value: 0,
-            position: { x: 200 + Math.random() * 200, y: 200 + Math.random() * 200 },
+            position: spawnPos(),
             _orphanId: crypto.randomUUID(),
         };
         onStoryChange({ ...story, orphanedVariables: [...(story.orphanedVariables ?? []), orphan as any] });
@@ -126,7 +132,7 @@ export const NodeToolbar: React.FC<Props> = ({ story, onStoryChange, onLoadStory
             variable: 'newVar',
             operator: '==' as const,
             value: 0,
-            position: { x: 200 + Math.random() * 200, y: 200 + Math.random() * 200 },
+            position: spawnPos(),
             _orphanId: crypto.randomUUID(),
         };
         onStoryChange({ ...story, orphanedConditions: [...(story.orphanedConditions ?? []), orphan as any] });
@@ -137,7 +143,7 @@ export const NodeToolbar: React.FC<Props> = ({ story, onStoryChange, onLoadStory
             type: gateType,
             left: null,
             right: null,
-            position: { x: 200 + Math.random() * 200, y: 200 + Math.random() * 200 },
+            position: spawnPos(),
             _orphanId: crypto.randomUUID(),
         };
         onStoryChange({ ...story, orphanedConditions: [...(story.orphanedConditions ?? []), orphan as any] });

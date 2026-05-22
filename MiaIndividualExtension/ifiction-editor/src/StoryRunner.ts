@@ -7,6 +7,7 @@ export class StoryRunner {
     private engine: StoryEngine;
     private state: SystemState;
     public logs: string[] = [];
+    public takenTransitionIds: string[] = [];
 
 
     constructor(story: StoryData) {
@@ -33,7 +34,25 @@ export class StoryRunner {
         this.logs.push(`${node.data.displayText}`);
 
         while (node && node.type !== 'choice' && node.type !== 'end') {
-            this.state = this.engine.step(this.state);  
+            const prevNodeId = this.state.currentNodeId;
+            const prevTransitions = node.data.transitions || [];
+
+            this.state = this.engine.step(this.state);
+
+            if (this.state.currentNodeId === prevNodeId) {
+                this.logs.push("(No transitions available — the story pauses here.)");
+                return;
+            }
+
+            // Record the exact transition the engine took (highest-priority valid one).
+            const takenIndex = prevTransitions
+                .map((t, i) => ({ t, i }))
+                .filter(({ t }) => this.engine.checkCondition(t.condition, this.state.variables))
+                .sort((a, b) => (b.t.priority || 0) - (a.t.priority || 0))[0]?.i;
+            if (takenIndex !== undefined) {
+                this.takenTransitionIds.push(`${prevNodeId}-${takenIndex}`);
+            }
+
             node = this.getCurrentNode();
             if (node) {
                 this.logs.push(node.data.displayText);
@@ -71,9 +90,23 @@ export class StoryRunner {
         }
 
         public handleChoice(choiceText: string) {
-            if (!this.getCurrentNode()) {
+            const node = this.getCurrentNode();
+            if (!node) {
                 this.logs.push("Error: Current node no longer exists.");
                 return;
+            }
+
+            const choices = (node.data as any).choices || [];
+            const optionIndex = choices.findIndex((opt: any) => opt.displayText === choiceText);
+            if (optionIndex >= 0) {
+                const transitions = choices[optionIndex]?.transitions || [];
+                const takenIndex = transitions
+                    .map((t: any, i: number) => ({ t, i }))
+                    .filter(({ t }: { t: any }) => this.engine.checkCondition(t.condition, this.state.variables))
+                    .sort((a: any, b: any) => (b.t.priority || 0) - (a.t.priority || 0))[0]?.i;
+                if (takenIndex !== undefined) {
+                    this.takenTransitionIds.push(`${node.id}-option-${optionIndex}-${takenIndex}`);
+                }
             }
 
             this.state = this.engine.step(this.state, choiceText);

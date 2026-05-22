@@ -59,7 +59,7 @@ export class StoryEngine {
             return validTransitions.length > 0 ? validTransitions[0].targetNodeId : null;
     }
 
-    private checkCondition(condition: Condition | undefined, variables: Record<string, number>): boolean {
+    public checkCondition(condition: Condition | undefined, variables: Record<string, number>): boolean {
         if (!condition) return true;
 
         if (typeof condition !== 'object' || !(condition as any).type) {

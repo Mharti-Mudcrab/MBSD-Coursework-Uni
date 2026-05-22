@@ -595,8 +595,8 @@ export const StoryInspector: React.FC<Props> = ({
                     <label style={{ display: 'block', color: '#aaa', fontSize: 12 }}>Value</label>
                     <input
                         style={{ width: '100%', padding: '6px 8px', boxSizing: 'border-box' }}
-                        value={condition.value || ''}
-                        onChange={(e) => handleComparisonChange({ value: e.target.value })}
+                        value={condition.value ?? ''}
+                        onChange={(e) => handleComparisonChange({ value: parseFloat(e.target.value) })}
                     />
                 </div>
 
@@ -685,7 +685,7 @@ export const StoryInspector: React.FC<Props> = ({
                     <input
                         style={{ width: '100%', padding: '6px 8px', boxSizing: 'border-box' }}
                         value={condition.value ?? ''}
-                        onChange={(e) => handleChange({ value: e.target.value })}
+                        onChange={(e) => handleChange({ value: parseFloat(e.target.value) })}
                     />
                 </div>
 

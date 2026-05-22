@@ -54,48 +54,31 @@ const collectInvalidTransitionIds = (story: StoryData): Set<string> => {
     return invalid;
 };
 
-const collectTakenTransitionIds = (story: StoryData, choices: string[]): Set<string> => {
-    const taken = new Set<string>();
-    const runner = new StoryRunner(story);
-
-    const pushCurrentTransitionCandidates = () => {
-        const node = runner.getCurrentNode();
-        if (!node) return;
-
-        if (node.type !== 'choice') {
-            // Non-choice transitions auto-fire in StoryRunner; record best candidate for current state.
-            const transitions = node.data.transitions || [];
-            const target = transitions
-                .map((transition, index) => ({ transition, id: `${node.id}-${index}` }))
-                .sort((a, b) => (b.transition.priority || 0) - (a.transition.priority || 0))[0];
-
-            if (target) taken.add(target.id);
-        }
-    };
-
-    // Capture initial automatic progression context.
-    pushCurrentTransitionCandidates();
-
-    for (let i = 0; i < choices.length; i++) {
-        const choiceText = choices[i];
-        const node = runner.getCurrentNode();
-        if (!node || node.type !== 'choice') break;
-
-        const optionIndex = (node.data.choices || []).findIndex(opt => opt.displayText.toLowerCase() === choiceText.toLowerCase());
-        if (optionIndex < 0) break;
-
-        const transitions = ((node.data.choices || [])[optionIndex] as any)?.transitions || [];
-        const target = transitions
-            .map((transition: any, transitionIndex: number) => ({ transition, id: `${node.id}-option-${optionIndex}-${transitionIndex}` }))
-            .sort((a: any, b: any) => (b.transition.priority || 0) - (a.transition.priority || 0))[0];
-
-        if (target) taken.add(target.id);
-
-        runner.handleChoice(choiceText);
-        pushCurrentTransitionCandidates();
+const describeTransition = (story: StoryData, transitionId: string): string => {
+    const optionMatch = transitionId.match(/^(.+)-option-(\d+)-(\d+)$/);
+    if (optionMatch) {
+        const [, nodeId, optionIndexStr, transitionIndexStr] = optionMatch;
+        const node = story.nodes[nodeId];
+        const nodeLabel = node?.data?.label ?? nodeId;
+        const option = (node?.data as any)?.choices?.[parseInt(optionIndexStr)];
+        const optionText = option?.displayText ?? `option ${optionIndexStr}`;
+        const targetId = option?.transitions?.[parseInt(transitionIndexStr)]?.targetNodeId;
+        const targetLabel = targetId ? (story.nodes[targetId]?.data?.label ?? targetId) : 'unknown';
+        return `option "${optionText}" in "${nodeLabel}" → "${targetLabel}"`;
     }
 
-    return taken;
+    const lastDash = transitionId.lastIndexOf('-');
+    if (lastDash >= 0) {
+        const nodeId = transitionId.slice(0, lastDash);
+        const index = parseInt(transitionId.slice(lastDash + 1));
+        const node = story.nodes[nodeId];
+        const nodeLabel = node?.data?.label ?? nodeId;
+        const targetId = node?.data?.transitions?.[index]?.targetNodeId;
+        const targetLabel = targetId ? (story.nodes[targetId]?.data?.label ?? targetId) : 'unknown';
+        return `"${nodeLabel}" → "${targetLabel}"`;
+    }
+
+    return `'${transitionId}'`;
 };
 
 const getExecutionSignature = (story: StoryData): string => {
@@ -129,7 +112,7 @@ export const VirtualConsole: React.FC<{ story: StoryData }> = ({ story }) => {
     const [executionId, setExecutionId] = useState(0);
     const [choiceHistory, setChoiceHistory] = useState<string[]>([]);
     const [resumeNotice, setResumeNotice] = useState<string | null>(null);
-    const lastTakenTransitionsRef = useRef<Set<string>>(new Set());
+    const prevTakenIdsRef = useRef<string[]>([]);
 
     const executionSignature = useMemo(() => getExecutionSignature(story), [story]);
     const executionStory = useMemo(() => story, [executionSignature]);
@@ -176,19 +159,6 @@ export const VirtualConsole: React.FC<{ story: StoryData }> = ({ story }) => {
     const runner = runnerBuild.runner;
 
     useEffect(() => {
-        const invalidTransitionIds = collectInvalidTransitionIds(story);
-        const previousTaken = lastTakenTransitionsRef.current;
-        const hit = Array.from(previousTaken).find(id => invalidTransitionIds.has(id));
-
-        if (hit) {
-            setResumeNotice(`Condition became invalid on transition '${hit}'. Restarted from start.`);
-            setHistory([]);
-            setChoiceHistory([]);
-            setExecutionId(prev => prev + 1);
-        }
-    }, [story]);
-
-    useEffect(() => {
         if (!runnerBuild.replayFailed || choiceHistory.length === 0) {
             return;
         }
@@ -204,7 +174,7 @@ export const VirtualConsole: React.FC<{ story: StoryData }> = ({ story }) => {
         setHistory([]);
         setChoiceHistory([]);
         setResumeNotice(null);
-        setExecutionId(prev => prev +1);
+        setExecutionId(prev => prev + 1);
     };
 
 
@@ -213,11 +183,23 @@ export const VirtualConsole: React.FC<{ story: StoryData }> = ({ story }) => {
             setHistory(runnerBuild.error ? [`Error: ${runnerBuild.error}`] : []);
             return;
         }
-        // Init logs from start node
+
+        const invalidIds = collectInvalidTransitionIds(story);
+        const hitId = prevTakenIdsRef.current.find(id => invalidIds.has(id));
+
+        if (hitId) {
+            const label = describeTransition(story, hitId);
+            setResumeNotice(`Condition on transition ${label} became invalid. Story restarted.`);
+            prevTakenIdsRef.current = [];
+            setHistory([]);
+            setChoiceHistory([]);
+            setExecutionId(prev => prev + 1);
+            return;
+        }
+
+        prevTakenIdsRef.current = [...runner.takenTransitionIds];
         setHistory([...runner.logs]);
         printChoices(runner);
-
-        lastTakenTransitionsRef.current = collectTakenTransitionIds(story, choiceHistory);
     }, [runner, runnerBuild.error]);
 
     useEffect(() => {

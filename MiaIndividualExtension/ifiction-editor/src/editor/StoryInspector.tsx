@@ -135,6 +135,27 @@ const updateConditionInTree = (root: Condition | undefined, targetNode: any, upd
     return root;
 };
 
+const offsetConditionTree = (condition: any, dx: number, dy: number): any => {
+    if (!condition) return condition;
+    const pos = condition.position;
+    return {
+        ...condition,
+        position: pos ? { x: pos.x + dx, y: pos.y + dy } : undefined,
+        ...(condition.left  ? { left:      offsetConditionTree(condition.left,      dx, dy) } : {}),
+        ...(condition.right ? { right:     offsetConditionTree(condition.right,     dx, dy) } : {}),
+        ...(condition.condition ? { condition: offsetConditionTree(condition.condition, dx, dy) } : {}),
+    };
+};
+
+const duplicateConditionAsOrphan = (condition: any): any => {
+    const copy = JSON.parse(JSON.stringify(condition));
+    const pos = copy.position ?? { x: 200, y: 200 };
+    const offset = offsetConditionTree(copy, 40, 40);
+    offset._orphanId = crypto.randomUUID();
+    offset.position = { x: pos.x + 40, y: pos.y + 40 };
+    return offset;
+};
+
 const formatCondition = (condition: any): string => {
     if (!condition) return '';
 
@@ -166,7 +187,7 @@ const formatCondition = (condition: any): string => {
         | { kind: 'transition'; parentNode: StoryNode; parentId: string; index: number; transition: any; isOption: boolean }
         | { kind: 'condition'; parentNode: StoryNode; parentId: string; index: number; transition: any; isOption: boolean; condition: any }
         | { kind: 'comparisonBlock'; parentNode: StoryNode; parentId: string; transitionIndex: number; isOption: boolean; blockId: string; condition: any }
-        | { kind: 'orphanedCondition'; condition: any }
+        | { kind: 'orphanedCondition'; orphanId: string; condition: any }
         | { kind: 'orphanedComparison'; orphanId: string; blockId: string; condition: any }
         | { kind: 'orphanedTransition'; orphanId: string; blockId: string; transition: Transition }
         | { kind: 'orphanedVariable'; orphanId: string; blockId: string; change: StateChange }
@@ -259,6 +280,7 @@ const formatCondition = (condition: any): string => {
                 if (parentTransitionId.startsWith('orphan-')) {
                     return {
                         kind: 'orphanedCondition',
+                        orphanId: orphanId ?? parentTransitionId.slice('orphan-'.length),
                         condition: condition_obj
                     };
                 }
@@ -580,6 +602,15 @@ export const StoryInspector: React.FC<Props> = ({
 
                 <button
                     onClick={() => {
+                        onUpdateStory({ ...story, orphanedConditions: [...(story.orphanedConditions || []), duplicateConditionAsOrphan(condition)] });
+                    }}
+                    style={{ width: '100%', padding: '8px 12px', marginBottom: 8, background: '#2a4a6a', border: 'none', color: '#fff', borderRadius: 4, cursor: 'pointer' }}
+                >
+                    Duplicate &amp; Subconditions
+                </button>
+
+                <button
+                    onClick={() => {
                         const result = removeConditionNode(transition.condition, condition);
                         const updatedTransition = {
                             ...transition,
@@ -657,6 +688,15 @@ export const StoryInspector: React.FC<Props> = ({
                         onChange={(e) => handleChange({ value: e.target.value })}
                     />
                 </div>
+
+                <button
+                    onClick={() => {
+                        onUpdateStory({ ...story, orphanedConditions: [...(story.orphanedConditions || []), duplicateConditionAsOrphan(condition)] });
+                    }}
+                    style={{ width: '100%', padding: '8px 12px', marginBottom: 8, background: '#2a4a6a', border: 'none', color: '#fff', borderRadius: 4, cursor: 'pointer' }}
+                >
+                    Duplicate &amp; Subconditions
+                </button>
 
                 <button
                     onClick={() => {
@@ -894,7 +934,8 @@ export const StoryInspector: React.FC<Props> = ({
     }
 
     if (selection.kind === 'orphanedCondition') {
-        const { condition } = selection;
+        const { orphanId, condition } = selection;
+        const matchRoot = (o: any, i: number) => (o._orphanId ?? `idx-${i}`) === orphanId;
         const conditionLabel = condition?.type === 'comparison'
             ? `${condition.variable} ${condition.operator} ${condition.value}`
             : condition?.type === 'and' || condition?.type === 'or'
@@ -909,15 +950,44 @@ export const StoryInspector: React.FC<Props> = ({
 
                 <button
                     onClick={() => {
-                        // Remove this orphan from the story-level orphan pool
+                        onUpdateStory({ ...story, orphanedConditions: [...(story.orphanedConditions || []), duplicateConditionAsOrphan(condition)] });
+                    }}
+                    style={{ width: '100%', padding: '8px 12px', marginBottom: 8, background: '#2a4a6a', border: 'none', color: '#fff', borderRadius: 4, cursor: 'pointer' }}
+                >
+                    Duplicate &amp; Subconditions
+                </button>
+
+                <button
+                    onClick={() => {
+                        const orphanRoot = (story.orphanedConditions || []).find(matchRoot);
+                        if (!orphanRoot) return;
+                        const result = removeConditionNode(orphanRoot, condition);
+                        const stampedNew = result.orphaned.map((o: any) => ({ ...o, _orphanId: crypto.randomUUID() }));
                         onUpdateStory({
                             ...story,
-                            orphanedConditions: (story.orphanedConditions || []).filter(c => c !== condition)
+                            orphanedConditions: [
+                                ...(story.orphanedConditions || [])
+                                    .map((o: any, i: number) => matchRoot(o, i) ? result.nextCondition : o)
+                                    .filter(Boolean) as Condition[],
+                                ...stampedNew
+                            ]
+                        });
+                    }}
+                    style={{ width: '100%', padding: '8px 12px', marginBottom: 8, background: '#664400', border: 'none', color: '#fff', borderRadius: 4, cursor: 'pointer' }}
+                >
+                    Delete Block Only
+                </button>
+
+                <button
+                    onClick={() => {
+                        onUpdateStory({
+                            ...story,
+                            orphanedConditions: (story.orphanedConditions || []).filter((o: any, i: number) => !matchRoot(o, i))
                         });
                     }}
                     style={{ width: '100%', padding: '8px 12px', background: '#aa4444', border: 'none', color: '#fff', borderRadius: 4, cursor: 'pointer' }}
                 >
-                    Delete Orphaned Block
+                    Delete Entire Subtree
                 </button>
             </aside>
         );
@@ -936,6 +1006,19 @@ export const StoryInspector: React.FC<Props> = ({
                 <h2 style={{ marginTop: 0 }}>Condition Block</h2>
                 <p style={{ fontSize: 12, color: '#aaa' }}>Part of: {isOption ? `${parentId} / ${transition.targetNodeId}` : parentId}</p>
                 <p style={{ fontSize: 12, color: '#cfe8cf' }}>Parsed as: {conditionLabel}</p>
+
+                <button
+                    onClick={() => {
+                        const copy = JSON.parse(JSON.stringify(condition));
+                        const pos = (copy as any).position ?? { x: 200, y: 200 };
+                        (copy as any)._orphanId = crypto.randomUUID();
+                        (copy as any).position = { x: pos.x + 40, y: pos.y + 40 };
+                        onUpdateStory({ ...story, orphanedConditions: [...(story.orphanedConditions || []), copy] });
+                    }}
+                    style={{ width: '100%', padding: '8px 12px', marginBottom: 8, background: '#2a4a6a', border: 'none', color: '#fff', borderRadius: 4, cursor: 'pointer' }}
+                >
+                    Duplicate &amp; Subconditions
+                </button>
 
                 <button
                     onClick={() => {

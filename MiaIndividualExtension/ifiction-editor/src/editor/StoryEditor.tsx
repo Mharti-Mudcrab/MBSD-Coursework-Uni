@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo } from 'react';
-import { ReactFlow, Background, Controls, useNodesState, type Node } from '@xyflow/react'
-import type { StoryData } from '../types'
+import { ReactFlow, Background, Controls, useNodesState, type Node, type Connection } from '@xyflow/react'
+import type { StoryData, Condition } from '../types'
 import type { ConditionBlockData, TransitionBlockData, OptionBlockData, CanvasNodeData } from './types'
 import '@xyflow/react/dist/style.css'
 import { StartNode } from './nodes/StartNode';

@@ -30,7 +30,7 @@ ChoiceNode roadChoice {
             -> addPictureSystemStateChange with priority 2 with condition: Talisman==1 and BushLookup<4,
             -> foundNothingSystemStateChange with priority 1 with condition: BushLookup<5 },
         ChoiceOption {displayText: "Impossible choice",
-        	-> hardToGetToNode with priority 1 with condition: HardToGetValue==1}   
+        	-> hardToGetToNode with priority 1 with condition: HardToGetValue==1}
         	//-> hardToGetToNode with priority 4 with condition: BushLookup>4,
         	//-> hardToGetToNode with priority 2 with condition: BushLookup>2 and Talisman==1, 
         	//-> hardToGetToNode with priority 1 with condition: BushLookup>2 and (Talisman==1 or coin>=10) }
@@ -126,7 +126,7 @@ ChoiceNode movePastWitchChoice {
         ChoiceOption {displayText: "Go back to start", 
             -> start},
         ChoiceOption {displayText: "Show her your bag full of pearls", 
-            -> buyTheWitch with priority 2 with condition: Pearl>50},
+            -> buyTheWitch with priority 2 with condition: Pearl>50 and Coin==25}, 
         ChoiceOption {displayText: "Go past her",
              -> walkPastWitch with priority 2 with condition: Talisman==1,
              -> witchBadEnd}  
@@ -135,10 +135,15 @@ ChoiceNode movePastWitchChoice {
 
 SystemStateChangeNode buyTheWitch {
 	displayText: "The witch melts at the sight of your pearly whites and dissolves into the ground...\n\tWait where are the pearls!?\n You suddenly have no pearls left",
-	Pearl=0,
-	-> abruptBadEnd with priority 2 with condition: Talisman==2 
+	Pearl+=0,
+	-> furtherDownReachablePath
 }        
- 
+
+DialogueNode furtherDownReachablePath {
+    displayText: "We got here because we got the coins!",
+    -> nodeTranitioningToItself
+}
+  
 DialogueNode walkPastWitch {
     displayText: "You catch a lurking eye from the old lady as you walk past", 
     -> abruptBadEnd

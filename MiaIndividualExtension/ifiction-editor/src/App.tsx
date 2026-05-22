@@ -3,12 +3,24 @@ import { StoryEditor } from './editor/StoryEditor';
 import { StoryInspector } from "./editor/StoryInspector";
 import { NodeToolbar } from "./editor/NodeToolbar";
 import type { StoryData, StoryNode, Transition } from './types';
-import { enchantedForest } from "./testStory";
 import { useState, useRef } from 'react';
+
+const emptyStory: StoryData = {
+    name: 'New Story',
+    startNodeId: 'start',
+    nodes: {
+        start: {
+            id: 'start',
+            type: 'start',
+            position: { x: 200, y: 200 },
+            data: { label: 'Start', displayText: '' },
+        },
+    },
+};
 import './App.css'
 
 function App() {
-    const [story, setStory] = useState<StoryData>(enchantedForest);
+    const [story, setStory] = useState<StoryData>(emptyStory);
     const [canvasKey, setCanvasKey] = useState(0);
     const [showPreview, setShowPreview] = useState(true);
     const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);

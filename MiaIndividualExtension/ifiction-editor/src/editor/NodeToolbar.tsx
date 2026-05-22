@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import type { StoryData, StoryNode, NodeType } from '../types';
 
 interface Props {
     story: StoryData;
     onStoryChange: (story: StoryData) => void;
+    onLoadStory: (story: StoryData) => void;
     onSelectNode: (nodeId: string | null) => void;
 }
 
@@ -41,8 +42,36 @@ const labelStyle: React.CSSProperties = {
     flexShrink: 0,
 };
 
-export const NodeToolbar: React.FC<Props> = ({ story, onStoryChange, onSelectNode }) => {
+export const NodeToolbar: React.FC<Props> = ({ story, onStoryChange, onLoadStory, onSelectNode }) => {
     const existingIds = new Set(Object.keys(story.nodes));
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const saveStory = () => {
+        const blob = new Blob([JSON.stringify(story, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'story.json';
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
+    const loadStory = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            try {
+                const loaded = JSON.parse(ev.target?.result as string) as StoryData;
+                onLoadStory(loaded);
+                onSelectNode(null);
+            } catch {
+                alert('Invalid story JSON.');
+            }
+        };
+        reader.readAsText(file);
+        e.target.value = '';
+    };
 
     const addStoryNode = (type: NodeType) => {
         const id = uniqueId(type, existingIds);
@@ -141,6 +170,11 @@ export const NodeToolbar: React.FC<Props> = ({ story, onStoryChange, onSelectNod
             <button style={btnStyle} onClick={addOrphanComparison}>Comparison</button>
             <button style={btnStyle} onClick={() => addOrphanLogical('and')}>AND</button>
             <button style={btnStyle} onClick={() => addOrphanLogical('or')}>OR</button>
+            <div style={dividerStyle} />
+            <span style={labelStyle}>File</span>
+            <button style={btnStyle} onClick={saveStory}>Save</button>
+            <button style={btnStyle} onClick={() => fileInputRef.current?.click()}>Load</button>
+            <input ref={fileInputRef} type="file" accept=".json" style={{ display: 'none' }} onChange={loadStory} />
         </div>
     );
 };

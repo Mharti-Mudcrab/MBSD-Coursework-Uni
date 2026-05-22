@@ -85,12 +85,12 @@ Variable block inspector editing is implemented. Canvas-level wiring and node-le
 - **State Change nodes**: no UI to add or remove state change entries at the node level; canvas wiring of variable blocks is also missing (tracked under Section 4)
 - **Dialogue nodes**: only generic node properties (label, id, displayText) are editable; no richer editing surface
 
-### 7. Persistence ⧗ REMAINING
+### 7. Persistence ✓ DONE
 
-Not started. Required for a usable editor:
-- Export story to JSON
-- Import story from JSON
-- Preserve node ids, positions, and all transition data
+Save/Load buttons in `NodeToolbar.tsx`:
+- Save: serialises `story` to JSON and triggers a browser download
+- Load: file picker reads a `.json` file and replaces the current story via `onStoryChange`
+- Node ids, positions, and all transition/orphan data round-trip through `JSON.stringify`/`JSON.parse` intact
 
 ### 8. Validation and Feedback ⊘ OUT OF SCOPE
 

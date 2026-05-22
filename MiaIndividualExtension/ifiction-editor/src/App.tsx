@@ -9,10 +9,18 @@ import './App.css'
 
 function App() {
     const [story, setStory] = useState<StoryData>(enchantedForest);
+    const [canvasKey, setCanvasKey] = useState(0);
     const [showPreview, setShowPreview] = useState(true);
     const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
     const [showInspector, setShowInspector] = useState(true);
     const blockToConditionRef = useRef<Map<string, any>>(new Map());
+
+    const loadStory = (loaded: StoryData) => {
+        setStory(loaded);
+        setSelectedNodeId(null);
+        blockToConditionRef.current.clear();
+        setCanvasKey(k => k + 1);
+    };
 
     const updateNodeInStory = (updatedNode: StoryNode) => {
         setStory(currentStory => {
@@ -90,15 +98,9 @@ function App() {
                 borderRight: "1px solid #333"
             }}>
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                    <NodeToolbar story={story} onStoryChange={setStory} onSelectNode={setSelectedNodeId} />
+                    <NodeToolbar story={story} onStoryChange={setStory} onLoadStory={loadStory} onSelectNode={setSelectedNodeId} />
                     <div style={{ flex: 1, position: 'relative' }}>
-                        <StoryEditor story={story} onStoryChange={setStory} selectedNodeId={selectedNodeId} onSelectNode={setSelectedNodeId} blockToConditionRef={blockToConditionRef} />
-                        <button
-                            onClick={() => setShowPreview(!showPreview)}
-                            style={{ position: 'absolute', bottom: '20px', right: '20px', zIndex: 10, padding: '8px 12px', cursor: 'pointer' }}
-                        >
-                            {showPreview ? "Hide Output" : "Show Output"}
-                        </button>
+                        <StoryEditor key={canvasKey} story={story} onStoryChange={setStory} selectedNodeId={selectedNodeId} onSelectNode={setSelectedNodeId} blockToConditionRef={blockToConditionRef} />
                     </div>
                 </div>
 

@@ -13,14 +13,14 @@ export const DialogueNode = ({ data }: any) => {
                 fontSize: 12,
             }}
         >
-            <Handle id="target" type="target" position={Position.Left} />
+            <Handle id="input" type="target" position={Position.Left} />
             <div style={{ fontWeight: 'bold', marginBottom: 4 }}>
                 {data?.label || 'Dialogue'}
             </div>
             <div style={{ fontSize: 11, color: '#aaa', maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {data?.displayText || '(no text)'}
             </div>
-            <Handle id="source" type="source" position={Position.Right} />
+            <Handle id="output" type="source" position={Position.Right} />
         </div>
     );
 };

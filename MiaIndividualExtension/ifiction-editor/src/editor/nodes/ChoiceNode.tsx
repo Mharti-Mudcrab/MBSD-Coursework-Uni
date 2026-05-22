@@ -13,7 +13,7 @@ export const ChoiceNode = ({ data }: any) => {
                 fontSize: 12,
             }}
         >
-            <Handle id="target" type="target" position={Position.Left} />
+            <Handle id="input" type="target" position={Position.Left} />
             <div style={{ fontWeight: 'bold', marginBottom: 4 }}>
                 {data?.label || 'Choice'}
             </div>
@@ -23,7 +23,7 @@ export const ChoiceNode = ({ data }: any) => {
             <div style={{ fontSize: 10, color: '#999', marginTop: 4 }}>
                 {data?.choices?.length || 0} options
             </div>
-            <Handle id="source" type="source" position={Position.Right} />
+            <Handle id="output" type="source" position={Position.Right} />
         </div>
     );
 };

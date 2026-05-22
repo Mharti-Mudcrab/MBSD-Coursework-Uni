@@ -499,6 +499,239 @@ export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNode
         onSelectNode(null);
     }, [onSelectNode]);
 
+    const onConnect = useCallback(
+        (connection: Connection) => {
+            const { source, target, targetHandle } = connection;
+            if (!source || !target) return;
+
+            // Returns updated story with the given transitionBlockId's targetNodeId set, or null
+            const setTransitionTargetNode = (blockId: string, newTargetId: string): StoryData | null => {
+                if (blockId.startsWith('orphan-transition-')) {
+                    const orphanId = blockId.slice('orphan-transition-'.length);
+                    return {
+                        ...story,
+                        orphanedTransitions: (story.orphanedTransitions || []).map((o: any, i: number) =>
+                            (o._orphanId ?? `trans-idx-${i}`) === orphanId ? { ...o, targetNodeId: newTargetId } : o
+                        ),
+                    };
+                }
+                if (blockId.includes('-option-')) {
+                    const splitIdx = blockId.indexOf('-option-');
+                    const parentNodeId = blockId.substring(0, splitIdx);
+                    const rest = blockId.substring(splitIdx + '-option-'.length).split('-');
+                    const optionIndex = parseInt(rest[0], 10);
+                    const transitionIndex = parseInt(rest[1], 10);
+                    const parentNode = story.nodes[parentNodeId];
+                    if (!parentNode) return null;
+                    const choices = [...(parentNode.data as any).choices];
+                    const transitions = [...choices[optionIndex].transitions];
+                    transitions[transitionIndex] = { ...transitions[transitionIndex], targetNodeId: newTargetId };
+                    choices[optionIndex] = { ...choices[optionIndex], transitions };
+                    return { ...story, nodes: { ...story.nodes, [parentNodeId]: { ...parentNode, data: { ...parentNode.data, choices } } } };
+                }
+                const lastDash = blockId.lastIndexOf('-');
+                const parentNodeId = blockId.substring(0, lastDash);
+                const transitionIndex = parseInt(blockId.substring(lastDash + 1), 10);
+                const parentNode = story.nodes[parentNodeId];
+                if (!parentNode?.data.transitions) return null;
+                const transitions = [...parentNode.data.transitions];
+                transitions[transitionIndex] = { ...transitions[transitionIndex], targetNodeId: newTargetId };
+                return { ...story, nodes: { ...story.nodes, [parentNodeId]: { ...parentNode, data: { ...parentNode.data, transitions } } } };
+            };
+
+            // Returns updated story with a condition set on the given transitionBlockId, or null
+            const setTransitionCondition = (blockId: string, condition: Condition): StoryData | null => {
+                if (blockId.startsWith('orphan-transition-')) {
+                    const orphanId = blockId.slice('orphan-transition-'.length);
+                    return {
+                        ...story,
+                        orphanedTransitions: (story.orphanedTransitions || []).map((o: any, i: number) =>
+                            (o._orphanId ?? `trans-idx-${i}`) === orphanId ? { ...o, condition } : o
+                        ),
+                    };
+                }
+                if (blockId.includes('-option-')) {
+                    const splitIdx = blockId.indexOf('-option-');
+                    const parentNodeId = blockId.substring(0, splitIdx);
+                    const rest = blockId.substring(splitIdx + '-option-'.length).split('-');
+                    const optionIndex = parseInt(rest[0], 10);
+                    const transitionIndex = parseInt(rest[1], 10);
+                    const parentNode = story.nodes[parentNodeId];
+                    if (!parentNode) return null;
+                    const choices = [...(parentNode.data as any).choices];
+                    const transitions = [...choices[optionIndex].transitions];
+                    transitions[transitionIndex] = { ...transitions[transitionIndex], condition };
+                    choices[optionIndex] = { ...choices[optionIndex], transitions };
+                    return { ...story, nodes: { ...story.nodes, [parentNodeId]: { ...parentNode, data: { ...parentNode.data, choices } } } };
+                }
+                const lastDash = blockId.lastIndexOf('-');
+                const parentNodeId = blockId.substring(0, lastDash);
+                const transitionIndex = parseInt(blockId.substring(lastDash + 1), 10);
+                const parentNode = story.nodes[parentNodeId];
+                if (!parentNode?.data.transitions) return null;
+                const transitions = [...parentNode.data.transitions];
+                transitions[transitionIndex] = { ...transitions[transitionIndex], condition };
+                return { ...story, nodes: { ...story.nodes, [parentNodeId]: { ...parentNode, data: { ...parentNode.data, transitions } } } };
+            };
+
+            // Shallow-touches the story subtree that owns a parentTransitionId, forcing a re-render
+            // after a direct condition mutation (following the same pattern as onNodeDragStop)
+            const touchParentTransition = (parentTransitionId: string): StoryData => {
+                if (parentTransitionId.startsWith('orphan-transition-')) {
+                    return { ...story, orphanedTransitions: [...(story.orphanedTransitions || [])] };
+                }
+                if (parentTransitionId.startsWith('orphan-')) {
+                    // orphaned condition tree
+                    return { ...story, orphanedConditions: [...(story.orphanedConditions || [])] };
+                }
+                if (parentTransitionId.includes('-option-')) {
+                    const splitIdx = parentTransitionId.indexOf('-option-');
+                    const parentNodeId = parentTransitionId.substring(0, splitIdx);
+                    const parentNode = story.nodes[parentNodeId];
+                    if (!parentNode) return story;
+                    return { ...story, nodes: { ...story.nodes, [parentNodeId]: { ...parentNode, data: { ...parentNode.data } } } };
+                }
+                const lastDash = parentTransitionId.lastIndexOf('-');
+                const parentNodeId = parentTransitionId.substring(0, lastDash);
+                const parentNode = story.nodes[parentNodeId];
+                if (!parentNode) return story;
+                return { ...story, nodes: { ...story.nodes, [parentNodeId]: { ...parentNode } } };
+            };
+
+            // ── Case 1: TransitionBlock.output → StoryNode.input ─────────────────
+            // Sets the transition's targetNodeId to the target story node
+            if (targetHandle === 'input' && story.nodes[target] && !source.startsWith('condition-')) {
+                const updated = setTransitionTargetNode(source, target);
+                if (updated) onStoryChange(updated);
+                return;
+            }
+
+            // ── Case 2: StoryNode/OptionBlock.output → orphaned TransitionBlock.input
+            // Adopts the orphaned transition into the source node or option
+            if (targetHandle === 'input' && target.startsWith('orphan-transition-')) {
+                const orphanId = target.slice('orphan-transition-'.length);
+                const orphaned = (story.orphanedTransitions || []).find((o: any, i: number) =>
+                    (o._orphanId ?? `trans-idx-${i}`) === orphanId
+                );
+                if (!orphaned) return;
+                const { _orphanId: _oid, ...transitionData } = orphaned as any;
+                const newOrphans = (story.orphanedTransitions || []).filter((o: any, i: number) =>
+                    (o._orphanId ?? `trans-idx-${i}`) !== orphanId
+                );
+
+                if (source.includes('-option-') && !source.startsWith('orphan-')) {
+                    const splitIdx = source.indexOf('-option-');
+                    const parentNodeId = source.substring(0, splitIdx);
+                    const optionIndex = parseInt(source.substring(splitIdx + '-option-'.length), 10);
+                    const parentNode = story.nodes[parentNodeId];
+                    if (!parentNode) return;
+                    const choices = [...(parentNode.data as any).choices];
+                    choices[optionIndex] = { ...choices[optionIndex], transitions: [...(choices[optionIndex].transitions || []), transitionData] };
+                    onStoryChange({ ...story, nodes: { ...story.nodes, [parentNodeId]: { ...parentNode, data: { ...parentNode.data, choices } } }, orphanedTransitions: newOrphans });
+                } else if (story.nodes[source]) {
+                    const parentNode = story.nodes[source];
+                    const transitions = [...(parentNode.data.transitions || []), transitionData];
+                    onStoryChange({ ...story, nodes: { ...story.nodes, [source]: { ...parentNode, data: { ...parentNode.data, transitions } } }, orphanedTransitions: newOrphans });
+                }
+                return;
+            }
+
+            // ── Case 2b: ChoiceNode.output → orphaned OptionBlock.input ─────────
+            // Adopts the orphaned option into the choice node's choices array
+            if (targetHandle === 'input' && target.startsWith('orphan-option-')) {
+                const orphanId = target.slice('orphan-option-'.length);
+                const orphaned = (story.orphanedOptions || []).find((o: any, i: number) =>
+                    (o._orphanId ?? `opt-idx-${i}`) === orphanId
+                );
+                if (!orphaned || story.nodes[source]?.type !== 'choice') return;
+                const { _orphanId: _oid, ...optionData } = orphaned as any;
+                const parentNode = story.nodes[source];
+                const choices = [...((parentNode.data as any).choices || []), optionData];
+                onStoryChange({
+                    ...story,
+                    nodes: { ...story.nodes, [source]: { ...parentNode, data: { ...parentNode.data, choices } } },
+                    orphanedOptions: (story.orphanedOptions || []).filter((o: any, i: number) =>
+                        (o._orphanId ?? `opt-idx-${i}`) !== orphanId
+                    ),
+                });
+                return;
+            }
+
+            // ── Case 3: (Orphaned) ConditionBlock.output → TransitionBlock.condition
+            // Attaches the orphaned condition tree root to the transition's condition field
+            if (targetHandle === 'condition' && source.startsWith('condition-')) {
+                const condRef = blockToConditionRef.current.get(source);
+                if (!condRef?.parentTransitionId?.startsWith('orphan-')) return;
+                const orphanId = condRef.orphanId ?? condRef.parentTransitionId.slice('orphan-'.length);
+                const orphanRoot = (story.orphanedConditions || []).find((o: any, i: number) =>
+                    (o._orphanId ?? `idx-${i}`) === orphanId
+                );
+                if (!orphanRoot) return;
+                const { _orphanId: _, ...conditionData } = orphanRoot as any;
+                const updated = setTransitionCondition(target, conditionData as Condition);
+                if (!updated) return;
+                onStoryChange({
+                    ...updated,
+                    orphanedConditions: (story.orphanedConditions || []).filter((o: any, i: number) =>
+                        (o._orphanId ?? `idx-${i}`) !== orphanId
+                    ),
+                });
+                return;
+            }
+
+            // ── Case 4: (Orphaned) ConditionBlock.output → AND/OR.conditionA/conditionB
+            // Wires an orphaned condition tree into the left or right slot of a logical group
+            if ((targetHandle === 'conditionA' || targetHandle === 'conditionB') && source.startsWith('condition-')) {
+                const sourceCondRef = blockToConditionRef.current.get(source);
+                if (!sourceCondRef?.parentTransitionId?.startsWith('orphan-')) return;
+                const orphanId = sourceCondRef.orphanId ?? sourceCondRef.parentTransitionId.slice('orphan-'.length);
+                const orphanRoot = (story.orphanedConditions || []).find((o: any, i: number) =>
+                    (o._orphanId ?? `idx-${i}`) === orphanId
+                );
+                if (!orphanRoot) return;
+                const { _orphanId: _, ...conditionData } = orphanRoot as any;
+
+                const targetCondRef = blockToConditionRef.current.get(target);
+                if (!targetCondRef) return;
+                // Direct mutation matches the existing pattern used in onNodeDragStop for positions
+                targetCondRef.condition[targetHandle === 'conditionA' ? 'left' : 'right'] = conditionData;
+
+                const touched = touchParentTransition(targetCondRef.parentTransitionId);
+                onStoryChange({
+                    ...touched,
+                    orphanedConditions: (story.orphanedConditions || []).filter((o: any, i: number) =>
+                        (o._orphanId ?? `idx-${i}`) !== orphanId
+                    ),
+                });
+                return;
+            }
+
+            // ── Case 5: OrphanedVariable.output → StateChangeNode.var ────────────
+            // Adopts an orphaned variable change block into the state change node
+            if (targetHandle === 'var' && source.startsWith('orphan-variable-') && story.nodes[target]?.type === 'stateChange') {
+                const orphanId = source.slice('orphan-variable-'.length);
+                const orphaned = (story.orphanedVariables || []).find((o: any, i: number) =>
+                    (o._orphanId ?? `var-idx-${i}`) === orphanId
+                );
+                if (!orphaned) return;
+                const { _orphanId: _oid2, ...changeData } = orphaned as any;
+                const targetNode = story.nodes[target];
+                onStoryChange({
+                    ...story,
+                    nodes: {
+                        ...story.nodes,
+                        [target]: { ...targetNode, data: { ...targetNode.data, stateChanges: [...(targetNode.data.stateChanges || []), changeData] } },
+                    },
+                    orphanedVariables: (story.orphanedVariables || []).filter((o: any, i: number) =>
+                        (o._orphanId ?? `var-idx-${i}`) !== orphanId
+                    ),
+                });
+                return;
+            }
+        },
+        [story, onStoryChange, blockToConditionRef]
+    );
+
     const edges = useMemo(() => {
         const derivedEdges: any[] = [];
         
@@ -512,8 +745,8 @@ export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNode
                         id: `${node.id}-to-${transitionBlockId}`,
                         source: node.id,
                         target: transitionBlockId,
-                        sourceHandle: 'source',
-                        targetHandle: 'target',
+                        sourceHandle: 'output',
+                        targetHandle: 'input',
                     });
                     
                     // Edge from transition to target node
@@ -521,8 +754,8 @@ export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNode
                         id: `${transitionBlockId}-to-${transition.targetNodeId}`,
                         source: transitionBlockId,
                         target: transition.targetNodeId,
-                        sourceHandle: 'source',
-                        targetHandle: 'target',
+                        sourceHandle: 'output',
+                        targetHandle: 'input',
                     });
                 });
             }
@@ -536,7 +769,7 @@ export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNode
                         id: `${varBlockId}-to-${node.id}`,
                         source: varBlockId,
                         target: node.id,
-                        sourceHandle: 'source',
+                        sourceHandle: 'output',
                         targetHandle: 'var',
                     });
                 });
@@ -552,8 +785,8 @@ export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNode
                         id: `${node.id}-to-${optionBlockId}`,
                         source: node.id,
                         target: optionBlockId,
-                        sourceHandle: 'source',
-                        targetHandle: 'target',
+                        sourceHandle: 'output',
+                        targetHandle: 'input',
                     });
 
                     // Option-level transitions (optionBlock -> optionTransitionBlock -> target)
@@ -566,8 +799,8 @@ export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNode
                                 id: `${optionBlockId}-to-${optionTransitionId}`,
                                 source: optionBlockId,
                                 target: optionTransitionId,
-                                sourceHandle: 'source',
-                                targetHandle: 'target',
+                                sourceHandle: 'output',
+                                targetHandle: 'input',
                             });
 
                             // Edge from option transition to the real target node
@@ -575,8 +808,8 @@ export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNode
                                 id: `${optionTransitionId}-to-${transition.targetNodeId}`,
                                 source: optionTransitionId,
                                 target: transition.targetNodeId,
-                                sourceHandle: 'source',
-                                targetHandle: 'target',
+                                sourceHandle: 'output',
+                                targetHandle: 'input',
                             });
                         });
                     }
@@ -584,11 +817,26 @@ export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNode
             }
         });
         
+        // Add edges for orphaned transitions that have a targetNodeId wired
+        (story.orphanedTransitions || []).forEach((orphaned: any, orphanIndex: number) => {
+            const orphanId = orphaned._orphanId ?? `trans-idx-${orphanIndex}`;
+            const blockId = `orphan-transition-${orphanId}`;
+            if (orphaned.targetNodeId) {
+                derivedEdges.push({
+                    id: `${blockId}-to-${orphaned.targetNodeId}`,
+                    source: blockId,
+                    target: orphaned.targetNodeId,
+                    sourceHandle: 'output',
+                    targetHandle: 'input',
+                });
+            }
+        });
+
         // Add condition block edges computed during node initialization
         derivedEdges.push(...conditionEdges);
-        
+
         return derivedEdges;
-    }, [story.nodes, conditionEdges]);
+    }, [story.nodes, story.orphanedTransitions, conditionEdges]);
 
     return (
         <div style={{ width: '100%', height: '100%', minHeight: '500px' }}>
@@ -600,6 +848,7 @@ export const StoryEditor: React.FC<Props> = ({story, onStoryChange, selectedNode
                 onNodeDragStop={onNodeDragStop}
                 onNodeClick={handleNodeClick}
                 onPaneClick={handlePaneClick}
+                onConnect={onConnect}
                 colorMode="dark"
                 fitView
                 minZoom={0.1}

@@ -31,7 +31,7 @@ export const OptionBlock: React.FC<OptionBlockProps> = ({ data }) => {
                 maxWidth: 180,
             }}
         >
-            <Handle id="target" type="target" position={Position.Left} />
+            <Handle id="input" type="target" position={Position.Left} />
             <div style={{ 
                 fontSize: 11, 
                 color: '#aaa', 
@@ -44,7 +44,7 @@ export const OptionBlock: React.FC<OptionBlockProps> = ({ data }) => {
             <div style={{ fontSize: 9, color: '#777', marginTop: 2 }}>
                 {data.option.transitions?.length || 0} transitions
             </div>
-            <Handle id="source" type="source" position={Position.Right} />
+            <Handle id="output" type="source" position={Position.Right} />
         </div>
     );
 };

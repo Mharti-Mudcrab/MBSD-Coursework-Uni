@@ -11,7 +11,7 @@ export const StartNode = ({ data }: any) => {
             minWidth: '120px',
             fontSize: 12,
         }}>
-            <Handle id="target" type="target" position={Position.Left} />
+            <Handle id="input" type="target" position={Position.Left} />
             <div style={{ fontWeight: 'bold', marginBottom: 4 }}>
                 {data?.label || 'Start'}
             </div>
@@ -20,7 +20,7 @@ export const StartNode = ({ data }: any) => {
                     {data.displayText}
                 </div>
             )}
-            <Handle id="source" type="source" position={Position.Right} />
+            <Handle id="output" type="source" position={Position.Right} />
         </div>
     );
 };

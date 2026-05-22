@@ -11,7 +11,7 @@ export const EndNode = ({ data }: any) => {
             minWidth: '120px',
             fontSize: 12,
         }}>
-            <Handle id="target" type="target" position={Position.Left} />
+            <Handle id="input" type="target" position={Position.Left} />
             <div style={{ fontWeight: 'bold', marginBottom: 4 }}>
                 {data?.label || 'End'}
             </div>

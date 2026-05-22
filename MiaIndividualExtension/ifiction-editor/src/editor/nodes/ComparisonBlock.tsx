@@ -15,7 +15,7 @@ export const ComparisonBlock = ({ data }: any) => {
                 minWidth: 100,
             }}
         >
-            <Handle id="target" type="target" position={Position.Left} />
+            <Handle id="input" type="target" position={Position.Left} />
             <div style={{ fontWeight: 'bold', marginBottom: 2 }}>
                 {operator}
             </div>

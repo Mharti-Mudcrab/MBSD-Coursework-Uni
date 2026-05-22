@@ -76,7 +76,11 @@ function App() {
             };
         });
 
-        setSelectedNodeId(updatedNode.id);
+        // Only follow the (possibly-renamed) node ID if the story node itself was selected.
+        // If a sub-block is selected (transition, variable, option, condition), preserve it.
+        if (selectedNodeId && story.nodes[selectedNodeId]) {
+            setSelectedNodeId(updatedNode.id);
+        }
     };
 
     return (

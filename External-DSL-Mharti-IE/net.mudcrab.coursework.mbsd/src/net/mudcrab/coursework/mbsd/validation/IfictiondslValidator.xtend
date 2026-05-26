@@ -237,7 +237,7 @@ class IfictiondslValidator extends AbstractIfictiondslValidator {
 					furtherDownTheDeadBranchNodes.contains(transCand.destination)
 				])
 				furtherDownTheDeadBranchNodes.clear
-				splitDeadNodeCandidatesAndFurtherDownDeadBranchCandidates(furtherDownTheDeadBranchNodes, transitionCandidates, furtherDownTheDeadBranchNodes, allTransitions, traverser)
+				splitDeadNodeCandidatesAndFurtherDownDeadBranchCandidates(deadNodeCandidates, transitionCandidates, furtherDownTheDeadBranchNodes, allTransitions, traverser)
 			} else {
 				keepGoing = false
 			}

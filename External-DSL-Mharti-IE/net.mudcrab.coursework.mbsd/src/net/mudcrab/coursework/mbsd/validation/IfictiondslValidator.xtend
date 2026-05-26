@@ -284,6 +284,8 @@ class IfictiondslValidator extends AbstractIfictiondslValidator {
 		cachedDeadNodes.addAll(deadNodeCandidates)
 		val cachedNodesNotVisitedFromConditionlessSearch = cache.get("cachedNodesNotVisitedFromConditionlessSearch", story.eResource, [new HashSet<Node>()])
 		cachedNodesNotVisitedFromConditionlessSearch.addAll(notVisitedNodesFromConditionlessSearch)
+	
+		System.out.println("Finished checkDetectDeadNodes")
 	}
 	
 	private def void splitDeadNodeCandidatesAndFurtherDownDeadBranchCandidates(HashSet<Node> deadNodeCandidates, HashSet<Transition> transitionCandidates, HashSet<Node> furtherDownTheDeadBranchNodes, List<Transition> allTransitions, ASTTraverser traverser) {
@@ -321,7 +323,9 @@ class IfictiondslValidator extends AbstractIfictiondslValidator {
 								IfictiondslPackage.Literals.NODE__NAME, // null, // If want warning on entire node and not just i.e. the name with: IfictiondslPackage.Literals.NODE__NAME
 								NODE_IS_UNREACHABLE				
 							)
-							putWarningsOnDeadNodesDownDeadBranch(transition.destination, traverser)
+							if (!(transition.destination === deadNode)) {
+								putWarningsOnDeadNodesDownDeadBranch(transition.destination, traverser)								
+							}
 						}
 					}
 				}
@@ -337,7 +341,9 @@ class IfictiondslValidator extends AbstractIfictiondslValidator {
 							IfictiondslPackage.Literals.NODE__NAME, // null, // If want warning on entire node and not just i.e. the name with: IfictiondslPackage.Literals.NODE__NAME
 							NODE_IS_UNREACHABLE				
 						)
-						putWarningsOnDeadNodesDownDeadBranch(transition.destination, traverser)
+						if (!(transition.destination === deadNode)) {
+							putWarningsOnDeadNodesDownDeadBranch(transition.destination, traverser)								
+						}
 					}
 				}
 			}
@@ -356,9 +362,11 @@ class IfictiondslValidator extends AbstractIfictiondslValidator {
 					)
 				]
 				if (!nodesWithRightStateToGetToDeadNodeCandidate.empty) {
-					if (nodesWithRightStateToGetToDeadNodeCandidate.findFirst[ travNode |
-						traverser.findNodeFrom(travNode.node, transCand.destination, true)
-					] !== null) {
+					if (traverser.visitedNodes.contains(transCand.destination) || 			// If already discovered by previous search
+						nodesWithRightStateToGetToDeadNodeCandidate.findFirst[ travNode |	// Try to discover now that condition is achievable
+							traverser.findNodeFrom(travNode.node, transCand.destination, true)
+						] !== null
+					) {
 						succeeded = true
 					}
 					// System.out.println('''We did it! we got to "«transCand.destination.name»" condition: «transCand.condition» with state: «nodeWithRightStateToGetToDeadNodeCandidate.stateSnapshot»''')				

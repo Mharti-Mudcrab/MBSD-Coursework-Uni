@@ -174,6 +174,10 @@ class ASTTraverser {
 						if (!visitedTransitions.contains(t)) {
 							visitedTransitions.add(t)
 						}
+						// Check for self reference
+						if (currentNode === t.destination) {
+							return false
+						}
 						if(findNodeFromHelper(t.destination, toNode, strictMatch)) { // If not the first one finds it, maybe the second one will
 							return true
 						}
@@ -188,6 +192,10 @@ class ASTTraverser {
 				if (structuralFeature !== null) {
 					val t = currentNode.eGet(structuralFeature) as Transition
 					if (t !== null && checkCondition(t.condition)) {
+						// Check for self reference
+						if (currentNode === t.destination) {
+							return false
+						}
 						if (!visitedTransitions.contains(t)) {
 							visitedTransitions.add(t)
 						}

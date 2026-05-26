@@ -36,6 +36,7 @@ class IfictiondslValidator extends AbstractIfictiondslValidator {
 	public static val NODE_TRANSITIONS_TO_ITSELF = 'nodeTransitionsToItself'
 	public static val NODE_IS_UNREACHABLE = 'nodeIsUnreachable'
 	public static val TRANSITION_CONDITION_CANNOT_BE_SATISFIED = 'transitionConditionCannotBeSatisfied'
+	public static val CANNOT_HAVE_CONDITION_ON_TRANSITION = 'cannotHaveConditionOnTransition'
 
 	@Check(CheckType.FAST)
 	def checkNotRefferencedByAnyTransitions(Node node) {
@@ -44,6 +45,36 @@ class IfictiondslValidator extends AbstractIfictiondslValidator {
 				IfictiondslPackage.Literals.NODE__NAME,
 				NOT_REFERENCED_BY_TRANSITION
 			)
+		}
+	}
+	
+	@Check(CheckType.FAST)
+	def checkConditionOnOnlyTransition(Node node) {
+		val cachedNodesNotVisitedFromConditionlessSearch = cache.get("cachedNodesNotVisitedFromConditionlessSearch", node.eResource, [new HashSet<Node>()])
+		val cacheDeadNodes = cache.get("cachedDeadNodes", node.eResource, [new HashSet<Node>()])
+		
+		if ( !(node instanceof ChoiceNode) ) {
+			val structuralFeature = node.eClass.getEStructuralFeature("transition")
+			if (structuralFeature !== null) {
+				val transition = node.eGet(structuralFeature) as Transition
+				if (transition.condition !== null) {
+					if (cachedNodesNotVisitedFromConditionlessSearch.contains(node) ||
+						cacheDeadNodes.contains(node)
+					) {
+						warning('''Transition could cause softlock, as condition might be unfullfillable and no alternative transition can be present in node''',
+							transition,
+							IfictiondslPackage.Literals.TRANSITION__CONDITION,
+							CANNOT_HAVE_CONDITION_ON_TRANSITION
+						)
+					} else {
+						error('''Transition could cause softlock, as condition might be unfullfillable and no alternative transition can be present in node''',
+							transition,
+							IfictiondslPackage.Literals.TRANSITION__CONDITION,
+							CANNOT_HAVE_CONDITION_ON_TRANSITION
+						)
+					}
+				}	
+			}
 		}
 	}
 

@@ -1,10 +1,12 @@
 import React, { useRef } from 'react';
-import type { StoryData, StoryNode, NodeType } from '../types';
+import type { StoryData, StoryNode, NodeType, EditorState, Condition } from '../types';
 
 interface Props {
     story: StoryData;
+    editorState: EditorState;
     onStoryChange: (story: StoryData) => void;
-    onLoadStory: (story: StoryData) => void;
+    onEditorStateChange: (editorState: EditorState) => void;
+    onLoadStory: (story: StoryData, editorState: EditorState) => void;
     onSelectNode: (nodeId: string | null) => void;
     getSpawnPosition?: () => { x: number; y: number };
 }
@@ -16,34 +18,17 @@ function uniqueId(base: string, existing: Set<string>): string {
 }
 
 const btnStyle: React.CSSProperties = {
-    padding: '4px 11px',
-    fontSize: 12,
-    cursor: 'pointer',
-    background: '#1e1e1e',
-    color: '#ccc',
-    border: '1px solid #444',
-    borderRadius: 4,
+    padding: '4px 11px', fontSize: 12, cursor: 'pointer',
+    background: '#1e1e1e', color: '#ccc', border: '1px solid #444', borderRadius: 4,
 };
-
 const dividerStyle: React.CSSProperties = {
-    width: 1,
-    height: 20,
-    background: '#444',
-    margin: '0 6px',
-    alignSelf: 'center',
-    flexShrink: 0,
+    width: 1, height: 20, background: '#444', margin: '0 6px', alignSelf: 'center', flexShrink: 0,
 };
-
 const labelStyle: React.CSSProperties = {
-    fontSize: 10,
-    color: '#555',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginRight: 2,
-    flexShrink: 0,
+    fontSize: 10, color: '#555', textTransform: 'uppercase', letterSpacing: 1, marginRight: 2, flexShrink: 0,
 };
 
-export const NodeToolbar: React.FC<Props> = ({ story, onStoryChange, onLoadStory, onSelectNode, getSpawnPosition }) => {
+export const NodeToolbar: React.FC<Props> = ({ story, editorState, onStoryChange, onEditorStateChange, onLoadStory, onSelectNode, getSpawnPosition }) => {
     const existingIds = new Set(Object.keys(story.nodes));
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -53,7 +38,7 @@ export const NodeToolbar: React.FC<Props> = ({ story, onStoryChange, onLoadStory
     };
 
     const saveStory = () => {
-        const blob = new Blob([JSON.stringify(story, null, 2)], { type: 'application/json' });
+        const blob = new Blob([JSON.stringify({ story, editorState }, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -68,9 +53,8 @@ export const NodeToolbar: React.FC<Props> = ({ story, onStoryChange, onLoadStory
         const reader = new FileReader();
         reader.onload = (ev) => {
             try {
-                const loaded = JSON.parse(ev.target?.result as string) as StoryData;
-                onLoadStory(loaded);
-                onSelectNode(null);
+                const parsed = JSON.parse(ev.target?.result as string);
+                onLoadStory(parsed.story, parsed.editorState);
             } catch {
                 alert('Invalid story JSON.');
             }
@@ -82,85 +66,67 @@ export const NodeToolbar: React.FC<Props> = ({ story, onStoryChange, onLoadStory
     const addStoryNode = (type: NodeType) => {
         const id = uniqueId(type, existingIds);
         const pos = spawnPos();
-
         const dataMap: Record<string, object> = {
             dialogue: { label: 'New Dialogue', displayText: 'Enter text here.', transitions: [] },
             choice: { label: 'New Choice', displayText: 'Make a choice.', choices: [] },
             stateChange: { label: 'New State Change', displayText: '', stateChanges: [] },
             end: { label: 'End', displayText: '' },
         };
-
-        const newNode: StoryNode = { id, type, position: pos, data: dataMap[type] as StoryNode['data'] };
+        const newNode: StoryNode = { id, type, data: dataMap[type] as StoryNode['data'] };
         onStoryChange({ ...story, nodes: { ...story.nodes, [id]: newNode } });
+        onEditorStateChange({ ...editorState, canvasPositions: { ...editorState.canvasPositions, [id]: pos } });
         onSelectNode(id);
     };
 
     const addOrphanTransition = () => {
-        const orphan = {
-            targetNodeId: '',
-            priority: 0,
-            position: spawnPos(),
-            _orphanId: crypto.randomUUID(),
-        };
-        onStoryChange({ ...story, orphanedTransitions: [...(story.orphanedTransitions ?? []), orphan as any] });
+        const id = crypto.randomUUID();
+        onEditorStateChange({
+            ...editorState,
+            orphanedTransitions: { ...editorState.orphanedTransitions, [id]: { targetNodeId: '', priority: 0 } },
+            canvasPositions: { ...editorState.canvasPositions, [`orphan-transition-${id}`]: spawnPos() },
+        });
     };
 
     const addOrphanOption = () => {
-        const orphan = {
-            displayText: 'New Option',
-            transitions: [],
-            position: spawnPos(),
-            _orphanId: crypto.randomUUID(),
-        };
-        onStoryChange({ ...story, orphanedOptions: [...(story.orphanedOptions ?? []), orphan as any] });
+        const id = crypto.randomUUID();
+        onEditorStateChange({
+            ...editorState,
+            orphanedOptions: { ...editorState.orphanedOptions, [id]: { displayText: 'New Option', transitions: [] } },
+            canvasPositions: { ...editorState.canvasPositions, [`orphan-option-${id}`]: spawnPos() },
+        });
     };
 
     const addOrphanVariable = () => {
-        const orphan = {
-            variable: 'newVar',
-            operator: '=' as const,
-            value: 0,
-            position: spawnPos(),
-            _orphanId: crypto.randomUUID(),
-        };
-        onStoryChange({ ...story, orphanedVariables: [...(story.orphanedVariables ?? []), orphan as any] });
+        const id = crypto.randomUUID();
+        onEditorStateChange({
+            ...editorState,
+            orphanedVariables: { ...editorState.orphanedVariables, [id]: { variable: 'newVar', operator: '=' as const, value: 0 } },
+            canvasPositions: { ...editorState.canvasPositions, [`orphan-variable-${id}`]: spawnPos() },
+        });
     };
 
     const addOrphanComparison = () => {
-        const orphan = {
-            type: 'comparison' as const,
-            variable: 'newVar',
-            operator: '==' as const,
-            value: 0,
-            position: spawnPos(),
-            _orphanId: crypto.randomUUID(),
-        };
-        onStoryChange({ ...story, orphanedConditions: [...(story.orphanedConditions ?? []), orphan as any] });
+        const id = crypto.randomUUID();
+        const condition: Condition = { type: 'comparison', variable: 'newVar', operator: '==', value: 0 };
+        onEditorStateChange({
+            ...editorState,
+            orphanedConditions: { ...editorState.orphanedConditions, [id]: condition },
+            canvasPositions: { ...editorState.canvasPositions, [`condition-orphan-${id}-root`]: spawnPos() },
+        });
     };
 
     const addOrphanLogical = (gateType: 'and' | 'or') => {
-        const orphan = {
-            type: gateType,
-            left: null,
-            right: null,
-            position: spawnPos(),
-            _orphanId: crypto.randomUUID(),
-        };
-        onStoryChange({ ...story, orphanedConditions: [...(story.orphanedConditions ?? []), orphan as any] });
+        const id = crypto.randomUUID();
+        const condition: Condition = { type: gateType, left: null as any, right: null as any };
+        onEditorStateChange({
+            ...editorState,
+            orphanedConditions: { ...editorState.orphanedConditions, [id]: condition },
+            canvasPositions: { ...editorState.canvasPositions, [`condition-orphan-${id}-root`]: spawnPos() },
+        });
     };
 
     return (
-        <div style={{
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 5,
-            padding: '0 12px',
-            background: '#111',
-            borderBottom: '1px solid #2a2a2a',
-            height: 38,
-            flexShrink: 0,
-        }}>
+        <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 5, padding: '0 12px', background: '#111', borderBottom: '1px solid #2a2a2a', height: 38, flexShrink: 0 }}>
             <span style={labelStyle}>Node</span>
             <button style={btnStyle} onClick={() => addStoryNode('dialogue')}>Dialogue</button>
             <button style={btnStyle} onClick={() => addStoryNode('choice')}>Choice</button>

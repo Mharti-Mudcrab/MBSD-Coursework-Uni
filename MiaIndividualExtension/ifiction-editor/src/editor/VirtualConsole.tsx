@@ -83,158 +83,119 @@ const describeTransition = (story: StoryData, transitionId: string): string => {
 
 const getExecutionSignature = (story: StoryData): string => {
     const normalizedNodes = Object.entries(story.nodes)
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([id, node]) => ({
-            id,
-            type: node.type,
-            data: {
-                ...node.data,
-                transitions: (node.data.transitions || []).map(({ position, ...transition }) => transition),
-                choices: (node.data.choices || []).map(({ position, transitions, ...choice }) => ({
-                    ...choice,
-                    transitions: (transitions || []).map(({ position: _optionTransitionPosition, ...transition }) => transition),
-                })),
-            },
-        }));
-
-    return JSON.stringify({
-        name: story.name,
-        startNodeId: story.startNodeId,
-        nodes: normalizedNodes,
-    });
+        .sort(([a], [b]) => a.localeCompare(b));
+    return JSON.stringify({ name: story.name, startNodeId: story.startNodeId, nodes: normalizedNodes });
 };
 
 export const VirtualConsole: React.FC<{ story: StoryData }> = ({ story }) => {
-    
-    const [history, setHistory] = useState<string[]>([]);
+
+    const [displayLines, setDisplayLines] = useState<string[]>([]);
     const [inputValue, setInputValue] = useState('');
     const scrollRef = useRef<HTMLDivElement>(null);
     const [executionId, setExecutionId] = useState(0);
-    const [choiceHistory, setChoiceHistory] = useState<string[]>([]);
     const [resumeNotice, setResumeNotice] = useState<string | null>(null);
+
+    const runnerRef = useRef<StoryRunner | null>(null);
+    const choiceHistoryRef = useRef<string[]>([]);
+    const prevLogLengthRef = useRef(0);
     const prevTakenIdsRef = useRef<string[]>([]);
 
     const executionSignature = useMemo(() => getExecutionSignature(story), [story]);
     const executionStory = useMemo(() => story, [executionSignature]);
 
-    const runnerBuild = useMemo(() => {
-        try {
-            const builtRunner = new StoryRunner(executionStory);
-
-            for (let i = 0; i < choiceHistory.length; i++) {
-                const chosenText = choiceHistory[i];
-                const availableChoices = builtRunner.getAvailableChoices();
-                const matchedChoice = availableChoices.find(
-                    c => c.toLowerCase() === chosenText.toLowerCase()
-                );
-
-                if (!matchedChoice) {
-                    return {
-                        runner: builtRunner,
-                        error: null as string | null,
-                        replayFailed: true,
-                        failedChoice: chosenText,
-                    };
-                }
-
-                builtRunner.handleChoice(matchedChoice);
-            }
-
-            return {
-                runner: builtRunner,
-                error: null as string | null,
-                replayFailed: false,
-                failedChoice: null as string | null,
-            };
-        } catch (e: any) {
-            return {
-                runner: null,
-                error: e?.message || 'Failed to initialize runner',
-                replayFailed: false,
-                failedChoice: null as string | null,
-            };
-        }
-    }, [executionStory, executionId, choiceHistory]);
-
-    const runner = runnerBuild.runner;
-
+    // Rebuild only when the story's execution-relevant data changes, or on explicit restart.
+    // Choices do not trigger this path — they advance the live runner directly.
     useEffect(() => {
-        if (!runnerBuild.replayFailed || choiceHistory.length === 0) {
+        // Check if any transition taken in the previous session is now structurally invalid.
+        const invalidIds = collectInvalidTransitionIds(executionStory);
+        const hitId = prevTakenIdsRef.current.find(id => invalidIds.has(id));
+        if (hitId) {
+            const label = describeTransition(executionStory, hitId);
+            setResumeNotice(`Condition on transition ${label} became invalid. Story restarted.`);
+            choiceHistoryRef.current = [];
+            prevTakenIdsRef.current = [];
+        }
+
+        let runner: StoryRunner;
+        try {
+            runner = new StoryRunner(executionStory);
+        } catch (e: any) {
+            runnerRef.current = null;
+            prevLogLengthRef.current = 0;
+            setDisplayLines([`Error: ${e?.message || 'Failed to initialize runner'}`]);
             return;
         }
 
-        setResumeNotice(
-            `Story changed and invalidated choice '${runnerBuild.failedChoice}'. Restarted from start.`
-        );
-        setChoiceHistory([]);
-    }, [runnerBuild.replayFailed, runnerBuild.failedChoice, choiceHistory.length]);
+        // Replay the choice history to restore the player's position after an edit.
+        let failedChoice: string | null = null;
+        for (const choice of choiceHistoryRef.current) {
+            const match = runner.getAvailableChoices().find(c => c.toLowerCase() === choice.toLowerCase());
+            if (!match) {
+                failedChoice = choice;
+                choiceHistoryRef.current = [];
+                try { runner = new StoryRunner(executionStory); } catch { /* error already shown above */ }
+                break;
+            }
+            runner.handleChoice(match);
+        }
 
+        if (failedChoice) {
+            setResumeNotice(`Story changed and invalidated choice '${failedChoice}'. Restarted from start.`);
+        }
+
+        runnerRef.current = runner;
+        prevTakenIdsRef.current = [...runner.takenTransitionIds];
+        prevLogLengthRef.current = runner.logs.length;
+
+        const lines = [...runner.logs];
+        const choices = runner.getAvailableChoices();
+        if (choices.length > 0) {
+            lines.push('\nAvailable Options:\n' + choices.map(c => `- ${c}`).join('\n'));
+        }
+        setDisplayLines(lines);
+
+    }, [executionStory, executionId]);
+
+    useEffect(() => {
+        scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [displayLines]);
 
     const handleRestart = () => {
-        setHistory([]);
-        setChoiceHistory([]);
+        choiceHistoryRef.current = [];
+        prevTakenIdsRef.current = [];
+        setDisplayLines([]);
         setResumeNotice(null);
         setExecutionId(prev => prev + 1);
     };
 
-
-    useEffect(() => {
-        if (!runner) {
-            setHistory(runnerBuild.error ? [`Error: ${runnerBuild.error}`] : []);
-            return;
-        }
-
-        const invalidIds = collectInvalidTransitionIds(story);
-        const hitId = prevTakenIdsRef.current.find(id => invalidIds.has(id));
-
-        if (hitId) {
-            const label = describeTransition(story, hitId);
-            setResumeNotice(`Condition on transition ${label} became invalid. Story restarted.`);
-            prevTakenIdsRef.current = [];
-            setHistory([]);
-            setChoiceHistory([]);
-            setExecutionId(prev => prev + 1);
-            return;
-        }
-
-        prevTakenIdsRef.current = [...runner.takenTransitionIds];
-        setHistory([...runner.logs]);
-        printChoices(runner);
-    }, [runner, runnerBuild.error]);
-
-    useEffect(() => {
-        scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [history]);
-
-
-    const printChoices = (runner: StoryRunner) => {
-        const choices = runner.getAvailableChoices();
-            if (choices.length > 0) {
-                const choiceText = "\nAvailable Options:\n" + choices.map((c) => `- ${c}`).join('\n');
-                setHistory(prev => [...prev, choiceText]);
-            }
-    };
-
     const handleCommand = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!runner) {
-            return;
-        }
+        const runner = runnerRef.current;
+        if (!runner) return;
+
         const input = inputValue.trim();
         if (!input) return;
 
-        const availableChoices = runner.getAvailableChoices();
-
-        setHistory(prev => [...prev, `> ${input}`]);
-
-        const match = availableChoices.find(
-            choice => choice.toLowerCase() === input.toLowerCase()
-        );
+        const match = runner.getAvailableChoices().find(c => c.toLowerCase() === input.toLowerCase());
 
         if (match) {
-            setChoiceHistory(prev => [...prev, match]);
+            choiceHistoryRef.current = [...choiceHistoryRef.current, match];
+            runner.handleChoice(match);
+            prevTakenIdsRef.current = [...runner.takenTransitionIds];
+
+            const newLines: string[] = [
+                `> ${input}`,
+                ...runner.logs.slice(prevLogLengthRef.current),
+            ];
+            prevLogLengthRef.current = runner.logs.length;
+
+            const choices = runner.getAvailableChoices();
+            if (choices.length > 0) {
+                newLines.push('\nAvailable Options:\n' + choices.map(c => `- ${c}`).join('\n'));
+            }
+            setDisplayLines(prev => [...prev, ...newLines]);
         } else {
-            setHistory(prev => [...prev, `Error: Invalid input '${input}'.`])
+            setDisplayLines(prev => [...prev, `> ${input}`, `Error: Invalid input '${input}'.`]);
         }
 
         setInputValue('');
@@ -263,7 +224,7 @@ export const VirtualConsole: React.FC<{ story: StoryData }> = ({ story }) => {
             )}
             {/* Output */}
             <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', marginTop: '10px', marginBottom: '10px', whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
-                {history.map((line, i) => (
+                {displayLines.map((line: string, i: number) => (
                     <div key={i} style = {{
                         marginBottom: '8px',
                         lineHeight: '1.5',

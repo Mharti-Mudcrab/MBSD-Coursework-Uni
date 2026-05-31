@@ -30,7 +30,7 @@ export const VariableBlock: React.FC<VariableBlockProps> = ({ data }) => {
         >
             <div style={{ fontSize: 11, color: '#aaa' }}>{data.change.variable}</div>
             <div style={{ fontSize: 12, fontWeight: 'bold', marginTop: 2 }}>{data.change.operator} {data.change.value}</div>
-            <Handle id="output" type="source" position={Position.Right} />
+            <Handle id="output" type="source" position={Position.Right} style={{ background: '#6ac06a' }} />
         </div>
     );
 };

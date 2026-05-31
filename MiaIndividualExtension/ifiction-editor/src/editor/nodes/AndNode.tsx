@@ -16,10 +16,10 @@ export const AndNode = ({ data }: any) => {
                 textAlign: 'center',
             }}
         >
-            <Handle id="conditionA" type="target" position={Position.Left} style={{ top: '25%' }} />
+            <Handle id="conditionA" type="target" position={Position.Left} style={{ top: '25%', background: '#d4a574' }} />
             <div style={{ fontWeight: 'bold' }}>AND</div>
-            <Handle id="conditionB" type="target" position={Position.Left} style={{ top: '75%' }} />
-            <Handle id="output" type="source" position={Position.Right} />
+            <Handle id="conditionB" type="target" position={Position.Left} style={{ top: '75%', background: '#d4a574' }} />
+            <Handle id="output" type="source" position={Position.Right} style={{ background: '#d4a574' }} />
         </div>
     );
 };

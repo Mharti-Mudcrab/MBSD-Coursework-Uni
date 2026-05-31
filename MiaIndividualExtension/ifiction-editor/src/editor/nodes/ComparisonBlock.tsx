@@ -15,14 +15,13 @@ export const ComparisonBlock = ({ data }: any) => {
                 minWidth: 100,
             }}
         >
-            <Handle id="input" type="target" position={Position.Left} />
             <div style={{ fontWeight: 'bold', marginBottom: 2 }}>
                 {operator}
             </div>
             <div style={{ fontSize: 9, color: '#aaa' }}>
                 {variable} {operator} {value}
             </div>
-            <Handle id="output" type="source" position={Position.Right} />
+            <Handle id="output" type="source" position={Position.Right} style={{ background: '#d4a574' }} />
         </div>
     );
 };

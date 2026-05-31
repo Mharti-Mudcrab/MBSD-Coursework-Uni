@@ -135,7 +135,7 @@ export const NodeToolbar: React.FC<Props> = ({ story, editorState, onStoryChange
             <div style={dividerStyle} />
             <span style={labelStyle}>Block</span>
             <button style={btnStyle} onClick={addOrphanTransition}>Transition</button>
-            <button style={btnStyle} onClick={addOrphanOption}>Option</button>
+            <button style={btnStyle} onClick={addOrphanOption}>Choice Option</button>
             <button style={btnStyle} onClick={addOrphanVariable}>Variable</button>
             <div style={dividerStyle} />
             <span style={labelStyle}>Condition</span>

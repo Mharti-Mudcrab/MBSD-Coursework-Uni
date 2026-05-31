@@ -3,6 +3,7 @@ import { StoryEditor } from './editor/StoryEditor';
 import { StoryInspector } from "./editor/StoryInspector";
 import { NodeToolbar } from "./editor/NodeToolbar";
 import type { StoryData, StoryNode, Transition, EditorState } from './types';
+import type { BlockRegistryEntry } from './editor/types';
 import { emptyEditorState } from './types';
 import { useState, useRef } from 'react';
 import './App.css'
@@ -24,6 +25,25 @@ const initialEditorState: EditorState = {
     canvasPositions: { start: { x: 200, y: 200 } },
 };
 
+function renameNodeInMap(
+    nodes: StoryData["nodes"],
+    oldId: string,
+    newNode: StoryNode
+): StoryData["nodes"] {
+    const newId = newNode.id;
+    const remapTransitions = (transitions?: Transition[]) =>
+        transitions?.map(t => t.targetNodeId === oldId ? { ...t, targetNodeId: newId } : t);
+    const result: StoryData["nodes"] = {};
+    for (const [nodeId, node] of Object.entries(nodes)) {
+        if (nodeId === oldId) {
+            result[newId] = { ...newNode, data: { ...newNode.data, transitions: remapTransitions(newNode.data.transitions) } } as StoryNode;
+        } else {
+            result[nodeId] = { ...node, data: { ...node.data, transitions: remapTransitions(node.data.transitions) } } as StoryNode;
+        }
+    }
+    return result;
+}
+
 function App() {
     const [story, setStory] = useState<StoryData>(emptyStory);
     const [editorState, setEditorState] = useState<EditorState>(initialEditorState);
@@ -31,7 +51,7 @@ function App() {
     const [showPreview, setShowPreview] = useState(true);
     const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
     const [showInspector, setShowInspector] = useState(true);
-    const blockToConditionRef = useRef<Map<string, any>>(new Map());
+    const blockToConditionRef = useRef<Map<string, BlockRegistryEntry>>(new Map());
     const spawnPositionRef = useRef<() => { x: number; y: number }>(() => ({ x: 300, y: 300 }));
 
     const loadStory = (loaded: StoryData, loadedEditorState: EditorState) => {
@@ -44,64 +64,29 @@ function App() {
 
     const updateNodeInStory = (updatedNode: StoryNode) => {
         setStory(currentStory => {
-            const previousNodeId = selectedNodeId && currentStory.nodes[selectedNodeId]
-                ? selectedNodeId
-                : updatedNode.id;
-
+            const previousNodeId = selectedNodeId && currentStory.nodes[selectedNodeId] ? selectedNodeId : updatedNode.id;
             if (!updatedNode.id.trim()) return currentStory;
             if (updatedNode.id !== previousNodeId && currentStory.nodes[updatedNode.id]) return currentStory;
-
-            const nextNodes: StoryData["nodes"] = {};
-            for (const [nodeId, node] of Object.entries(currentStory.nodes)) {
-                if (nodeId === previousNodeId) {
-                    nextNodes[updatedNode.id] = {
-                        ...updatedNode,
-                        data: {
-                            ...updatedNode.data,
-                            transitions: (updatedNode.data.transitions ?? []).map((transition: Transition) =>
-                                transition.targetNodeId === previousNodeId
-                                    ? { ...transition, targetNodeId: updatedNode.id }
-                                    : transition
-                            ),
-                        },
-                    };
-                    continue;
-                }
-                nextNodes[nodeId] = {
-                    ...node,
-                    data: {
-                        ...node.data,
-                        transitions: node.data.transitions?.map((transition: Transition) =>
-                            transition.targetNodeId === previousNodeId
-                                ? { ...transition, targetNodeId: updatedNode.id }
-                                : transition
-                        ),
-                    },
-                };
-            }
-
             return {
                 ...currentStory,
-                nodes: nextNodes,
+                nodes: renameNodeInMap(currentStory.nodes, previousNodeId, updatedNode),
                 startNodeId: currentStory.startNodeId === previousNodeId ? updatedNode.id : currentStory.startNodeId,
             };
         });
 
-        // Remap the canvas position to the new node ID if the ID changed
         if (selectedNodeId && story.nodes[selectedNodeId] && updatedNode.id !== selectedNodeId) {
             setEditorState(current => {
-                const updated = { ...current.canvasPositions };
-                if (updated[selectedNodeId]) {
-                    updated[updatedNode.id] = updated[selectedNodeId];
-                    delete updated[selectedNodeId];
+                const positions = { ...current.canvasPositions };
+                if (positions[selectedNodeId]) {
+                    positions[updatedNode.id] = positions[selectedNodeId];
+                    delete positions[selectedNodeId];
                 }
-                return { ...current, canvasPositions: updated };
+                return { ...current, canvasPositions: positions };
             });
         }
 
-        if (selectedNodeId && story.nodes[selectedNodeId]) {
+        if (selectedNodeId && story.nodes[selectedNodeId])
             setSelectedNodeId(updatedNode.id);
-        }
     };
 
     const deleteNode = (nodeId: string) => {
@@ -113,10 +98,10 @@ function App() {
 
         // Promote the deleted node's children to orphans in editorState
         const newOrphanedVariables = nodeToDelete?.type === 'stateChange'
-            ? Object.fromEntries(((nodeToDelete.data as any).stateChanges || []).map((sc: any) => [crypto.randomUUID(), sc]))
+            ? Object.fromEntries(nodeToDelete.data.stateChanges.map(sc => [crypto.randomUUID(), sc]))
             : {};
         const newOrphanedOptions = nodeToDelete?.type === 'choice'
-            ? Object.fromEntries(((nodeToDelete.data as any).choices || []).map((opt: any) => [crypto.randomUUID(), opt]))
+            ? Object.fromEntries(nodeToDelete.data.choices.map(opt => [crypto.randomUUID(), opt]))
             : {};
 
         setStory(current => ({ ...current, nodes: nextNodes }));

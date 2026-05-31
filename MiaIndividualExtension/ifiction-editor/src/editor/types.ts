@@ -1,4 +1,4 @@
-import type { Operator, Transition, ChoiceOption } from '../types';
+import type { Operator, Transition, ChoiceOption, Condition, StateChange } from '../types';
 
 /**
  * Type definitions for condition block components rendered on the canvas.
@@ -51,8 +51,54 @@ export type OptionBlockData = {
 /**
  * Union of all possible node data types that can appear on the canvas.
  */
-export type CanvasNodeData = 
+export type CanvasNodeData =
     | Record<string, unknown>  // Story nodes (generic for all story node types)
     | OptionBlockData
     | TransitionBlockData
     | ConditionBlockData;
+
+/**
+ * Discriminated union for entries in the block registry (blockToConditionRef).
+ * Each variant describes what a canvas block ID maps to in story/editor state.
+ */
+export type ConditionNodeEntry = {
+    kind: 'conditionNode';
+    parentTransitionId: string;
+    condition: Condition;
+    orphanId?: string;
+    optionOrphanId?: string;
+    transitionIndex?: number;
+    transition?: Transition;
+};
+
+export type OrphanedTransitionEntry = {
+    kind: 'orphanedTransition';
+    orphanId: string;
+    transition: Transition;
+};
+
+export type OrphanedVariableEntry = {
+    kind: 'orphanedVariable';
+    orphanId: string;
+    change: StateChange;
+};
+
+export type OrphanedOptionEntry = {
+    kind: 'orphanedOption';
+    orphanId: string;
+    option: ChoiceOption;
+};
+
+export type OrphanedOptionTransitionEntry = {
+    kind: 'orphanedOptionTransition';
+    optionOrphanId: string;
+    transitionIndex: number;
+    transition: Transition;
+};
+
+export type BlockRegistryEntry =
+    | ConditionNodeEntry
+    | OrphanedTransitionEntry
+    | OrphanedVariableEntry
+    | OrphanedOptionEntry
+    | OrphanedOptionTransitionEntry;

@@ -79,46 +79,44 @@ export class StoryRunner {
 
         if (node.type !== 'choice') return [];
 
-        return (node.data.choices || [])
+        return node.data.choices
             .filter(opt => {
-                const validTransition = opt.transitions.find(t => (this.engine as any).checkCondition(t.condition, this.state.variables));
-
+                const validTransition = opt.transitions.find(t => this.engine.checkCondition(t.condition, this.state.variables));
                 return !!validTransition;
-
             })
             .map(opt => opt.displayText);
+    }
+
+    public handleChoice(choiceText: string) {
+        const node = this.getCurrentNode();
+        if (!node || node.type !== 'choice') {
+            this.logs.push("Error: Current node no longer exists.");
+            return;
         }
 
-        public handleChoice(choiceText: string) {
-            const node = this.getCurrentNode();
-            if (!node) {
-                this.logs.push("Error: Current node no longer exists.");
-                return;
+        const choices = node.data.choices;
+        const optionIndex = choices.findIndex(opt => opt.displayText === choiceText);
+        if (optionIndex >= 0) {
+            const transitions = choices[optionIndex].transitions;
+            const takenIndex = transitions
+                .map((t, i) => ({ t, i }))
+                .filter(({ t }) => this.engine.checkCondition(t.condition, this.state.variables))
+                .sort((a, b) => (b.t.priority || 0) - (a.t.priority || 0))[0]?.i;
+            if (takenIndex !== undefined) {
+                this.takenTransitionIds.push(`${node.id}-option-${optionIndex}-${takenIndex}`);
             }
-
-            const choices = (node.data as any).choices || [];
-            const optionIndex = choices.findIndex((opt: any) => opt.displayText === choiceText);
-            if (optionIndex >= 0) {
-                const transitions = choices[optionIndex]?.transitions || [];
-                const takenIndex = transitions
-                    .map((t: any, i: number) => ({ t, i }))
-                    .filter(({ t }: { t: any }) => this.engine.checkCondition(t.condition, this.state.variables))
-                    .sort((a: any, b: any) => (b.t.priority || 0) - (a.t.priority || 0))[0]?.i;
-                if (takenIndex !== undefined) {
-                    this.takenTransitionIds.push(`${node.id}-option-${optionIndex}-${takenIndex}`);
-                }
-            }
-
-            this.state = this.engine.step(this.state, choiceText);
-            this.processCurrentNode();
         }
 
-        public getCurrentNode(): StoryNode | undefined {
-            return this.engine['story'].nodes[this.state.currentNodeId];
-        }
+        this.state = this.engine.step(this.state, choiceText);
+        this.processCurrentNode();
+    }
 
-        public getVariables() {
-            return this.state.variables;
-        }
+    public getCurrentNode(): StoryNode | undefined {
+        return this.engine.getNode(this.state.currentNodeId);
+    }
+
+    public getVariables() {
+        return this.state.variables;
+    }
 
 }

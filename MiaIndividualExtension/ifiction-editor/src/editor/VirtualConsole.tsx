@@ -40,9 +40,9 @@ const collectInvalidTransitionIds = (story: StoryData): Set<string> => {
             }
         });
 
-        if (node.type === 'choice' && Array.isArray((node.data as any).choices)) {
-            (node.data as any).choices.forEach((choice: any, optionIndex: number) => {
-                (choice.transitions || []).forEach((transition: any, transitionIndex: number) => {
+        if (node.type === 'choice') {
+            node.data.choices.forEach((choice, optionIndex) => {
+                (choice.transitions || []).forEach((transition, transitionIndex) => {
                     if (!isConditionStructurallyValid(transition.condition)) {
                         invalid.add(`${node.id}-option-${optionIndex}-${transitionIndex}`);
                     }
@@ -60,7 +60,7 @@ const describeTransition = (story: StoryData, transitionId: string): string => {
         const [, nodeId, optionIndexStr, transitionIndexStr] = optionMatch;
         const node = story.nodes[nodeId];
         const nodeLabel = node?.data?.label ?? nodeId;
-        const option = (node?.data as any)?.choices?.[parseInt(optionIndexStr)];
+        const option = node?.type === 'choice' ? node.data.choices[parseInt(optionIndexStr)] : undefined;
         const optionText = option?.displayText ?? `option ${optionIndexStr}`;
         const targetId = option?.transitions?.[parseInt(transitionIndexStr)]?.targetNodeId;
         const targetLabel = targetId ? (story.nodes[targetId]?.data?.label ?? targetId) : 'unknown';
@@ -80,6 +80,25 @@ const describeTransition = (story: StoryData, transitionId: string): string => {
 
     return `'${transitionId}'`;
 };
+
+const formatChoices = (choices: string[]): string =>
+    '\nAvailable Options:\n' + choices.map(c => `- ${c}`).join('\n');
+
+function replayHistory(
+    runner: StoryRunner,
+    history: string[],
+    story: StoryData
+): { runner: StoryRunner; failedChoice: string | null } {
+    for (const choice of history) {
+        const match = runner.getAvailableChoices().find(c => c.toLowerCase() === choice.toLowerCase());
+        if (!match) {
+            try { runner = new StoryRunner(story); } catch { /* error already shown above */ }
+            return { runner, failedChoice: choice };
+        }
+        runner.handleChoice(match);
+    }
+    return { runner, failedChoice: null };
+}
 
 const getExecutionSignature = (story: StoryData): string => {
     const normalizedNodes = Object.entries(story.nodes)
@@ -126,20 +145,10 @@ export const VirtualConsole: React.FC<{ story: StoryData }> = ({ story }) => {
             return;
         }
 
-        // Replay the choice history to restore the player's position after an edit.
-        let failedChoice: string | null = null;
-        for (const choice of choiceHistoryRef.current) {
-            const match = runner.getAvailableChoices().find(c => c.toLowerCase() === choice.toLowerCase());
-            if (!match) {
-                failedChoice = choice;
-                choiceHistoryRef.current = [];
-                try { runner = new StoryRunner(executionStory); } catch { /* error already shown above */ }
-                break;
-            }
-            runner.handleChoice(match);
-        }
-
+        const { runner: restoredRunner, failedChoice } = replayHistory(runner, choiceHistoryRef.current, executionStory);
+        runner = restoredRunner;
         if (failedChoice) {
+            choiceHistoryRef.current = [];
             setResumeNotice(`Story changed and invalidated choice '${failedChoice}'. Restarted from start.`);
         }
 
@@ -149,9 +158,7 @@ export const VirtualConsole: React.FC<{ story: StoryData }> = ({ story }) => {
 
         const lines = [...runner.logs];
         const choices = runner.getAvailableChoices();
-        if (choices.length > 0) {
-            lines.push('\nAvailable Options:\n' + choices.map(c => `- ${c}`).join('\n'));
-        }
+        if (choices.length > 0) lines.push(formatChoices(choices));
         setDisplayLines(lines);
 
     }, [executionStory, executionId]);
@@ -190,9 +197,7 @@ export const VirtualConsole: React.FC<{ story: StoryData }> = ({ story }) => {
             prevLogLengthRef.current = runner.logs.length;
 
             const choices = runner.getAvailableChoices();
-            if (choices.length > 0) {
-                newLines.push('\nAvailable Options:\n' + choices.map(c => `- ${c}`).join('\n'));
-            }
+            if (choices.length > 0) newLines.push(formatChoices(choices));
             setDisplayLines(prev => [...prev, ...newLines]);
         } else {
             setDisplayLines(prev => [...prev, `> ${input}`, `Error: Invalid input '${input}'.`]);

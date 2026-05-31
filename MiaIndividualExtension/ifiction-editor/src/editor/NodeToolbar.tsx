@@ -63,16 +63,16 @@ export const NodeToolbar: React.FC<Props> = ({ story, editorState, onStoryChange
         e.target.value = '';
     };
 
-    const addStoryNode = (type: NodeType) => {
+    const addStoryNode = (type: Exclude<NodeType, 'start'>) => {
         const id = uniqueId(type, existingIds);
         const pos = spawnPos();
-        const dataMap: Record<string, object> = {
+        const dataMap: Record<Exclude<NodeType, 'start'>, object> = {
             dialogue: { label: 'New Dialogue', displayText: 'Enter text here.', transitions: [] },
             choice: { label: 'New Choice', displayText: 'Make a choice.', choices: [] },
             stateChange: { label: 'New State Change', displayText: '', stateChanges: [] },
             end: { label: 'End', displayText: '' },
         };
-        const newNode: StoryNode = { id, type, data: dataMap[type] as StoryNode['data'] };
+        const newNode = { id, type, data: dataMap[type] } as StoryNode;
         onStoryChange({ ...story, nodes: { ...story.nodes, [id]: newNode } });
         onEditorStateChange({ ...editorState, canvasPositions: { ...editorState.canvasPositions, [id]: pos } });
         onSelectNode(id);

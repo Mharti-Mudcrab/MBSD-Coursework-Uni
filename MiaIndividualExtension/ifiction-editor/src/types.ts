@@ -1,6 +1,6 @@
 export type NodeType = 'start' | 'dialogue' | 'choice' | 'stateChange' | 'end';
 
-interface baseNodeData {
+interface BaseNodeData {
     label: string;
     displayText: string;
 }
@@ -27,19 +27,12 @@ export interface ChoiceOption {
     transitions: Transition[];
 }
 
-export interface StoryNode {
-    id: string;
-    type: NodeType;
-    data: baseNodeData & {
-        choices?: ChoiceOption[];
-        stateChanges?: StateChange[];
-        transitions?: Transition[];
-    };
-}
-
-export interface ChoiceNodeData extends baseNodeData {
-    options: ChoiceOption[];
-}
+export type StoryNode =
+    | { id: string; type: 'start';       data: BaseNodeData & { transitions?: Transition[] } }
+    | { id: string; type: 'dialogue';    data: BaseNodeData & { transitions?: Transition[] } }
+    | { id: string; type: 'choice';      data: BaseNodeData & { transitions?: Transition[]; choices: ChoiceOption[] } }
+    | { id: string; type: 'stateChange'; data: BaseNodeData & { transitions?: Transition[]; stateChanges: StateChange[] } }
+    | { id: string; type: 'end';         data: BaseNodeData & { transitions?: Transition[] } };
 
 export type Operator = '==' | '!=' | '<' | '>' | '<=' | '>=';
 
@@ -66,16 +59,12 @@ export type Condition =
     | LogicalGroup
     | ParenthesizedCondition;
 
-export type stateChangeOperator = '=' | '+=' | '-=';
+export type StateChangeOperator = '=' | '+=' | '-=';
 
 export interface StateChange {
     variable: string;
-    operator: stateChangeOperator;
+    operator: StateChangeOperator;
     value: number;
-}
-
-export interface StateChangeNodeData extends baseNodeData {
-    stateChanges: StateChange[];
 }
 
 export interface SystemState {

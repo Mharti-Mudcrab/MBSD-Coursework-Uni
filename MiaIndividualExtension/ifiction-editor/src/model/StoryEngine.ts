@@ -28,7 +28,7 @@ export class StoryEngine {
     private applyNodeLogic(node: StoryNode, variables: Record<string, number>): Record<string, number> {
         const newVars = { ...variables };
 
-        if (node.type === 'stateChange' && node.data.stateChanges) {
+        if (node.type === 'stateChange') {
             node.data.stateChanges.forEach((change: StateChange) => {
                 const currentVal = newVars[change.variable] || 0;
                 if (change.operator === '=') newVars[change.variable] = change.value;
@@ -43,7 +43,7 @@ export class StoryEngine {
     private determineNextNode(node: StoryNode, variables: Record<string, number>, input?: string): string | null {
         if (node.type === 'choice'){
             if (!input) return null;
-            const option = node.data.choices?.find(opt => opt.displayText === input);
+            const option = node.data.choices.find(opt => opt.displayText === input);
             return option ? this.evaluateTransitions(option.transitions, variables) : null;
         }
 
@@ -52,19 +52,17 @@ export class StoryEngine {
 
     private evaluateTransitions(transitions: Transition[], variables: Record<string, number>): string | null {
         const validTransitions = transitions
-            .filter(t => this.checkCondition(t.condition as any, variables))
-            // Type-unsafe. Keep an eye on this.
-            .sort((a,b) => (b.priority || 0) - (a.priority || 0)); // Higher priority first
+            .filter(t => this.checkCondition(t.condition, variables))
+            .sort((a, b) => (b.priority || 0) - (a.priority || 0));
+        return validTransitions.length > 0 ? validTransitions[0].targetNodeId : null;
+    }
 
-            return validTransitions.length > 0 ? validTransitions[0].targetNodeId : null;
+    public getNode(nodeId: string): StoryNode | undefined {
+        return this.story.nodes[nodeId];
     }
 
     public checkCondition(condition: Condition | undefined, variables: Record<string, number>): boolean {
         if (!condition) return true;
-
-        if (typeof condition !== 'object' || !(condition as any).type) {
-            return false;
-        }
 
         if (condition.type === 'comparison') {
             if (
@@ -72,35 +70,27 @@ export class StoryEngine {
                 condition.variable.trim() === '' ||
                 typeof condition.value !== 'number' ||
                 !Number.isFinite(condition.value)
-            ) {
-                return false;
-            }
+            ) return false;
             const val = variables[condition.variable] || 0;
             switch (condition.operator) {
                 case '==': return val === condition.value;
                 case '!=': return val !== condition.value;
-                case '<': return val < condition.value;
-                case '>': return val > condition.value;
+                case '<':  return val < condition.value;
+                case '>':  return val > condition.value;
                 case '<=': return val <= condition.value;
                 case '>=': return val >= condition.value;
-                default: return false;
+                default:   return false;
             }
         }
 
-        // Type-unsafe codesmell. Keep an eye on this.
-            else if (condition.type === 'and') {
-                if (!(condition as any).left || !(condition as any).right) return false;
-                return this.checkCondition((condition as any).left, variables) && this.checkCondition((condition as any).right, variables);
-            }
-            else if (condition.type === 'or') {
-                if (!(condition as any).left || !(condition as any).right) return false;
-                return this.checkCondition((condition as any).left, variables) || this.checkCondition((condition as any).right, variables);
-            }
-            else if (condition.type === 'parentheses')
-                return !!(condition as any).condition && this.checkCondition((condition as any).condition, variables);
+        if (condition.type === 'and')
+            return this.checkCondition(condition.left, variables) && this.checkCondition(condition.right, variables);
+        if (condition.type === 'or')
+            return this.checkCondition(condition.left, variables) || this.checkCondition(condition.right, variables);
+        if (condition.type === 'parentheses')
+            return this.checkCondition(condition.condition, variables);
 
-            else return false;
-
+        return false;
     }
 
 

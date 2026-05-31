@@ -15,11 +15,13 @@ export type ComparisonBlockData = {
 export type AndBlockData = {
     type: 'and';
     isSelected: boolean;
+    isIncomplete: boolean;
 };
 
 export type OrBlockData = {
     type: 'or';
     isSelected: boolean;
+    isIncomplete: boolean;
 };
 
 export type ConditionBlockData = ComparisonBlockData | AndBlockData | OrBlockData;

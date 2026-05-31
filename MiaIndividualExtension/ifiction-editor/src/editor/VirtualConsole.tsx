@@ -1,34 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { StoryRunner } from '../StoryRunner';
 import type { StoryData } from '../types';
-
-const isConditionStructurallyValid = (condition: any): boolean => {
-    if (!condition) return true;
-    if (typeof condition !== 'object' || !condition.type) return false;
-
-    if (condition.type === 'comparison') {
-        const validOperators = new Set(['==', '!=', '<', '>', '<=', '>=']);
-        return (
-            typeof condition.variable === 'string' &&
-            condition.variable.trim() !== '' &&
-            typeof condition.value === 'number' &&
-            Number.isFinite(condition.value) &&
-            validOperators.has(condition.operator)
-        );
-    }
-
-    if (condition.type === 'and' || condition.type === 'or') {
-        return !!condition.left && !!condition.right &&
-            isConditionStructurallyValid(condition.left) &&
-            isConditionStructurallyValid(condition.right);
-    }
-
-    if (condition.type === 'parentheses') {
-        return !!condition.condition && isConditionStructurallyValid(condition.condition);
-    }
-
-    return false;
-};
+import { isConditionStructurallyValid } from '../model/conditionUtils';
 
 const collectInvalidTransitionIds = (story: StoryData): Set<string> => {
     const invalid = new Set<string>();

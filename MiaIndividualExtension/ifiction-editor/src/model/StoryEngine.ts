@@ -84,9 +84,11 @@ export class StoryEngine {
         }
 
         if (condition.type === 'and')
-            return this.checkCondition(condition.left, variables) && this.checkCondition(condition.right, variables);
+            return condition.left != null && condition.right != null &&
+                this.checkCondition(condition.left, variables) && this.checkCondition(condition.right, variables);
         if (condition.type === 'or')
-            return this.checkCondition(condition.left, variables) || this.checkCondition(condition.right, variables);
+            return condition.left != null && condition.right != null &&
+                (this.checkCondition(condition.left, variables) || this.checkCondition(condition.right, variables));
         if (condition.type === 'parentheses')
             return this.checkCondition(condition.condition, variables);
 

@@ -2,7 +2,7 @@ import React from 'react';
 import type { Condition, StoryData, StoryNode, Transition, EditorState, StateChangeOperator, StateChange } from '../types';
 import type { BlockRegistryEntry } from './types';
 import { resolveInspectorSelection } from './inspectorSelection';
-import { removeConditionNode, updateConditionInTree, formatCondition, duplicateConditionAsOrphan } from '../model/conditionUtils';
+import { removeConditionNode, updateConditionInTree, formatCondition, duplicateConditionAsOrphan, isConditionStructurallyValid } from '../model/conditionUtils';
 import { updateNodeTransition, deleteNodeTransition, updateOptionTransition, deleteOptionTransition } from '../model/transitionUtils';
 
 interface Props {
@@ -112,6 +112,9 @@ export const StoryInspector: React.FC<Props> = ({
                 {transition.condition && (
                     <div style={{ marginBottom: 12, padding: 8, background: '#1a3a1a', borderRadius: 4, borderLeft: '3px solid #6ac06a' }}>
                         <p style={{ margin: '0 0 8px 0', fontSize: 12, color: '#cfe8cf' }}>Condition: {formatCondition(transition.condition)}</p>
+                        {!isConditionStructurallyValid(transition.condition) && (
+                            <p style={{ margin: 0, fontSize: 12, color: '#c06a6a' }}>Condition is incomplete — transition cannot be traversed.</p>
+                        )}
                     </div>
                 )}
                 <button onClick={() => { const updated = isOption ? deleteOptionTransition(parentNode, parentId, index) : deleteNodeTransition(parentNode, index); if (updated) onUpdateNode(updated); }}
@@ -254,7 +257,10 @@ export const StoryInspector: React.FC<Props> = ({
                 </div>
                 {transition.condition && (
                     <div style={{ marginBottom: 12, padding: 8, background: '#1a3a1a', borderRadius: 4, borderLeft: '3px solid #6ac06a' }}>
-                        <p style={{ margin: 0, fontSize: 12, color: '#cfe8cf' }}>Condition: {formatCondition(transition.condition)}</p>
+                        <p style={{ margin: '0 0 8px 0', fontSize: 12, color: '#cfe8cf' }}>Condition: {formatCondition(transition.condition)}</p>
+                        {!isConditionStructurallyValid(transition.condition) && (
+                            <p style={{ margin: 0, fontSize: 12, color: '#c06a6a' }}>Condition is incomplete — transition cannot be traversed.</p>
+                        )}
                     </div>
                 )}
                 <button onClick={() => { const updated = { ...editorState.orphanedTransitions }; delete updated[orphanId]; onUpdateEditorState({ ...editorState, orphanedTransitions: updated }); }}
@@ -293,11 +299,13 @@ export const StoryInspector: React.FC<Props> = ({
 
     if (selection.kind === 'orphanedCondition') {
         const { orphanId, condition } = selection;
+        const incomplete = (condition.type === 'and' || condition.type === 'or') && !isConditionStructurallyValid(condition);
         return (
             <InspectorPanel>
                 <h2 style={{ marginTop: 0 }}>Orphaned Condition</h2>
                 <p style={{ fontSize: 12, color: '#aaa' }}>This condition block is detached. Drag it onto a transition to reconnect it.</p>
                 <p style={{ fontSize: 12, color: '#cfe8cf' }}>Parsed as: {conditionLabel(condition)}</p>
+                {incomplete && <p style={{ fontSize: 12, color: '#c06a6a' }}>Block is incomplete — transitions this is attached to cannot be traversed.</p>}
                 <button onClick={() => { const { id, condition: dup } = duplicateConditionAsOrphan(condition); onUpdateEditorState({ ...editorState, orphanedConditions: { ...editorState.orphanedConditions, [id]: dup } }); }}
                     style={{ width: '100%', padding: '8px 12px', marginBottom: 8, background: '#2a4a6a', border: 'none', color: '#fff', borderRadius: 4, cursor: 'pointer' }}>Duplicate &amp; Subconditions</button>
                 <button onClick={() => {
@@ -318,11 +326,13 @@ export const StoryInspector: React.FC<Props> = ({
 
     if (selection.kind === 'condition') {
         const { parentNode, parentId, index, transition, isOption, condition } = selection;
+        const incomplete = (condition.type === 'and' || condition.type === 'or') && !isConditionStructurallyValid(condition);
         return (
             <InspectorPanel>
                 <h2 style={{ marginTop: 0 }}>Condition Block</h2>
                 <p style={{ fontSize: 12, color: '#aaa' }}>Part of: {isOption ? `${parentId} / ${transition.targetNodeId}` : parentId}</p>
                 <p style={{ fontSize: 12, color: '#cfe8cf' }}>Parsed as: {conditionLabel(condition)}</p>
+                {incomplete && <p style={{ fontSize: 12, color: '#c06a6a' }}>Block is incomplete — transitions this is attached to cannot be traversed.</p>}
                 <button onClick={() => { const copy = JSON.parse(JSON.stringify(condition)); onUpdateEditorState({ ...editorState, orphanedConditions: { ...editorState.orphanedConditions, [crypto.randomUUID()]: copy } }); }}
                     style={{ width: '100%', padding: '8px 12px', marginBottom: 8, background: '#2a4a6a', border: 'none', color: '#fff', borderRadius: 4, cursor: 'pointer' }}>Duplicate &amp; Subconditions</button>
                 <button onClick={() => {
@@ -362,7 +372,10 @@ export const StoryInspector: React.FC<Props> = ({
                 </div>
                 {transition.condition && (
                     <div style={{ marginBottom: 12, padding: 8, background: '#1a3a1a', borderRadius: 4, borderLeft: '3px solid #6ac06a' }}>
-                        <p style={{ margin: 0, fontSize: 12, color: '#cfe8cf' }}>Condition: {formatCondition(transition.condition)}</p>
+                        <p style={{ margin: '0 0 8px 0', fontSize: 12, color: '#cfe8cf' }}>Condition: {formatCondition(transition.condition)}</p>
+                        {!isConditionStructurallyValid(transition.condition) && (
+                            <p style={{ margin: 0, fontSize: 12, color: '#c06a6a' }}>Condition is incomplete — transition cannot be traversed.</p>
+                        )}
                     </div>
                 )}
                 <button onClick={() => {
@@ -405,11 +418,13 @@ export const StoryInspector: React.FC<Props> = ({
 
     if (selection.kind === 'orphanedOptionCondition') {
         const { optionOrphanId, transitionIndex, transition, condition } = selection;
+        const incomplete = (condition.type === 'and' || condition.type === 'or') && !isConditionStructurallyValid(condition);
         return (
             <InspectorPanel>
                 <h2 style={{ marginTop: 0 }}>Condition Block</h2>
                 <p style={{ fontSize: 12, color: '#aaa' }}>In orphaned option block.</p>
                 <p style={{ fontSize: 12, color: '#cfe8cf' }}>Parsed as: {conditionLabel(condition)}</p>
+                {incomplete && <p style={{ fontSize: 12, color: '#c06a6a' }}>Block is incomplete — transitions this is attached to cannot be traversed.</p>}
                 <button onClick={() => {
                     const option = editorState.orphanedOptions[optionOrphanId];
                     if (!option) return;

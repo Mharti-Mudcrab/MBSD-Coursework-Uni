@@ -1,14 +1,14 @@
 import { Handle, Position } from '@xyflow/react';
 
 export const AndNode = ({ data }: any) => {
-    const { isSelected } = data;
+    const { isSelected, isIncomplete } = data;
 
     return (
         <div
             style={{
                 padding: '8px 12px',
                 background: isSelected ? '#2a4a3a' : '#1a3a2a',
-                border: `2px solid ${isSelected ? '#6ac06a' : '#666'}`,
+                border: `2px solid ${isIncomplete ? '#c06a6a' : isSelected ? '#6ac06a' : '#666'}`,
                 borderRadius: 4,
                 fontSize: 11,
                 color: '#ddd',

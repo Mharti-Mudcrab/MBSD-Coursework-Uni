@@ -105,6 +105,11 @@ function applyConditionToParent(
         if (!orphanedTrans) return null;
         return { nextEditorState: { ...editorState, orphanedTransitions: { ...editorState.orphanedTransitions, [transOrphanId]: { ...orphanedTrans, condition } }, orphanedConditions: remainingConditions, canvasPositions: updatedPositions } };
     }
+    if (parentId.startsWith('orphan-') && !parentId.startsWith('orphan-option-')) {
+        const condOrphanId = parentId.slice('orphan-'.length);
+        if (editorState.orphanedConditions[condOrphanId] !== undefined)
+            return { nextEditorState: { ...editorState, orphanedConditions: { ...remainingConditions, [condOrphanId]: condition }, canvasPositions: updatedPositions } };
+    }
     if (parentId.startsWith('orphan-option-')) {
         const { optionOrphanId, transitionIndex } = parseOrphanOptionId(parentId);
         const orphanOption = editorState.orphanedOptions[optionOrphanId];

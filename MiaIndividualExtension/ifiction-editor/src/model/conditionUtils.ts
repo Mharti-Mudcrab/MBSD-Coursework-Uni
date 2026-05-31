@@ -1,6 +1,29 @@
 import type { Condition } from '../types';
 
-export const formatCondition = (condition: Condition): string => {
+export const isConditionStructurallyValid = (condition: Condition | null | undefined): boolean => {
+    if (!condition) return true;
+    if (typeof condition !== 'object' || !condition.type) return false;
+    if (condition.type === 'comparison') {
+        const validOperators = new Set(['==', '!=', '<', '>', '<=', '>=']);
+        return (
+            typeof condition.variable === 'string' &&
+            condition.variable.trim() !== '' &&
+            typeof condition.value === 'number' &&
+            Number.isFinite(condition.value) &&
+            validOperators.has(condition.operator)
+        );
+    }
+    if (condition.type === 'and' || condition.type === 'or')
+        return !!condition.left && !!condition.right &&
+            isConditionStructurallyValid(condition.left) &&
+            isConditionStructurallyValid(condition.right);
+    if (condition.type === 'parentheses')
+        return !!condition.condition && isConditionStructurallyValid(condition.condition);
+    return false;
+};
+
+export const formatCondition = (condition: Condition | null | undefined): string => {
+    if (!condition) return 'MISSING';
     if (condition.type === 'comparison') return `${condition.variable} ${condition.operator} ${condition.value}`;
     if (condition.type === 'and' || condition.type === 'or') {
         const left = formatCondition(condition.left);

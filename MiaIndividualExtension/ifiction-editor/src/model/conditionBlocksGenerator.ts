@@ -87,7 +87,7 @@ function buildConditionBlocks(
             id: blockId,
             type: condition.type === 'and' ? 'andNode' : 'orNode',
             position,
-            data: { type: condition.type, isSelected: blockId === selectedNodeId },
+            data: { type: condition.type, isSelected: blockId === selectedNodeId, isIncomplete: !group.left || !group.right },
         });
 
         if (leftId) edges.push({ id: `${leftId}-to-${blockId}-conditionA`, source: leftId, target: blockId, sourceHandle: 'output', targetHandle: 'conditionA' });

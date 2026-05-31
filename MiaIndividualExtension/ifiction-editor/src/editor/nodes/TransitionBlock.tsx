@@ -1,5 +1,6 @@
 import type { Transition } from '../../types';
 import { Handle, Position } from '@xyflow/react';
+import { isConditionStructurallyValid } from '../../model/conditionUtils';
 
 interface TransitionBlockProps {
     data: {
@@ -22,7 +23,7 @@ export const TransitionBlock: React.FC<TransitionBlockProps> = ({ data }) => {
             style={{
                 padding: '8px 12px',
                 background: data?.isSelected ? '#444' : '#222',
-                border: `2px solid ${data?.isSelected ? '#4ec9b0' : '#555'}`,
+                border: `2px solid ${data.transition.condition && !isConditionStructurallyValid(data.transition.condition) ? '#c06a6a' : data?.isSelected ? '#4ec9b0' : '#555'}`,
                 borderRadius: 4,
                 cursor: 'pointer',
                 fontSize: 12,

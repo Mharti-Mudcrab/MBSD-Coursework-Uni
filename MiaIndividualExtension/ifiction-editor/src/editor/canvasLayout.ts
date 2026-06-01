@@ -35,7 +35,7 @@ function pushConditionBlocks(
 }
 
 // Projects StoryData + EditorState onto a flat list of ReactFlow nodes.
-// Two passes: first walks story.nodes (AST — connected elements), then walks
+// Two run-throughs: first walks story.nodes, then walks
 // editorState.orphanedX maps (canvas-only elements invisible to the engine).
 // The registry is populated as a side effect of both passes.
 export function buildCanvasNodes(
@@ -52,7 +52,7 @@ export function buildCanvasNodes(
     const conditionNodes: Node<ConditionBlockData>[] = [];
     const conditionEdgesList: any[] = [];
 
-    // ── Pass 1: connected elements (owned by the story AST) ──────────────────
+    // First we do nodes owned by the story itself
     const regularNodes = Object.values(story.nodes).map(node => ({
         id: node.id,
         type: node.type,
@@ -138,7 +138,7 @@ export function buildCanvasNodes(
         }
     });
 
-    // ── Pass 2: orphaned elements (in EditorState, not in the story AST) ───────
+    // Then we do orphaned blocks.
     Object.entries(editorState.orphanedConditions).forEach(([orphanId, condition]) => {
         pushConditionBlocks(condition, `orphan-${orphanId}`, selectedNodeId, canvasPositions, conditionNodes, conditionEdgesList, registry, { orphanId });
     });
@@ -226,8 +226,8 @@ export function buildCanvasNodes(
     };
 }
 
-// Derives ReactFlow edges from the story structure and orphan state.
-// conditionEdges are passed in from buildCanvasNodes (already computed there).
+// Create ReactFlow edges from the story and orphans.
+// conditionEdges are passed in from buildCanvasNodes (already calced there).
 export function buildCanvasEdges(story: StoryData, editorState: EditorState, conditionEdges: any[]): any[] {
     const edges: any[] = [];
 

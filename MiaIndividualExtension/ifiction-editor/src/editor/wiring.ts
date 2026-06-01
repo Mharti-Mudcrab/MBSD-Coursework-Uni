@@ -134,7 +134,7 @@ export function applyWiring(
     const { source, target, targetHandle } = connection;
     if (!source || !target) return null;
 
-    // ── Case 1: TransitionBlock.output → StoryNode.input ─────────────────────
+    // TransitionBlock to StoryNode Edges
     if (targetHandle === 'input' && story.nodes[target] && !source.startsWith('condition-')) {
         if (source.startsWith('orphan-transition-')) {
             const orphanId = source.slice('orphan-transition-'.length);
@@ -146,7 +146,7 @@ export function applyWiring(
         return nextStory ? { nextStory } : null;
     }
 
-    // ── Case 2: Node/OptionBlock.output → orphaned TransitionBlock.input ─────
+    // Node/OptionBlock to orphaned Transition
     if (targetHandle === 'input' && target.startsWith('orphan-transition-')) {
         const orphanId = target.slice('orphan-transition-'.length);
         const orphaned = editorState.orphanedTransitions[orphanId];
@@ -188,7 +188,7 @@ export function applyWiring(
         };
     }
 
-    // ── Case 2b: ChoiceNode.output → orphaned OptionBlock.input ──────────────
+    // ChoiceNode to Orphaned Option
     if (targetHandle === 'input' && target.startsWith('orphan-option-')) {
         const orphanId = target.slice('orphan-option-'.length);
         const orphaned = editorState.orphanedOptions[orphanId];
@@ -203,7 +203,7 @@ export function applyWiring(
         };
     }
 
-    // ── Case 3: orphaned ConditionBlock.output → TransitionBlock.condition ───
+    // Orphaned ConditionBlock to TransitionBlock
     if (targetHandle === 'condition' && source.startsWith('condition-')) {
         const condRef = blockRegistry.get(source);
         if (condRef?.kind !== 'conditionNode' || !condRef.parentTransitionId.startsWith('orphan-')) return null;
@@ -216,7 +216,7 @@ export function applyWiring(
         return applyConditionToParent(story, editorState, target, orphanRoot, remainingConditions, updatedPositions);
     }
 
-    // ── Case 4: orphaned ConditionBlock.output → AND/OR.conditionA/conditionB
+    // Orphaned ConditionBlock to AND/OR inputs
     if ((targetHandle === 'conditionA' || targetHandle === 'conditionB') && source.startsWith('condition-')) {
         const sourceCondRef = blockRegistry.get(source);
         if (sourceCondRef?.kind !== 'conditionNode' || !sourceCondRef.parentTransitionId.startsWith('orphan-')) return null;
@@ -237,7 +237,7 @@ export function applyWiring(
         return applyConditionToParent(story, editorState, parentTransitionId, newRoot, remainingConditions, updatedPositions);
     }
 
-    // ── Case 5: orphaned VariableBlock.output → StateChangeNode.var ──────────
+    // Orphaned VariableBlocks to StateChangeNode
     if (targetHandle === 'var' && source.startsWith('orphan-variable-')) {
         const orphanId = source.slice('orphan-variable-'.length);
         const orphaned = editorState.orphanedVariables[orphanId];
